@@ -5,6 +5,7 @@
 #include "cinder/Camera.h"
 #include "cinder/CameraUi.h"
 #include "cinder/params/Params.h"
+#include "CinderImGui.h"
 #include "Light.h"
 #include "ConfigManager.h"
 #include "Visualizer.h"
@@ -18,6 +19,8 @@ const int WINDOW_HEIGHT = 768;
 
 class PhotonicDirectorApp : public App {
 public:
+    void setTheme(ImGui::Options &options);
+    
     void setup() override;
     void mouseDown( MouseEvent event ) override;
     void mouseUp( MouseEvent event ) override;
@@ -33,10 +36,7 @@ public:
     
     void pickLight();
     
-    void editLight(Light* light);
-    
     void addLight();
-    void addLightDone();
     
     ~PhotonicDirectorApp();
     
@@ -52,13 +52,72 @@ protected:
     Visualizer mVisualizer;
     
     // Create parameters
-    params::InterfaceGlRef mGeneralControls;
-    params::InterfaceGlRef mLightControls;
     bool mDrawGui;
+    
+    // Test light inspector.
+    Light* lightToEdit;
 };
+
+void PhotonicDirectorApp::setTheme(ImGui::Options &options) {
+    options.childWindowRounding(3.f);
+    options.grabRounding(0.f);
+    options.windowRounding(0.f);
+    options.scrollbarRounding(3.f);
+    options.frameRounding(3.f);
+    options.windowTitleAlign(ImVec2(0.5f,0.5f));
+    
+    
+    options.color(ImGuiCol_Text,                  ImVec4(0.73f, 0.73f, 0.73f, 1.00f));
+    options.color(ImGuiCol_TextDisabled,          ImVec4(0.50f, 0.50f, 0.50f, 1.00f));
+    options.color(ImGuiCol_WindowBg,              ImVec4(0.26f, 0.26f, 0.26f, 0.95f));
+    options.color(ImGuiCol_ChildWindowBg,         ImVec4(0.28f, 0.28f, 0.28f, 1.00f));
+    options.color(ImGuiCol_PopupBg,               ImVec4(0.26f, 0.26f, 0.26f, 1.00f));
+    options.color(ImGuiCol_Border,                ImVec4(0.26f, 0.26f, 0.26f, 1.00f));
+    options.color(ImGuiCol_BorderShadow,          ImVec4(0.26f, 0.26f, 0.26f, 1.00f));
+    options.color(ImGuiCol_FrameBg,               ImVec4(0.16f, 0.16f, 0.16f, 1.00f));
+    options.color(ImGuiCol_FrameBgHovered,        ImVec4(0.16f, 0.16f, 0.16f, 1.00f));
+    options.color(ImGuiCol_FrameBgActive,         ImVec4(0.16f, 0.16f, 0.16f, 1.00f));
+    options.color(ImGuiCol_TitleBg,               ImVec4(0.36f, 0.36f, 0.36f, 1.00f));
+    options.color(ImGuiCol_TitleBgCollapsed,      ImVec4(0.36f, 0.36f, 0.36f, 1.00f));
+    options.color(ImGuiCol_TitleBgActive,         ImVec4(0.36f, 0.36f, 0.36f, 1.00f));
+    options.color(ImGuiCol_MenuBarBg,             ImVec4(0.26f, 0.26f, 0.26f, 1.00f));
+    options.color(ImGuiCol_ScrollbarBg,           ImVec4(0.21f, 0.21f, 0.21f, 1.00f));
+    options.color(ImGuiCol_ScrollbarGrab,         ImVec4(0.36f, 0.36f, 0.36f, 1.00f));
+    options.color(ImGuiCol_ScrollbarGrabHovered,  ImVec4(0.36f, 0.36f, 0.36f, 1.00f));
+    options.color(ImGuiCol_ScrollbarGrabActive,   ImVec4(0.36f, 0.36f, 0.36f, 1.00f));
+    options.color(ImGuiCol_ComboBg,               ImVec4(0.32f, 0.32f, 0.32f, 1.00f));
+    options.color(ImGuiCol_CheckMark,             ImVec4(0.78f, 0.78f, 0.78f, 1.00f));
+    options.color(ImGuiCol_SliderGrab,            ImVec4(0.74f, 0.74f, 0.74f, 1.00f));
+    options.color(ImGuiCol_SliderGrabActive,      ImVec4(0.74f, 0.74f, 0.74f, 1.00f));
+    options.color(ImGuiCol_Button,                ImVec4(0.36f, 0.36f, 0.36f, 1.00f));
+    options.color(ImGuiCol_ButtonHovered,         ImVec4(0.43f, 0.43f, 0.43f, 1.00f));
+    options.color(ImGuiCol_ButtonActive,          ImVec4(0.11f, 0.11f, 0.11f, 1.00f));
+    options.color(ImGuiCol_Header,                ImVec4(0.36f, 0.36f, 0.36f, 1.00f));
+    options.color(ImGuiCol_HeaderHovered,         ImVec4(0.36f, 0.36f, 0.36f, 1.00f));
+    options.color(ImGuiCol_HeaderActive,          ImVec4(0.36f, 0.36f, 0.36f, 1.00f));
+    options.color(ImGuiCol_Column,                ImVec4(0.39f, 0.39f, 0.39f, 1.00f));
+    options.color(ImGuiCol_ColumnHovered,         ImVec4(0.26f, 0.59f, 0.98f, 1.00f));
+    options.color(ImGuiCol_ColumnActive,          ImVec4(0.26f, 0.59f, 0.98f, 1.00f));
+    options.color(ImGuiCol_ResizeGrip,            ImVec4(0.36f, 0.36f, 0.36f, 1.00f));
+    options.color(ImGuiCol_ResizeGripHovered,     ImVec4(0.26f, 0.59f, 0.98f, 1.00f));
+    options.color(ImGuiCol_ResizeGripActive,      ImVec4(0.26f, 0.59f, 0.98f, 1.00f));
+    options.color(ImGuiCol_CloseButton,           ImVec4(0.59f, 0.59f, 0.59f, 1.00f));
+    options.color(ImGuiCol_CloseButtonHovered,    ImVec4(0.98f, 0.39f, 0.36f, 1.00f));
+    options.color(ImGuiCol_CloseButtonActive,     ImVec4(0.98f, 0.39f, 0.36f, 1.00f));
+    options.color(ImGuiCol_PlotLines,             ImVec4(0.39f, 0.39f, 0.39f, 1.00f));
+    options.color(ImGuiCol_PlotLinesHovered,      ImVec4(1.00f, 0.43f, 0.35f, 1.00f));
+    options.color(ImGuiCol_PlotHistogram,         ImVec4(0.90f, 0.70f, 0.00f, 1.00f));
+    options.color(ImGuiCol_PlotHistogramHovered,  ImVec4(1.00f, 0.60f, 0.00f, 1.00f));
+    options.color(ImGuiCol_TextSelectedBg,        ImVec4(0.32f, 0.52f, 0.65f, 1.00f));
+    options.color(ImGuiCol_ModalWindowDarkening,  ImVec4(0.20f, 0.20f, 0.20f, 0.50f));
+}
 
 void PhotonicDirectorApp::setup()
 {
+    lightToEdit = nullptr;
+    ImGui::Options options;
+    setTheme(options);
+    ImGui::initialize(options);
     pickedLight = nullptr;
     
     // Setup some initial lights.
@@ -71,46 +130,20 @@ void PhotonicDirectorApp::setup()
     
     // Initialize params.
     mDrawGui = true;
-    mGeneralControls = params::InterfaceGl::create("Controls", vec2(200,200));
-    mGeneralControls->setPosition(vec2(10,10));
-    mGeneralControls->addButton("Add light", [&](){addLight();});
-    mGeneralControls->addSeparator();
-    mGeneralControls->addButton("Save", std::bind(&PhotonicDirectorApp::save, this));
-    mGeneralControls->addButton("Load", std::bind(&PhotonicDirectorApp::load, this));
-    mLightControls = params::InterfaceGl::create("Light controls", vec2(200,400));
-    mLightControls->setPosition(vec2(220, 10));
-    // Hide the light controls.
-    mLightControls->hide();
-}
-
-void PhotonicDirectorApp::editLight(Light* light) {
-    mLightControls->clear();
-    mLightControls->addParam("Intensity", &(light->intensity), "min=0.0 max=1.0 step=0.01");
-    // Create functions for setting the position.
-    function<void (vec3)> setter = bind(&Light::setPosition, light, placeholders::_1);
-    function<vec3 ()> getter = bind(&Light::getPosition, light);
-    mLightControls->addParam("Position", setter, getter);
-    mLightControls->addParam("Color", &(light->color));
-    mLightControls->addButton("Done", [&](){addLightDone();});
-    mLightControls->show();
 }
 
 void PhotonicDirectorApp::addLight() {
     Light* newLight = new Light(vec3(1.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), 0.5f);
     mLights.push_back(newLight);
-    editLight(newLight);
-}
-
-void PhotonicDirectorApp::addLightDone() {
-    mLightControls->clear();
-    mLightControls->hide();
+    lightToEdit = newLight;
 }
 
 void PhotonicDirectorApp::mouseDown( MouseEvent event )
 {
     mVisualizer.mouseDown(event);
     if (pickedLight) {
-        editLight(pickedLight);
+//        editLight(pickedLight);
+        lightToEdit = pickedLight;
     }
 }
 
@@ -133,8 +166,11 @@ void PhotonicDirectorApp::keyDown( KeyEvent event)
 {
     if (event.getChar() == KeyEvent::KEY_ESCAPE)
         exit(0);
-    if (event.getChar() == 'g')
+    if (event.getChar() == 'g') {
         mDrawGui = !mDrawGui;
+        ImGuiStyle& imGuiStyle            = ImGui::GetStyle();
+        imGuiStyle.Alpha            = mDrawGui ? 1.0f : 0.0f;
+    }
 }
 
 void PhotonicDirectorApp::save()
@@ -158,6 +194,32 @@ void PhotonicDirectorApp::load()
 void PhotonicDirectorApp::update()
 {
     pickLight();
+    
+    // Draw the general ui.
+    {
+        ui::ScopedWindow window("Controls");
+        if (ui::Button("Add light")) {
+            addLight();
+        }
+        ui::Separator();
+        ui::Spacing();
+        if (ui::Button("Save")) {
+            save();
+        }
+        if (ui::Button("Load")) {
+            load();
+        }
+    }
+    
+    if (lightToEdit) {
+        ui::ScopedWindow lightEditWindow("Edit light");
+        ui::SliderFloat("Intensity", &lightToEdit->intensity, 0.f, 1.f);
+        ui::ColorEdit4("Color", &lightToEdit->color[0]);
+        ui::DragFloat3("Position", &lightToEdit->position[0]);
+        if (ui::Button("Done")) {
+            lightToEdit = nullptr;
+        }
+    }
 }
 
 void PhotonicDirectorApp::resize()
@@ -180,12 +242,6 @@ void PhotonicDirectorApp::draw()
     if (pickedLight) {
         mVisualizer.highLightLight(pickedLight);
     }
-    
-    if (mDrawGui) {
-        mGeneralControls->draw();
-        mLightControls->draw();
-    }
-    
 }
 
 PhotonicDirectorApp::~PhotonicDirectorApp()
