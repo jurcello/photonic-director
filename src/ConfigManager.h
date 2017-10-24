@@ -15,8 +15,18 @@
 
 class ConfigManager {
 public:
-    void readLights(fs::path path, std::vector<Light*> &lights);
-    void writeLights(fs::path path, std::vector<Light*> &lights);
+    ConfigManager();
+    void readFromFile(fs::path path);
+    void readLights(std::vector<Light*> &lights);
+    int readInt(std::string name);
+    
+    void startNewDoc();
+    void writeLights(std::vector<Light*> &lights);
+    void writeInt(std::string name, int value);
+    void writeToFile(fs::path path);
+    
+protected:
+    XmlTree mDoc;
 };
 
 #endif /* ConfigManager_h */

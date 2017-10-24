@@ -234,7 +234,10 @@ void PhotonicDirectorApp::save()
     std::vector<string> extensions {"xml"};
     fs::path savePath = getSaveFilePath(fs::path(), extensions);
     if (! savePath.empty()) {
-        config.writeLights(savePath, mLights);
+        config.startNewDoc();
+        config.writeLights(mLights);
+        config.writeInt("oscPort", mOscPort);
+        config.writeToFile(savePath);
     }
 }
 
@@ -243,7 +246,13 @@ void PhotonicDirectorApp::load()
     std::vector<string> extensions {"xml"};
     fs::path loadPath = getOpenFilePath(fs::path(), extensions);
     if (! loadPath.empty()) {
-        config.readLights(loadPath, mLights);
+        config.readFromFile(loadPath);
+        int oscPort = config.readInt("oscPort");
+        if (oscPort > 0) {
+            mOscPort = oscPort;
+            setupOsc(mOscPort);
+        }
+        config.readLights(mLights);
     }
 }
 
