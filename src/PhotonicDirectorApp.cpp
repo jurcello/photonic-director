@@ -5,20 +5,25 @@
 #include "cinder/Camera.h"
 #include "cinder/CameraUi.h"
 #include "cinder/params/Params.h"
+#include "cinder/Log.h"
 #include "CinderImGui.h"
 #include "Light.h"
 #include "ConfigManager.h"
 #include "Visualizer.h"
+#include "Osc.h"
 
 using namespace ci;
 using namespace ci::app;
 using namespace std;
+using protocol = asio::ip::udp;
 
 const int WINDOW_WIDTH = 1024;
 const int WINDOW_HEIGHT = 768;
 
 class PhotonicDirectorApp : public App {
 public:
+    
+    PhotonicDirectorApp();
     void setTheme(ImGui::Options &options);
     
     void setup() override;
@@ -35,8 +40,9 @@ public:
     void load();
     
     void pickLight();
-    
     void addLight();
+    
+    void setupOsc(int port);
     
     ~PhotonicDirectorApp();
     
@@ -56,7 +62,19 @@ protected:
     
     // Test light inspector.
     Light* lightToEdit;
+    
+    // Osc receiver.
+    osc::ReceiverUdp* mOscReceiver;
+    int mOscPort;
+    
+    void oscReceive(const osc::Message &message);
+    
 };
+
+PhotonicDirectorApp::PhotonicDirectorApp()
+: mOscReceiver(nullptr), mOscPort(10000)
+{
+}
 
 void PhotonicDirectorApp::setTheme(ImGui::Options &options) {
     options.childWindowRounding(3.f);
@@ -130,6 +148,44 @@ void PhotonicDirectorApp::setup()
     
     // Initialize params.
     mDrawGui = true;
+    setupOsc(mOscPort);
+    setupOsc(mOscPort);
+}
+
+void PhotonicDirectorApp::setupOsc(int port)
+{
+    if (mOscReceiver) {
+        mOscReceiver->close();
+        delete mOscReceiver;
+    }
+    mOscReceiver = new osc::ReceiverUdp(port);
+    // Setup osc to listen to all addresses.
+    mOscReceiver->setListener("/*",[&](const osc::Message &message){
+        console() << "Message received" << endl;
+        oscReceive(message);
+    });
+    try {
+        mOscReceiver->bind();
+    }
+    catch (const osc::Exception &ex) {
+        CI_LOG_E("Error binding: " << ex.what() << ", val:" << ex.value());
+    }
+    mOscReceiver->listen([&](asio::error_code error, protocol::endpoint endpoint) -> bool {
+        if (error) {
+            if (error.value() != 89)
+                CI_LOG_E("Error listening: " << error.message() << ", val: " << error.value() << ", endpoint: " << endpoint);
+            return false;
+        }
+        else {
+            return true;
+        }
+    });
+
+}
+
+void PhotonicDirectorApp::oscReceive(const osc::Message &message)
+{
+    console() << "Osc message received: " << message.getArgFloat(0) << ", Address:" << message.getAddress() << endl;
 }
 
 void PhotonicDirectorApp::addLight() {
@@ -202,6 +258,13 @@ void PhotonicDirectorApp::update()
             addLight();
         }
         ui::Separator();
+        ui::Text("Osc settings");
+        ui::Spacing();
+        if  (ui::InputInt("Port", &mOscPort)) {
+            setupOsc(mOscPort);
+        }
+        ui::Separator();
+        ui::Text("File");
         ui::Spacing();
         if (ui::Button("Save")) {
             save();
@@ -249,6 +312,7 @@ PhotonicDirectorApp::~PhotonicDirectorApp()
     for (Light* light : mLights) {
         delete light;
     }
+    // Delete the osc receiver.
 }
 
 CINDER_APP( PhotonicDirectorApp, RendererGl( RendererGl::Options().msaa(8)), [](cinder::app::AppBase::Settings *settings){
