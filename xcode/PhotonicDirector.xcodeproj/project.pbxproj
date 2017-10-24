@@ -34,6 +34,7 @@
 		CF8E76D61F961E9000AF8CA0 /* object_shader.fragment in Resources */ = {isa = PBXBuildFile; fileRef = CF8E76D11F961E9000AF8CA0 /* object_shader.fragment */; };
 		CF8E76D71F961E9000AF8CA0 /* object_shader.vertex in Resources */ = {isa = PBXBuildFile; fileRef = CF8E76D21F961E9000AF8CA0 /* object_shader.vertex */; };
 		CF8E76D81F961E9000AF8CA0 /* wood.jpeg in Resources */ = {isa = PBXBuildFile; fileRef = CF8E76D31F961E9000AF8CA0 /* wood.jpeg */; };
+		CFAE26781F9F76B900F98A37 /* Effects.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CFAE26761F9F76B900F98A37 /* Effects.cpp */; };
 		F332D26B5D7445DBAB9A965F /* PhotonicDirectorApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9A1CD3725C6A461694128F8B /* PhotonicDirectorApp.cpp */; };
 		FDB2AEC3D35943089ABEBDC6 /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2560C7D54AF146C58D0E3594 /* imgui_draw.cpp */; };
 /* End PBXBuildFile section */
@@ -77,6 +78,8 @@
 		CF8E76D11F961E9000AF8CA0 /* object_shader.fragment */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = object_shader.fragment; sourceTree = "<group>"; };
 		CF8E76D21F961E9000AF8CA0 /* object_shader.vertex */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = object_shader.vertex; sourceTree = "<group>"; };
 		CF8E76D31F961E9000AF8CA0 /* wood.jpeg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = wood.jpeg; sourceTree = "<group>"; };
+		CFAE26761F9F76B900F98A37 /* Effects.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Effects.cpp; path = ../src/Effects.cpp; sourceTree = "<group>"; };
+		CFAE26771F9F76B900F98A37 /* Effects.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Effects.h; path = ../src/Effects.h; sourceTree = "<group>"; };
 		DAB0870676B54A88921DD398 /* CinderImGui.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CinderImGui.h; path = ../../../cinder_0.9.1_mac/blocks/ImGui/include/CinderImGui.h; sourceTree = "<group>"; };
 		E64159DA126B4670810A3CB1 /* CinderImGui.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.cpp; name = CinderImGui.cpp; path = ../../../cinder_0.9.1_mac/blocks/ImGui/src/CinderImGui.cpp; sourceTree = "<group>"; };
 		E827F274D1F04F36BC9F1382 /* Osc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Osc.h; path = ../../../cinder_0.9.1_mac/blocks/OSC/src/cinder/osc/Osc.h; sourceTree = "<group>"; };
@@ -139,6 +142,8 @@
 				CF8E76BB1F961E5A00AF8CA0 /* Visualizer.cpp */,
 				CF8E76BE1F961E5A00AF8CA0 /* Visualizer.h */,
 				9A1CD3725C6A461694128F8B /* PhotonicDirectorApp.cpp */,
+				CFAE26761F9F76B900F98A37 /* Effects.cpp */,
+				CFAE26771F9F76B900F98A37 /* Effects.h */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -411,6 +416,7 @@
 				F332D26B5D7445DBAB9A965F /* PhotonicDirectorApp.cpp in Sources */,
 				12209226C3094747A9CE2D69 /* DMXPro.cpp in Sources */,
 				24AEDC92D60541FFB933520A /* CinderImGui.cpp in Sources */,
+				CFAE26781F9F76B900F98A37 /* Effects.cpp in Sources */,
 				1B6219A581044E87A22A2A22 /* imgui.cpp in Sources */,
 				FDB2AEC3D35943089ABEBDC6 /* imgui_draw.cpp in Sources */,
 				CF8E76BF1F961E5A00AF8CA0 /* Visualizer.cpp in Sources */,

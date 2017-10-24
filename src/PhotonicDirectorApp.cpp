@@ -8,6 +8,7 @@
 #include "cinder/Log.h"
 #include "CinderImGui.h"
 #include "Light.h"
+#include "Effects.h"
 #include "ConfigManager.h"
 #include "Visualizer.h"
 #include "Osc.h"
@@ -63,9 +64,12 @@ protected:
     // Test light inspector.
     Light* lightToEdit;
     
-    // Osc receiver.
+    // Osc related stuff.
     osc::ReceiverUdp* mOscReceiver;
     int mOscPort;
+    
+    // Channel stuff.
+    vector<InputChannelRef> mChannels;
     
     void oscReceive(const osc::Message &message);
     
@@ -186,6 +190,14 @@ void PhotonicDirectorApp::setupOsc(int port)
 void PhotonicDirectorApp::oscReceive(const osc::Message &message)
 {
     console() << "Osc message received: " << message.getArgFloat(0) << ", Address:" << message.getAddress() << endl;
+    if (mChannels.size() > 0) {
+        for (InputChannelRef channel : mChannels) {
+            console() << channel->getAddress() << std::endl;
+            if (message.getAddress() == channel->getAddress()) {
+                channel->setValue(message.getArgFloat(0));
+            }
+        }
+    }
 }
 
 void PhotonicDirectorApp::addLight() {
@@ -266,6 +278,19 @@ void PhotonicDirectorApp::update()
         if (ui::Button("Add light")) {
             addLight();
         }
+        if (ui::Button("Add Channel")) {
+            ui::OpenPopup("Create channel");
+        }
+        if (ui::BeginPopupModal("Create channel")) {
+            static char address[64];
+            ui::InputText("Address", address, 64);
+            if (ui::Button("Done")) {
+                mChannels.push_back(InputChannel::create(address));
+                ui::CloseCurrentPopup();
+            }
+            ui::EndPopup();
+        }
+
         ui::Separator();
         ui::Text("Osc settings");
         ui::Spacing();
@@ -275,11 +300,12 @@ void PhotonicDirectorApp::update()
         ui::Separator();
         ui::Text("File");
         ui::Spacing();
-        if (ui::Button("Save")) {
-            save();
-        }
         if (ui::Button("Load")) {
             load();
+        }
+        ui::SameLine();
+        if (ui::Button("Save")) {
+            save();
         }
     }
     
