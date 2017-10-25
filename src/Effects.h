@@ -10,22 +10,28 @@
 
 #include <stdio.h>
 #include "cinder/app/App.h"
+#include <ctime>
 
 class InputChannel;
 typedef std::shared_ptr<InputChannel> InputChannelRef;
 
 class InputChannel {
 public:
-    static InputChannelRef create(std::string address);
+    static InputChannelRef create(std::string name, std::string address);
     void setAdrress(std::string address);
+    void setName(const std::string name);
     void setValue(float value);
     float getValue();
+    std::string getUuid();
     std::string getAddress();
+    std::string getName() const;
     
 protected:
-    InputChannel(std::string address);
+    InputChannel(std::string name, std::string address);
     float mValue;
+    std::string uuid;
     std::string mAddress;
+    std::string mName;
 };
 
 

@@ -278,18 +278,6 @@ void PhotonicDirectorApp::update()
         if (ui::Button("Add light")) {
             addLight();
         }
-        if (ui::Button("Add Channel")) {
-            ui::OpenPopup("Create channel");
-        }
-        if (ui::BeginPopupModal("Create channel")) {
-            static char address[64];
-            ui::InputText("Address", address, 64);
-            if (ui::Button("Done")) {
-                mChannels.push_back(InputChannel::create(address));
-                ui::CloseCurrentPopup();
-            }
-            ui::EndPopup();
-        }
 
         ui::Separator();
         ui::Text("Osc settings");
@@ -306,6 +294,65 @@ void PhotonicDirectorApp::update()
         ui::SameLine();
         if (ui::Button("Save")) {
             save();
+        }
+    }
+    // Draw the channel window if there are channels.
+    static const InputChannelRef* channelSelection = nullptr;
+    {
+        
+        ui::ScopedWindow window("Channels");
+        // Add the buttons.
+        if (ui::Button("Add Channel")) {
+            ui::OpenPopup("Create channel");
+        }
+        if (ui::BeginPopupModal("Create channel")) {
+            static char channelName[64];
+            ui::InputText("Name", channelName, 64);
+            static char channelAddress[64];
+            ui::InputText("Address", channelAddress, 64);
+            if (ui::Button("Done")) {
+                mChannels.push_back(InputChannel::create(channelName, channelAddress));
+                ui::CloseCurrentPopup();
+            }
+            ui::EndPopup();
+        }
+        if (channelSelection) {
+            ui::SameLine();
+            if (ui::Button("Remove")) {
+                auto it = std::find_if(mChannels.begin(), mChannels.end(), [](const InputChannelRef& channel){ return &channel == channelSelection; });
+                if (it != mChannels.end()) {
+                    mChannels.erase(it);
+                    channelSelection = nullptr;
+                }
+            }
+        }
+        if (! ui::IsWindowCollapsed()) {
+            ui::ListBoxHeader("Edit channels");
+            for (const InputChannelRef& channel : mChannels) {
+                if (ui::Selectable(channel->getName().c_str(), channelSelection == &channel)) {
+                    channelSelection = &channel;
+                }
+                ui::SameLine();
+                float value = channel->getValue();
+                ui::SliderFloat("", &value, 0.0f, 1.0f);
+            }
+            ui::ListBoxFooter();
+        }
+    }
+    if (channelSelection != nullptr) {
+        ui::ScopedWindow window("Channel inspector");
+        
+        InputChannelRef channel = *channelSelection;
+        static std::string name = channel->getName();
+        if (ui::InputText("Name", &name)) {
+            channel->setName(name);
+        }
+        static std::string address = channel->getAddress();
+        if (ui::InputText("Address", &address)) {
+            channel->setAdrress(address);
+        }
+        if (ui::Button("Done")) {
+            channelSelection = nullptr;
         }
     }
     
