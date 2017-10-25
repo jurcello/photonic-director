@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 #include "cinder/gl/gl.h"
+#include "Effects.h"
 
 using namespace cinder;
 
@@ -19,11 +20,13 @@ struct Light
     ColorA color;
     vec4 position;
     float intensity;
+    std::string mUuid;
     
     std::map<int, float> effectIntensities;
     std::map<int, ColorA> effectColors;
     
     Light(vec3 cPosition, vec4 cColor, float cIntensity);
+    Light(vec3 cPosition, vec4 cColor, float cIntensity, std::string uuid);
     
     void setPosition(vec3 newPosition);
     vec3 getPosition();

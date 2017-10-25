@@ -47,7 +47,9 @@ void ConfigManager::readLights(std::vector<Light *> &lights)
         position.z = lightNode.getChild("position").getAttributeValue<float>("z");
         // Intensity.
         float intensity = lightNode.getChild("intensity").getValue<float>();
-        Light* newLight = new Light(position, color, intensity);
+        // Uuid.
+        std::string uuid = lightNode.getAttribute("uuid");
+        Light* newLight = new Light(position, color, intensity, uuid);
         lights.push_back(newLight);
     }
 }
@@ -60,7 +62,7 @@ void ConfigManager::readChannels(std::vector<InputChannelRef> &channels)
         for (auto channelNode : channelNodes) {
             std::string name = channelNode.getChild("name").getValue<std::string>();
             std::string address = channelNode.getChild("oscAddress").getValue<std::string>();
-            std::string uuid = channelNode.getChild("uuid").getValue<std::string>();
+            std::string uuid = channelNode.getAttributeValue<std::string>("uuid");
             InputChannelRef newChannel = InputChannel::create(name, address, uuid);
             channels.push_back(newChannel);
         }
@@ -91,6 +93,7 @@ void ConfigManager::writeLights(std::vector<Light *> &lights)
     for (Light* light : lights) {
         XmlTree lightNode;
         lightNode.setTag("light");
+        lightNode.setAttribute("uuid", light->mUuid);
         XmlTree position;
         position.setTag("position");
         position.setAttribute("x", light->position.x);
@@ -128,12 +131,9 @@ void ConfigManager::writeChannels(std::vector<InputChannelRef> &channels) {
         XmlTree addressNode;
         addressNode.setTag("oscAddress");
         addressNode.setValue(channel->getAddress());
-        XmlTree uuidNode;
-        uuidNode.setTag("uuid");
-        uuidNode.setValue(channel->getUuid());
+        channelNode.setAttribute("uuid", channel->getUuid());
         channelNode.push_back(nameNode);
         channelNode.push_back(addressNode);
-        channelNode.push_back(uuidNode);
         channelsNode.push_back(channelNode);
     }
     mDoc.push_back(channelsNode);

@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include "cinder/app/App.h"
 #include <ctime>
+#include <uuid/uuid.h>
 
 class InputChannel;
 typedef std::shared_ptr<InputChannel> InputChannelRef;
@@ -34,6 +35,14 @@ protected:
     std::string mName;
 };
 
-
+// I know that this is not system indepedent, but this can easily be fixed once needed.
+inline std::string generate_uuid()
+{
+    uuid_t uuid;
+    uuid_generate_random(uuid);
+    char s[37];
+    uuid_unparse(uuid, s);
+    return s;
+}
 
 #endif /* Effects_h */

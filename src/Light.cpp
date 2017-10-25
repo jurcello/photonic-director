@@ -13,6 +13,12 @@ using namespace cinder::app;
 Light::Light(vec3 cPosition, vec4 cColor, float cIntensity)
 : position(vec4(cPosition, 1.0f)), color(cColor), intensity(cIntensity)
 {
+    mUuid = generate_uuid();
+}
+
+Light::Light(vec3 cPosition, vec4 cColor, float cIntensity, std::string uuid)
+: position(vec4(cPosition, 1.0f)), color(cColor), intensity(cIntensity), mUuid(uuid)
+{
 }
 
 void Light::setPosition(vec3 newPosition)

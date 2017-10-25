@@ -165,7 +165,6 @@ void PhotonicDirectorApp::setupOsc(int port)
     mOscReceiver = new osc::ReceiverUdp(port);
     // Setup osc to listen to all addresses.
     mOscReceiver->setListener("/*",[&](const osc::Message &message){
-        console() << "Message received" << endl;
         oscReceive(message);
     });
     try {
@@ -189,7 +188,6 @@ void PhotonicDirectorApp::setupOsc(int port)
 
 void PhotonicDirectorApp::oscReceive(const osc::Message &message)
 {
-    console() << "Osc message received: " << message.getArgFloat(0) << ", Address:" << message.getAddress() << endl;
     if (mChannels.size() > 0) {
         for (InputChannelRef channel : mChannels) {
             console() << channel->getAddress() << std::endl;

@@ -18,7 +18,7 @@ InputChannel::InputChannel(std::string name, std::string address, std::string uu
 : mName(name), mAddress(address), mValue(0.f), mUuid(uuid)
 {
     if (mUuid == "")
-        mUuid = std::to_string(time(0));
+        mUuid = generate_uuid();
 }
 
 void InputChannel::setAdrress(std::string address)
@@ -34,7 +34,6 @@ void InputChannel::setName(const std::string name)
 void InputChannel::setValue(float value)
 {
     mValue = value;
-    console() << "Value received: " << value << std::endl;
 }
 
 float InputChannel::getValue()
@@ -56,3 +55,4 @@ std::string InputChannel::getName() const
 {
     return mName;
 }
+
