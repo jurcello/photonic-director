@@ -9,6 +9,7 @@
 
 using namespace cinder;
 using namespace cinder::app;
+using namespace photonic;
 
 Light::Light(vec3 cPosition, vec4 cColor, float cIntensity)
 : position(vec4(cPosition, 1.0f)), color(cColor), intensity(cIntensity)

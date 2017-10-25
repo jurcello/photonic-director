@@ -10,7 +10,7 @@
 
 #include <stdio.h>
 #include "cinder/gl/gl.h"
-#include "Effects.h"
+#include "Utils.h"
 
 using namespace cinder;
 

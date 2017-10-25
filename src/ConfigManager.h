@@ -14,6 +14,8 @@
 #include "Light.h"
 #include "Effects.h"
 
+using namespace photonic;
+
 class ConfigManager {
 public:
     ConfigManager();

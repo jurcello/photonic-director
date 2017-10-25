@@ -8,6 +8,11 @@
 #include "Effects.h"
 
 using namespace cinder::app;
+using namespace ph;
+
+//////////////////////////////////////////////////////////////////
+/// Start channels.
+//////////////////////////////////////////////////////////////////
 
 InputChannelRef InputChannel::create(std::string name, std::string address, std::string uuid)
 {
@@ -56,3 +61,62 @@ std::string InputChannel::getName() const
     return mName;
 }
 
+//////////////////////////////////////////////////////////////////
+/// Start effects.
+//////////////////////////////////////////////////////////////////
+
+Effect::Effect(std::string name)
+:mName(name), mUuid(generate_uuid())
+{
+}
+
+Effect::Effect(std::string name, std::string uuid)
+:mName(name), mUuid(uuid)
+{
+}
+
+std::string Effect::getUuid()
+{
+    return mUuid;
+}
+
+std::string Effect::getName()
+{
+    return mName;
+}
+
+void Effect::setName(std::string name)
+{
+    mName = name;
+}
+
+void Effect::addLight(Light* light)
+{
+    // First check if the light is present.
+    auto it = std::find(mLights.begin(), mLights.end(), light);
+    if (it == mLights.end())
+        mLights.push_back(light);
+}
+
+void Effect::removeLight(Light *light)
+{
+    auto it = std::find(mLights.begin(), mLights.end(), light);
+    if (it != mLights.end())
+        mLights.erase(it);
+}
+
+void Effect::setChannel(InputChannelRef channel)
+{
+    mChannel = channel;
+}
+
+InputChannelRef Effect::getChannel()
+{
+    return mChannel;
+}
+
+void Effect::execute(float dt) {
+    for (Light* light: mLights) {
+        light->intensity = mChannel->getValue();
+    }
+}
