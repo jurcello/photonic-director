@@ -72,7 +72,11 @@ protected:
     // Channel stuff.
     vector<InputChannelRef> mChannels;
     
+    // Effects.
+    vector<EffectRef> mEffects;
+    
     void oscReceive(const osc::Message &message);
+    void drawGui();
     
 };
 
@@ -235,8 +239,6 @@ void PhotonicDirectorApp::keyDown( KeyEvent event)
         exit(0);
     if (event.getChar() == 'g') {
         mDrawGui = !mDrawGui;
-        ImGuiStyle& imGuiStyle            = ImGui::GetStyle();
-        imGuiStyle.Alpha            = mDrawGui ? 1.0f : 0.0f;
     }
 }
 
@@ -273,13 +275,28 @@ void PhotonicDirectorApp::update()
 {
     pickLight();
     
+    if (mDrawGui) {
+        drawGui();
+    }
+    
+    
+    /////////////////////////////////////////////
+    // Effect handling.
+    /////////////////////////////////////////////
+    for (auto effect : mEffects) {
+        effect->execute(0.f);
+    }
+}
+
+void PhotonicDirectorApp::drawGui()
+{
     // Draw the general ui.
     {
         ui::ScopedWindow window("Controls");
         if (ui::Button("Add light")) {
             addLight();
         }
-
+        
         ui::Separator();
         ui::Text("Osc settings");
         ui::Spacing();
@@ -356,6 +373,74 @@ void PhotonicDirectorApp::update()
             channelSelection = nullptr;
         }
     }
+    
+    // Effects ui.
+    static const EffectRef* effectSelection = nullptr;
+    {
+        ui::ScopedWindow window("Effects");
+        // Add the button.
+        if (ui::Button("Create Effect")) {
+            ui::OpenPopup("Create effect");
+        }
+        if (ui::BeginPopupModal("Create effect")) {
+            static std::string effectName;
+            ui::InputText("Name", &effectName);
+            if (ui::Button("Done")) {
+                EffectRef newEffect = Effect::create(effectName);
+                // TODO: Now add all lights. Later lights should be picked.
+                for (auto light : mLights) {
+                    newEffect->addLight(light);
+                }
+                mEffects.push_back(newEffect);
+                ui::CloseCurrentPopup();
+            }
+            ui::EndPopup();
+        }
+        if (effectSelection) {
+            ui::SameLine();
+            if (ui::Button("Remove")) {
+                auto it = std::find(mEffects.begin(), mEffects.end(), *effectSelection);
+                if (it != mEffects.end()) {
+                    mEffects.erase(it);
+                    effectSelection = nullptr;
+                }
+            }
+        }
+        if (! ui::IsWindowCollapsed()) {
+            ui::ListBoxHeader("Edit effects");
+            for (const EffectRef& effect : mEffects) {
+                if (ui::Selectable(effect->getName().c_str(), effectSelection == &effect)) {
+                    effectSelection = &effect;
+                }
+            }
+            ui::ListBoxFooter();
+        }
+    }
+    if (effectSelection != nullptr) {
+        ui::ScopedWindow window("Effect inspector");
+        
+        EffectRef effect = *effectSelection;
+        static std::string name = effect->getName();
+        if (ui::InputText("Name", &name)) {
+            effect->setName(name);
+        }
+        ui::Separator();
+        ui::Spacing();
+        if (! ui::IsWindowCollapsed()) {
+            ui::ListBoxHeader("Choose input channel",mChannels.size());
+            for (auto channel : mChannels) {
+                if (ui::Selectable(channel->getName().c_str(), channel == effect->getChannel())) {
+                    effect->setChannel(channel);
+                }
+            }
+            ui::ListBoxFooter();
+        }
+        
+        if (ui::Button("Done")) {
+            effectSelection = nullptr;
+        }
+    }
+    
     
     if (lightToEdit) {
         ui::ScopedWindow lightEditWindow("Edit light");

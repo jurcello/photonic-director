@@ -36,8 +36,13 @@ namespace photonic {
         std::string mName;
     };
     
+    class Effect;
+    typedef std::shared_ptr<Effect> EffectRef;
+    
     class Effect {
     public:
+        static EffectRef create(std::string name);
+        static EffectRef create(std::string name, std::string uuid);
         Effect(std::string name);
         Effect(std::string name, std::string uuid);
         std::string getUuid();

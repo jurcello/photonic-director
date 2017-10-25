@@ -65,6 +65,16 @@ std::string InputChannel::getName() const
 /// Start effects.
 //////////////////////////////////////////////////////////////////
 
+EffectRef Effect::create(std::string name)
+{
+    return EffectRef(new Effect(name));
+}
+
+EffectRef Effect::create(std::string name, std::string uuid)
+{
+    return EffectRef(new Effect(name, uuid));
+}
+
 Effect::Effect(std::string name)
 :mName(name), mUuid(generate_uuid())
 {
@@ -117,6 +127,7 @@ InputChannelRef Effect::getChannel()
 
 void Effect::execute(float dt) {
     for (Light* light: mLights) {
-        light->intensity = mChannel->getValue();
+        if (mChannel)
+            light->intensity = mChannel->getValue();
     }
 }
