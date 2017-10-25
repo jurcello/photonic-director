@@ -17,7 +17,7 @@ typedef std::shared_ptr<InputChannel> InputChannelRef;
 
 class InputChannel {
 public:
-    static InputChannelRef create(std::string name, std::string address);
+    static InputChannelRef create(std::string name, std::string address, std::string uuid = "");
     void setAdrress(std::string address);
     void setName(const std::string name);
     void setValue(float value);
@@ -27,9 +27,9 @@ public:
     std::string getName() const;
     
 protected:
-    InputChannel(std::string name, std::string address);
+    InputChannel(std::string name, std::string address, std::string uuid = "");
     float mValue;
-    std::string uuid;
+    std::string mUuid;
     std::string mAddress;
     std::string mName;
 };

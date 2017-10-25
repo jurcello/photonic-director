@@ -9,15 +9,16 @@
 
 using namespace cinder::app;
 
-InputChannelRef InputChannel::create(std::string name, std::string address)
+InputChannelRef InputChannel::create(std::string name, std::string address, std::string uuid)
 {
-    return InputChannelRef(new InputChannel(name, address));
+    return InputChannelRef(new InputChannel(name, address, uuid));
 }
 
-InputChannel::InputChannel(std::string name, std::string address)
-: mName(name), mAddress(address), mValue(0.f)
+InputChannel::InputChannel(std::string name, std::string address, std::string uuid)
+: mName(name), mAddress(address), mValue(0.f), mUuid(uuid)
 {
-    uuid = std::to_string(time(0));
+    if (mUuid == "")
+        mUuid = std::to_string(time(0));
 }
 
 void InputChannel::setAdrress(std::string address)
@@ -43,7 +44,7 @@ float InputChannel::getValue()
 
 std::string InputChannel::getUuid()
 {
-    return uuid;
+    return mUuid;
 }
 
 std::string InputChannel::getAddress()

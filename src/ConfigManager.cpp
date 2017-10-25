@@ -52,6 +52,22 @@ void ConfigManager::readLights(std::vector<Light *> &lights)
     }
 }
 
+void ConfigManager::readChannels(std::vector<InputChannelRef> &channels)
+{
+    channels.clear();
+    try {
+        auto channelNodes= mDoc.getChild("channels");
+        for (auto channelNode : channelNodes) {
+            std::string name = channelNode.getChild("name").getValue<std::string>();
+            std::string address = channelNode.getChild("oscAddress").getValue<std::string>();
+            std::string uuid = channelNode.getChild("uuid").getValue<std::string>();
+            InputChannelRef newChannel = InputChannel::create(name, address, uuid);
+            channels.push_back(newChannel);
+        }
+    } catch (Exception e){
+        // Although the node is not found, we load anyway...
+    }
+}
 int ConfigManager::readInt(std::string name)
 {
     if (mDoc.hasChild(name)) {
@@ -98,6 +114,29 @@ void ConfigManager::writeLights(std::vector<Light *> &lights)
         lightsNode.push_back(lightNode);
     }
     mDoc.push_back(lightsNode);
+}
+
+void ConfigManager::writeChannels(std::vector<InputChannelRef> &channels) {
+    XmlTree channelsNode;
+    channelsNode.setTag("channels");
+    for (InputChannelRef channel : channels) {
+        XmlTree channelNode;
+        channelNode.setTag("channel");
+        XmlTree nameNode;
+        nameNode.setTag("Name");
+        nameNode.setValue(channel->getName());
+        XmlTree addressNode;
+        addressNode.setTag("oscAddress");
+        addressNode.setValue(channel->getAddress());
+        XmlTree uuidNode;
+        uuidNode.setTag("uuid");
+        uuidNode.setValue(channel->getUuid());
+        channelNode.push_back(nameNode);
+        channelNode.push_back(addressNode);
+        channelNode.push_back(uuidNode);
+        channelsNode.push_back(channelNode);
+    }
+    mDoc.push_back(channelsNode);
 }
 
 void ConfigManager::writeInt(std::string name, int value)
