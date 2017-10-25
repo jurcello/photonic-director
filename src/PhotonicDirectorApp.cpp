@@ -195,7 +195,6 @@ void PhotonicDirectorApp::oscReceive(const osc::Message &message)
 {
     if (mChannels.size() > 0) {
         for (InputChannelRef channel : mChannels) {
-            console() << channel->getAddress() << std::endl;
             if (message.getAddress() == channel->getAddress()) {
                 channel->setValue(message.getArgFloat(0));
             }
@@ -361,11 +360,14 @@ void PhotonicDirectorApp::drawGui()
         ui::ScopedWindow window("Channel inspector");
         
         InputChannelRef channel = *channelSelection;
-        static std::string name = channel->getName();
+        static std::string name;
+        name = channel->getName();
+        console() << "Name: " << name << std::endl;
         if (ui::InputText("Name", &name)) {
             channel->setName(name);
         }
-        static std::string address = channel->getAddress();
+        static std::string address;
+        address = channel->getAddress();
         if (ui::InputText("Address", &address)) {
             channel->setAdrress(address);
         }
@@ -420,7 +422,8 @@ void PhotonicDirectorApp::drawGui()
         ui::ScopedWindow window("Effect inspector");
         
         EffectRef effect = *effectSelection;
-        static std::string name = effect->getName();
+        static std::string name;
+        name = effect->getName();
         if (ui::InputText("Name", &name)) {
             effect->setName(name);
         }
