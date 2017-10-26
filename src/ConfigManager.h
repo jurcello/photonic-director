@@ -22,11 +22,13 @@ public:
     void readFromFile(fs::path path);
     void readLights(std::vector<Light*> &lights);
     void readChannels(std::vector<InputChannelRef> &channels);
+    void readEffects(std::vector<EffectRef> &effects, const std::vector<Light*> &lights, const std::vector<InputChannelRef> &channels);
     int readInt(std::string name);
     
     void startNewDoc();
     void writeLights(std::vector<Light*> &lights);
     void writeChannels(std::vector<InputChannelRef> &channels);
+    void writeEffects(std::vector<EffectRef> &effects);
     void writeInt(std::string name, int value);
     void writeToFile(fs::path path);
     

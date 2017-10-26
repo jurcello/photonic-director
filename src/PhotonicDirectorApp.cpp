@@ -249,6 +249,7 @@ void PhotonicDirectorApp::save()
         config.startNewDoc();
         config.writeLights(mLights);
         config.writeChannels(mChannels);
+        config.writeEffects(mEffects);
         config.writeInt("oscPort", mOscPort);
         config.writeToFile(savePath);
     }
@@ -267,6 +268,7 @@ void PhotonicDirectorApp::load()
         }
         config.readLights(mLights);
         config.readChannels(mChannels);
+        config.readEffects(mEffects, mLights, mChannels);
     }
 }
 

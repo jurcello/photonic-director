@@ -115,6 +115,11 @@ void Effect::removeLight(Light *light)
         mLights.erase(it);
 }
 
+std::vector<Light*> Effect::getLights()
+{
+    return mLights;
+}
+
 void Effect::setChannel(InputChannelRef channel)
 {
     mChannel = channel;

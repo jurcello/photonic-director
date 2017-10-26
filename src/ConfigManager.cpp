@@ -70,6 +70,40 @@ void ConfigManager::readChannels(std::vector<InputChannelRef> &channels)
         // Although the node is not found, we load anyway...
     }
 }
+
+void ConfigManager::readEffects(std::vector<EffectRef> &effects, const std::vector<Light *> &lights, const std::vector<InputChannelRef> &channels)
+{
+    effects.clear();
+    if (mDoc.hasChild("effects")) {
+        auto effectsNodes = mDoc.getChild("effects");
+        for (auto effectNode : effectsNodes) {
+            std::string name = effectNode.getChild("name").getValue();
+            std::string uuid = effectNode.getAttributeValue<std::string>("uuid");
+            // Create the effect.
+            EffectRef newEffect = Effect::create(name, uuid);
+            if (effectNode.hasChild("channel")) {
+                std::string channelUuid = effectNode.getChild("channel").getValue();
+                // Get the channel from the uuid.
+                auto it = std::find_if(channels.begin(), channels.end(), [&channelUuid](const InputChannelRef &channelCandidate){ return channelCandidate->getUuid() == channelUuid;});
+                if (it != channels.end()) {
+                    newEffect->setChannel(*it);
+                }
+            }
+            if (effectNode.hasChild("lights")) {
+                for (const auto &lightNode : effectNode.getChild("lights").getChildren()) {
+                    std::string lightUuid = lightNode->getValue();
+                    auto it = std::find_if(lights.begin(), lights.end(), [&lightUuid](const Light* lightCandidate){ return lightCandidate->mUuid == lightUuid;});
+                    if (it != lights.end()) {
+                        newEffect->addLight(*it);
+                    }
+                }
+            }
+            effects.push_back(newEffect);
+        }
+        
+    }
+}
+
 int ConfigManager::readInt(std::string name)
 {
     if (mDoc.hasChild(name)) {
@@ -137,6 +171,36 @@ void ConfigManager::writeChannels(std::vector<InputChannelRef> &channels) {
         channelsNode.push_back(channelNode);
     }
     mDoc.push_back(channelsNode);
+}
+
+void ConfigManager::writeEffects(std::vector<EffectRef> &effects)
+{
+    XmlTree effectsNode;
+    effectsNode.setTag("effects");
+    for (auto effect : effects) {
+        XmlTree effectNode;
+        effectNode.setTag("effect");
+        effectNode.setAttribute("uuid", effect->getUuid());
+        XmlTree nameNode;
+        nameNode.setTag("name");
+        nameNode.setValue(effect->getName());
+        effectNode.push_back(nameNode);
+        XmlTree channelNode;
+        channelNode.setTag("channel");
+        channelNode.setValue(effect->getChannel()->getUuid());
+        effectNode.push_back(channelNode);
+        XmlTree lightsNode;
+        lightsNode.setTag("lights");
+        for (auto light : effect->getLights()) {
+            XmlTree lightNode;
+            lightNode.setTag("light");
+            lightNode.setValue(light->mUuid);
+            lightsNode.push_back(lightNode);
+        }
+        effectNode.push_back(lightsNode);
+        effectsNode.push_back(effectNode);
+    }
+    mDoc.push_back(effectsNode);
 }
 
 void ConfigManager::writeInt(std::string name, int value)
