@@ -9,6 +9,8 @@
 #define Utils_h
 
 #include <uuid/uuid.h>
+
+
 // I know that this is not system indepedent, but this can easily be fixed once needed.
 namespace photonic {
     inline std::string generate_uuid()
@@ -18,7 +20,7 @@ namespace photonic {
         char s[37];
         uuid_unparse(uuid, s);
         return s;
-    }
+    }    
 }
 
 #endif /* Utils_h */

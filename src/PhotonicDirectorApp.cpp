@@ -22,6 +22,22 @@ using protocol = asio::ip::udp;
 const int WINDOW_WIDTH = 1024;
 const int WINDOW_HEIGHT = 768;
 
+enum gui_status {
+    IDLE,
+    EDITING_LIGHT,
+    ADDING_LIGHT_TO_EFFECT
+};
+
+struct GuiStatusData {
+    EffectRef pickLightEffect;
+    Light* lightToEdit;
+    Light* pickedLight;
+    bool drawGui;
+    
+    gui_status status;
+};
+
+
 class PhotonicDirectorApp : public App {
 public:
     
@@ -53,17 +69,8 @@ protected:
     
     vector<Light*> mLights;
     
-    // Light picking.
-    Light* pickedLight;
-    
     // Visualizer.
     Visualizer mVisualizer;
-    
-    // Create parameters
-    bool mDrawGui;
-    
-    // Test light inspector.
-    Light* lightToEdit;
     
     // Osc related stuff.
     osc::ReceiverUdp* mOscReceiver;
@@ -74,7 +81,6 @@ protected:
     
     // Effects.
     vector<EffectRef> mEffects;
-    EffectRef mPickLightEffect;
     
     void oscReceive(const osc::Message &message);
     // Gui stuff.
@@ -82,13 +88,20 @@ protected:
     void drawChannelControls();
     void drawLightControls();
     void drawEffectControls();
+    GuiStatusData mGuiStatusData;
 
     
 };
 
 PhotonicDirectorApp::PhotonicDirectorApp()
-: mOscReceiver(nullptr), mOscPort(10000), mPickLightEffect(nullptr)
+: mOscReceiver(nullptr), mOscPort(10000)
 {
+    mGuiStatusData.pickLightEffect = nullptr;
+    mGuiStatusData.lightToEdit = nullptr;
+    mGuiStatusData.pickedLight = nullptr;
+    mGuiStatusData.drawGui = true;
+    
+    mGuiStatusData.status = IDLE;
 }
 
 void PhotonicDirectorApp::setTheme(ImGui::Options &options) {
@@ -147,11 +160,9 @@ void PhotonicDirectorApp::setTheme(ImGui::Options &options) {
 
 void PhotonicDirectorApp::setup()
 {
-    lightToEdit = nullptr;
     ImGui::Options options;
     setTheme(options);
     ImGui::initialize(options);
-    pickedLight = nullptr;
     
     // Setup some initial lights.
     mLights.push_back(new Light(vec3(2.0f, 2.0f, 0.0f), vec4(1.0f, 0.0f, 0.0f, 1.0f), 0.6f));
@@ -162,7 +173,6 @@ void PhotonicDirectorApp::setup()
     mVisualizer.setup(mLights);
     
     // Initialize params.
-    mDrawGui = true;
     setupOsc(mOscPort);
     setupOsc(mOscPort);
 }
@@ -211,21 +221,25 @@ void PhotonicDirectorApp::oscReceive(const osc::Message &message)
 void PhotonicDirectorApp::addLight() {
     Light* newLight = new Light(vec3(1.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), 0.5f);
     mLights.push_back(newLight);
-    lightToEdit = newLight;
+    mGuiStatusData.lightToEdit = newLight;
+    mGuiStatusData.status = EDITING_LIGHT;
 }
 
 void PhotonicDirectorApp::mouseDown( MouseEvent event )
 {
     mVisualizer.mouseDown(event);
-    if (pickedLight) {
-        // Only do 1 action with the picked light.
-        if (mPickLightEffect != nullptr) {
-            mPickLightEffect->toggleLight(pickedLight);
-        }
-        else {
-            lightToEdit = pickedLight;
-        }
-
+    switch (mGuiStatusData.status) {
+        case ADDING_LIGHT_TO_EFFECT:
+            if (mGuiStatusData.pickedLight != nullptr && mGuiStatusData.pickLightEffect != nullptr) {
+                mGuiStatusData.pickLightEffect->toggleLight(mGuiStatusData.pickedLight);
+            }
+            break;
+            
+        default:
+            if (mGuiStatusData.pickedLight != nullptr) {
+                mGuiStatusData.lightToEdit = mGuiStatusData.pickedLight;
+            }
+            break;
     }
 }
 
@@ -249,7 +263,7 @@ void PhotonicDirectorApp::keyDown( KeyEvent event)
     if (event.getChar() == KeyEvent::KEY_ESCAPE)
         exit(0);
     if (event.getChar() == 'g') {
-        mDrawGui = !mDrawGui;
+        mGuiStatusData.drawGui = !mGuiStatusData.drawGui;
     }
 }
 
@@ -288,7 +302,7 @@ void PhotonicDirectorApp::update()
 {
     pickLight();
     
-    if (mDrawGui) {
+    if (mGuiStatusData.drawGui) {
         drawGui();
     }
     
@@ -348,36 +362,38 @@ void PhotonicDirectorApp::drawLightControls()
     if (ui::Button("Add")) {
         Light* newLight = new Light(vec3(1.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), 0.5f);
         mLights.push_back(newLight);
-        lightToEdit = newLight;
+        mGuiStatusData.lightToEdit = newLight;
+        mGuiStatusData.status = EDITING_LIGHT;
     }
-    if (lightToEdit) {
+    if (mGuiStatusData.lightToEdit) {
         ui::SameLine();
         if (ui::Button("Remove")) {
-            auto it = std::find(mLights.begin(), mLights.end(), lightToEdit);
+            auto it = std::find(mLights.begin(), mLights.end(), mGuiStatusData.lightToEdit);
             if (it != mLights.end()) {
                 mLights.erase(it);
-                delete lightToEdit;
-                lightToEdit = nullptr;
+                delete mGuiStatusData.lightToEdit;
+                mGuiStatusData.lightToEdit = nullptr;
             }
         }
     }
     if (! ui::IsWindowCollapsed()) {
         ui::ListBoxHeader("Edit lights");
         for (Light* light: mLights) {
-            if (ui::Selectable(light->mName.c_str(), lightToEdit == light)) {
-                lightToEdit = light;
+            if (ui::Selectable(light->mName.c_str(), mGuiStatusData.lightToEdit == light)) {
+                mGuiStatusData.lightToEdit = light;
             }
         }
         ui::ListBoxFooter();
     }
-    if (lightToEdit) {
+    if (mGuiStatusData.lightToEdit) {
         ui::ScopedWindow lightEditWindow("Edit light");
-        ui::InputText("Name", &lightToEdit->mName);
-        ui::SliderFloat("Intensity", &lightToEdit->intensity, 0.f, 1.f);
-        ui::ColorEdit4("Color", &lightToEdit->color[0]);
-        ui::DragFloat3("Position", &lightToEdit->position[0]);
+        ui::InputText("Name", &mGuiStatusData.lightToEdit->mName);
+        ui::SliderFloat("Intensity", &mGuiStatusData.lightToEdit->intensity, 0.f, 1.f);
+        ui::ColorEdit4("Color", &mGuiStatusData.lightToEdit->color[0]);
+        ui::DragFloat3("Position", &mGuiStatusData.lightToEdit->position[0]);
         if (ui::Button("Done")) {
-            lightToEdit = nullptr;
+            mGuiStatusData.lightToEdit = nullptr;
+            mGuiStatusData.status = IDLE;
         }
     }
 }
@@ -513,15 +529,24 @@ void PhotonicDirectorApp::drawEffectControls()
             }
             ui::ListBoxFooter();
         }
-        std::string lightSelectText = mPickLightEffect == nullptr ? "Select/Deselect lights" : "Done selecting lights";
+        std::string lightSelectText = mGuiStatusData.status == ADDING_LIGHT_TO_EFFECT ? "Done selecting lights" : "Select/Deselect lights";
         if (ui::Button(lightSelectText.c_str())) {
-            mPickLightEffect = mPickLightEffect == nullptr ? *effectSelection : nullptr;
-            mVisualizer.enableEditingMode();
+            // Toggle the state of the gui.
+            mGuiStatusData.status = (mGuiStatusData.status == IDLE) ? ADDING_LIGHT_TO_EFFECT : IDLE;
+            if (mGuiStatusData.status == ADDING_LIGHT_TO_EFFECT) {
+                mGuiStatusData.pickLightEffect = *effectSelection;
+                mVisualizer.enableEditingMode();
+            }
+            else {
+                mGuiStatusData.pickLightEffect = nullptr;
+                mVisualizer.disableEditingMode();
+            }
         }
         
         if (ui::Button("Done")) {
             effectSelection = nullptr;
-            mPickLightEffect = nullptr;
+            mGuiStatusData.pickLightEffect = nullptr;
+            mGuiStatusData.status = IDLE;
             mVisualizer.disableEditingMode();
         }
     }
@@ -535,7 +560,7 @@ void PhotonicDirectorApp::resize()
 
 void PhotonicDirectorApp::pickLight()
 {
-    pickedLight = mVisualizer.pickLight(mLights);
+    mGuiStatusData.pickedLight = mVisualizer.pickLight(mLights);
 }
 
 void PhotonicDirectorApp::draw()
@@ -545,18 +570,31 @@ void PhotonicDirectorApp::draw()
     
     mVisualizer.draw(mLights);
     
-    if (pickedLight) {
-        mVisualizer.highLightLight(pickedLight);
-    }
-    if (lightToEdit) {
-        mVisualizer.highLightLight(lightToEdit, Color(0.f, 1.f, 1.f));
-    }
-    if (mPickLightEffect != nullptr) {
-        auto effectLights = mPickLightEffect->getLights();
-        for (auto light : effectLights) {
-            mVisualizer.highLightLight(light, Color(0.f, 1.f, 0.f));
+    // Delegate some gui drawing to the visualizer.
+    if (mGuiStatusData.status != IDLE) {
+        switch (mGuiStatusData.status) {
+            case EDITING_LIGHT:
+                if (mGuiStatusData.lightToEdit != nullptr) {
+                    mVisualizer.highLightLight(mGuiStatusData.lightToEdit, Color(0.f, 1.f, 1.f));
+                }
+                break;
+
+            case ADDING_LIGHT_TO_EFFECT:
+                if (mGuiStatusData.pickLightEffect != nullptr) {
+                    auto effectLights = mGuiStatusData.pickLightEffect->getLights();
+                    for (auto light : effectLights) {
+                        mVisualizer.highLightLight(light, Color(0.f, 1.f, 0.f));
+                    }
+                }
+
+            default:
+                break;
         }
     }
+    if (mGuiStatusData.pickedLight) {
+        mVisualizer.highLightLight(mGuiStatusData.pickedLight);
+    }
+
 }
 
 PhotonicDirectorApp::~PhotonicDirectorApp()
