@@ -115,6 +115,17 @@ void Effect::removeLight(Light *light)
         mLights.erase(it);
 }
 
+void Effect::toggleLight(Light *light)
+{
+    auto it = std::find(mLights.begin(), mLights.end(), light);
+    if (it != mLights.end()) {
+        mLights.erase(it);
+    }
+    else {
+        mLights.push_back(light);
+    }    
+}
+
 std::vector<Light*> Effect::getLights()
 {
     return mLights;

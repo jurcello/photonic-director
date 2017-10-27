@@ -23,12 +23,16 @@ using namespace ci::app;
 // This class is mainly intended to keep the main app more readable.
 class Visualizer {
 public:
+    Visualizer();
     void setup(std::vector<Light*> lights);
     void mouseDown(MouseEvent event);
     void mouseUp(MouseEvent event);
     void mouseDrag(MouseEvent event);
     void mouseMove(MouseEvent event);
     void draw(std::vector<Light*> lights);
+    
+    void enableEditingMode();
+    void disableEditingMode();
     
     void resize();
     Light* pickLight(std::vector<Light*> lights);
@@ -52,6 +56,7 @@ protected:
     vec2 mMousePos;
     
     void drawLight(Light* light);
+    bool mEditingMode;
     
     
 };

@@ -7,6 +7,12 @@
 
 #include "Visualizer.h"
 
+
+Visualizer::Visualizer()
+:mEditingMode(false)
+{
+}
+
 void Visualizer::setup(std::vector<Light*> lights)
 {
     mMousePos = vec2(0.f);
@@ -111,6 +117,16 @@ void Visualizer::draw(std::vector<Light *> lights)
     }
 }
 
+void Visualizer::enableEditingMode()
+{
+    mEditingMode = true;
+}
+
+void Visualizer::disableEditingMode()
+{
+    mEditingMode = false;
+}
+
 Light* Visualizer::pickLight(std::vector<Light*> lights)
 {
     float u = mMousePos.x / (float) getWindowWidth();
@@ -153,7 +169,9 @@ void Visualizer::drawLight(Light *light)
     gl::translate(vec3(light->position));
     gl::scale(vec3(LIGHT_SPHERE_SIZE));
     mLightShader->uniform("LightColor", light->color);
-    mLightShader->uniform("LightIntensity", light->intensity);
+    // If in editingmode, draw a light at full intensity,
+    float intensity = mEditingMode ? 1.f : light->intensity;
+    mLightShader->uniform("LightIntensity", intensity);
     mLight->draw();
     gl::popMatrices();
 

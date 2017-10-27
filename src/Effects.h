@@ -50,6 +50,7 @@ namespace photonic {
         void setName(std::string name);
         void addLight(Light* light);
         void removeLight(Light* light);
+        void toggleLight(Light* light);
         std::vector<Light*> getLights();
         void setChannel(InputChannelRef channel);
         InputChannelRef getChannel();

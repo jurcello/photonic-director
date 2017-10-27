@@ -74,11 +74,11 @@ protected:
     
     // Effects.
     vector<EffectRef> mEffects;
+    EffectRef mPickLightEffect;
     
     void oscReceive(const osc::Message &message);
     // Gui stuff.
     void drawGui();
-    void drawGeneralControls();
     void drawChannelControls();
     void drawLightControls();
     void drawEffectControls();
@@ -87,7 +87,7 @@ protected:
 };
 
 PhotonicDirectorApp::PhotonicDirectorApp()
-: mOscReceiver(nullptr), mOscPort(10000)
+: mOscReceiver(nullptr), mOscPort(10000), mPickLightEffect(nullptr)
 {
 }
 
@@ -218,8 +218,14 @@ void PhotonicDirectorApp::mouseDown( MouseEvent event )
 {
     mVisualizer.mouseDown(event);
     if (pickedLight) {
-//        editLight(pickedLight);
-        lightToEdit = pickedLight;
+        // Only do 1 action with the picked light.
+        if (mPickLightEffect != nullptr) {
+            mPickLightEffect->toggleLight(pickedLight);
+        }
+        else {
+            lightToEdit = pickedLight;
+        }
+
     }
 }
 
@@ -336,13 +342,6 @@ void PhotonicDirectorApp::drawGui()
     }
 }
 
-void PhotonicDirectorApp::drawGeneralControls()
-{
-    {
-        
-    }
-}
-
 void PhotonicDirectorApp::drawLightControls()
 {
     ui::ScopedWindow window("Lights");
@@ -453,7 +452,7 @@ void PhotonicDirectorApp::drawEffectControls()
 {
     
     // Effects ui.
-    static const EffectRef* effectSelection = nullptr;
+    static EffectRef* effectSelection = nullptr;
     {
         ui::ScopedWindow window("Effects");
         // Add the button.
@@ -486,7 +485,7 @@ void PhotonicDirectorApp::drawEffectControls()
         }
         if (! ui::IsWindowCollapsed()) {
             ui::ListBoxHeader("Edit effects");
-            for (const EffectRef& effect : mEffects) {
+            for (EffectRef& effect : mEffects) {
                 if (ui::Selectable(effect->getName().c_str(), effectSelection == &effect)) {
                     effectSelection = &effect;
                 }
@@ -514,9 +513,16 @@ void PhotonicDirectorApp::drawEffectControls()
             }
             ui::ListBoxFooter();
         }
+        std::string lightSelectText = mPickLightEffect == nullptr ? "Select/Deselect lights" : "Done selecting lights";
+        if (ui::Button(lightSelectText.c_str())) {
+            mPickLightEffect = mPickLightEffect == nullptr ? *effectSelection : nullptr;
+            mVisualizer.enableEditingMode();
+        }
         
         if (ui::Button("Done")) {
             effectSelection = nullptr;
+            mPickLightEffect = nullptr;
+            mVisualizer.disableEditingMode();
         }
     }
     
@@ -544,6 +550,12 @@ void PhotonicDirectorApp::draw()
     }
     if (lightToEdit) {
         mVisualizer.highLightLight(lightToEdit, Color(0.f, 1.f, 1.f));
+    }
+    if (mPickLightEffect != nullptr) {
+        auto effectLights = mPickLightEffect->getLights();
+        for (auto light : effectLights) {
+            mVisualizer.highLightLight(light, Color(0.f, 1.f, 0.f));
+        }
     }
 }
 
