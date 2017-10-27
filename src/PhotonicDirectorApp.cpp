@@ -543,6 +543,15 @@ void PhotonicDirectorApp::drawEffectControls()
             }
         }
         
+        // Create list of lights.
+        if (! ui::IsWindowCollapsed()) {
+            ui::ListBoxHeader("Lights");
+            for (const auto light : effect->getLights()) {
+                ui::BulletText(light->mName.c_str());
+            }
+            ui::ListBoxFooter();
+        }
+        
         if (ui::Button("Done")) {
             effectSelection = nullptr;
             mGuiStatusData.pickLightEffect = nullptr;

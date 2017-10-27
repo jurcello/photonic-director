@@ -154,9 +154,11 @@ void Visualizer::highLightLight(Light *light)
 
 void Visualizer::highLightLight(Light *light, Color color)
 {
+    // Create a pulsating box by altering the scale.
+    double scaleRatio = 1.1 + 0.1 * sin(4.0 * (getElapsedSeconds() + color.b + 10 * color.g + 100 * color.r));
     gl::pushMatrices();
     gl::translate(vec3(light->position));
-    gl::scale(vec3(LIGHT_SPHERE_SIZE));
+    gl::scale(vec3(LIGHT_SPHERE_SIZE * scaleRatio));
     gl::ScopedColor scopedColor(Color(color.r, color.g, color.b));
     mWireCube->draw();
     gl::popMatrices();
