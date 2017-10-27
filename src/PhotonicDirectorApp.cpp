@@ -76,7 +76,13 @@ protected:
     vector<EffectRef> mEffects;
     
     void oscReceive(const osc::Message &message);
+    // Gui stuff.
     void drawGui();
+    void drawGeneralControls();
+    void drawChannelControls();
+    void drawLightControls();
+    void drawEffectControls();
+
     
 };
 
@@ -292,6 +298,17 @@ void PhotonicDirectorApp::update()
 void PhotonicDirectorApp::drawGui()
 {
     // Draw the general ui.
+    drawGeneralControls();
+    // Draw the channel window if there are channels.
+    drawChannelControls();
+    
+    drawEffectControls();
+    
+    drawLightControls();
+}
+
+void PhotonicDirectorApp::drawGeneralControls()
+{
     {
         ui::ScopedWindow window("Controls");
         if (ui::Button("Add light")) {
@@ -315,7 +332,23 @@ void PhotonicDirectorApp::drawGui()
             save();
         }
     }
-    // Draw the channel window if there are channels.
+}
+
+void PhotonicDirectorApp::drawLightControls()
+{
+    if (lightToEdit) {
+        ui::ScopedWindow lightEditWindow("Edit light");
+        ui::SliderFloat("Intensity", &lightToEdit->intensity, 0.f, 1.f);
+        ui::ColorEdit4("Color", &lightToEdit->color[0]);
+        ui::DragFloat3("Position", &lightToEdit->position[0]);
+        if (ui::Button("Done")) {
+            lightToEdit = nullptr;
+        }
+    }
+}
+
+void PhotonicDirectorApp::drawChannelControls()
+{
     static const InputChannelRef* channelSelection = nullptr;
     {
         
@@ -358,6 +391,7 @@ void PhotonicDirectorApp::drawGui()
             ui::ListBoxFooter();
         }
     }
+    
     if (channelSelection != nullptr) {
         ui::ScopedWindow window("Channel inspector");
         
@@ -377,6 +411,11 @@ void PhotonicDirectorApp::drawGui()
             channelSelection = nullptr;
         }
     }
+    
+}
+
+void PhotonicDirectorApp::drawEffectControls()
+{
     
     // Effects ui.
     static const EffectRef* effectSelection = nullptr;
@@ -446,16 +485,6 @@ void PhotonicDirectorApp::drawGui()
         }
     }
     
-    
-    if (lightToEdit) {
-        ui::ScopedWindow lightEditWindow("Edit light");
-        ui::SliderFloat("Intensity", &lightToEdit->intensity, 0.f, 1.f);
-        ui::ColorEdit4("Color", &lightToEdit->color[0]);
-        ui::DragFloat3("Position", &lightToEdit->position[0]);
-        if (ui::Button("Done")) {
-            lightToEdit = nullptr;
-        }
-    }
 }
 
 void PhotonicDirectorApp::resize()
