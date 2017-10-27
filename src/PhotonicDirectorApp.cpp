@@ -297,47 +297,83 @@ void PhotonicDirectorApp::update()
 
 void PhotonicDirectorApp::drawGui()
 {
+    static bool showLightEditor = true;
+    static bool showChannelEditor = true;
+    static bool showEffectEditor = true;
     // Draw the general ui.
-    drawGeneralControls();
+    ui::ScopedWindow window("Controls");
+    
+    ui::Separator();
+    ui::Text("Osc settings");
+    ui::Spacing();
+    if  (ui::InputInt("Port", &mOscPort)) {
+        setupOsc(mOscPort);
+    }
+    ui::Separator();
+    ui::Text("Widgets");
+    ui::Checkbox("Show light editor", &showLightEditor);
+    ui::Checkbox("Show channel editor", &showChannelEditor);
+    ui::Checkbox("Show effect editor", &showEffectEditor);
+    ui::Separator();
+    ui::Text("File");
+    ui::Spacing();
+    if (ui::Button("Load")) {
+        load();
+    }
+    ui::SameLine();
+    if (ui::Button("Save")) {
+        save();
+    }
     // Draw the channel window if there are channels.
-    drawChannelControls();
-    
-    drawEffectControls();
-    
-    drawLightControls();
+    if (showChannelEditor) {
+        drawChannelControls();
+    }
+    if (showEffectEditor) {
+        drawEffectControls();
+    }
+    if (showLightEditor) {
+        drawLightControls();
+    }
 }
 
 void PhotonicDirectorApp::drawGeneralControls()
 {
     {
-        ui::ScopedWindow window("Controls");
-        if (ui::Button("Add light")) {
-            addLight();
-        }
         
-        ui::Separator();
-        ui::Text("Osc settings");
-        ui::Spacing();
-        if  (ui::InputInt("Port", &mOscPort)) {
-            setupOsc(mOscPort);
-        }
-        ui::Separator();
-        ui::Text("File");
-        ui::Spacing();
-        if (ui::Button("Load")) {
-            load();
-        }
-        ui::SameLine();
-        if (ui::Button("Save")) {
-            save();
-        }
     }
 }
 
 void PhotonicDirectorApp::drawLightControls()
 {
+    ui::ScopedWindow window("Lights");
+    if (ui::Button("Add")) {
+        Light* newLight = new Light(vec3(1.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), 0.5f);
+        mLights.push_back(newLight);
+        lightToEdit = newLight;
+    }
+    if (lightToEdit) {
+        ui::SameLine();
+        if (ui::Button("Remove")) {
+            auto it = std::find(mLights.begin(), mLights.end(), lightToEdit);
+            if (it != mLights.end()) {
+                mLights.erase(it);
+                delete lightToEdit;
+                lightToEdit = nullptr;
+            }
+        }
+    }
+    if (! ui::IsWindowCollapsed()) {
+        ui::ListBoxHeader("Edit lights");
+        for (Light* light: mLights) {
+            if (ui::Selectable(light->mName.c_str(), lightToEdit == light)) {
+                lightToEdit = light;
+            }
+        }
+        ui::ListBoxFooter();
+    }
     if (lightToEdit) {
         ui::ScopedWindow lightEditWindow("Edit light");
+        ui::InputText("Name", &lightToEdit->mName);
         ui::SliderFloat("Intensity", &lightToEdit->intensity, 0.f, 1.f);
         ui::ColorEdit4("Color", &lightToEdit->color[0]);
         ui::DragFloat3("Position", &lightToEdit->position[0]);
@@ -398,7 +434,6 @@ void PhotonicDirectorApp::drawChannelControls()
         InputChannelRef channel = *channelSelection;
         static std::string name;
         name = channel->getName();
-        console() << "Name: " << name << std::endl;
         if (ui::InputText("Name", &name)) {
             channel->setName(name);
         }
@@ -506,6 +541,9 @@ void PhotonicDirectorApp::draw()
     
     if (pickedLight) {
         mVisualizer.highLightLight(pickedLight);
+    }
+    if (lightToEdit) {
+        mVisualizer.highLightLight(lightToEdit, Color(0.f, 1.f, 1.f));
     }
 }
 

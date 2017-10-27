@@ -16,11 +16,13 @@ using namespace cinder;
 
 struct Light
 {
+    static int initNameNumber;
     // This needs to be aligned so we have 2 blocks of 16 bites.
     ColorA color;
     vec4 position;
     float intensity;
     std::string mUuid;
+    std::string mName;
     
     std::map<int, float> effectIntensities;
     std::map<int, ColorA> effectColors;

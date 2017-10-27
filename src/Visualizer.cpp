@@ -133,13 +133,19 @@ Light* Visualizer::pickLight(std::vector<Light*> lights)
 
 void Visualizer::highLightLight(Light *light)
 {
+    highLightLight(light, Color(1.0f, 1.0f, 0.0f));
+}
+
+void Visualizer::highLightLight(Light *light, Color color)
+{
     gl::pushMatrices();
     gl::translate(vec3(light->position));
     gl::scale(vec3(LIGHT_SPHERE_SIZE));
-    gl::ScopedColor color(Color(1.0f, 1.0f, 0.0f));
+    gl::ScopedColor scopedColor(Color(color.r, color.g, color.b));
     mWireCube->draw();
     gl::popMatrices();
 }
+
 
 void Visualizer::drawLight(Light *light)
 {

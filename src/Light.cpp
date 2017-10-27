@@ -11,15 +11,19 @@ using namespace cinder;
 using namespace cinder::app;
 using namespace photonic;
 
+int Light::initNameNumber = 0;
+
 Light::Light(vec3 cPosition, vec4 cColor, float cIntensity)
 : position(vec4(cPosition, 1.0f)), color(cColor), intensity(cIntensity)
 {
     mUuid = generate_uuid();
+    mName = "Lamp " + std::to_string(++initNameNumber);
 }
 
 Light::Light(vec3 cPosition, vec4 cColor, float cIntensity, std::string uuid)
 : position(vec4(cPosition, 1.0f)), color(cColor), intensity(cIntensity), mUuid(uuid)
 {
+    mName = "Lamp " + std::to_string(++initNameNumber);
 }
 
 void Light::setPosition(vec3 newPosition)

@@ -33,6 +33,7 @@ public:
     void resize();
     Light* pickLight(std::vector<Light*> lights);
     void highLightLight(Light* light);
+    void highLightLight(Light* light, Color color);
     
 protected:
     gl::BatchRef mCube, mLight;
