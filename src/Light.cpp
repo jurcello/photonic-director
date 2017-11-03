@@ -36,22 +36,22 @@ vec3 Light::getPosition()
     return vec3(position.x, position.y, position.z);
 }
 
-void Light::setEffectIntensity(int effectId, float targetIntensity)
+void Light::setEffectIntensity(std::string effectId, float targetIntensity)
 {
     effectIntensities[effectId] = targetIntensity;
 }
 
-float Light::getEffetcIntensity(int effectId)
+float Light::getEffetcIntensity(std::string effectId)
 {
     return effectIntensities[effectId];
 }
 
-void Light::setEffectColor(int effectId, ColorA color)
+void Light::setEffectColor(std::string effectId, ColorA color)
 {
     effectColors[effectId] = color;
 }
 
-ColorA Light::getEffectColor(int effectId)
+ColorA Light::getEffectColor(std::string effectId)
 {
     return effectColors[effectId];
 }

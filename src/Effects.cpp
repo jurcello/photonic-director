@@ -126,6 +126,12 @@ void Effect::toggleLight(Light *light)
     }    
 }
 
+bool Effect::hasLight(Light *light)
+{
+    auto it = std::find(mLights.begin(), mLights.end(), light);
+    return it != mLights.end();
+}
+
 std::vector<Light*> Effect::getLights()
 {
     return mLights;
@@ -144,6 +150,6 @@ InputChannelRef Effect::getChannel()
 void Effect::execute(float dt) {
     for (Light* light: mLights) {
         if (mChannel)
-            light->intensity = mChannel->getValue();
+            light->setEffectIntensity(mUuid, mChannel->getValue());
     }
 }

@@ -24,8 +24,8 @@ struct Light
     std::string mUuid;
     std::string mName;
     
-    std::map<int, float> effectIntensities;
-    std::map<int, ColorA> effectColors;
+    std::map<std::string, float> effectIntensities;
+    std::map<std::string, ColorA> effectColors;
     
     Light(vec3 cPosition, vec4 cColor, float cIntensity);
     Light(vec3 cPosition, vec4 cColor, float cIntensity, std::string uuid);
@@ -34,10 +34,10 @@ struct Light
     vec3 getPosition();
     
     // Effect setters and getters.
-    void setEffectIntensity(int effectId, float targetIntensity);
-    float getEffetcIntensity(int effectId);
-    void setEffectColor(int effectId, ColorA color);
-    ColorA getEffectColor(int effectId);
+    void setEffectIntensity(std::string effectId, float targetIntensity);
+    float getEffetcIntensity(std::string effectId);
+    void setEffectColor(std::string effectId, ColorA color);
+    ColorA getEffectColor(std::string effectId);
     
     
 };

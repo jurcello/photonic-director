@@ -313,6 +313,18 @@ void PhotonicDirectorApp::update()
     for (auto effect : mEffects) {
         effect->execute(0.f);
     }
+    /////////////////////////////////////////////
+    // Light handling.
+    /////////////////////////////////////////////
+    for (auto light : mLights) {
+        float endIntensity = 0.f;
+        for (auto effect : mEffects) {
+            if (effect->hasLight(light)) {
+                endIntensity += light->getEffetcIntensity(effect->getUuid());
+            }
+        }
+        light->intensity = endIntensity;
+    }
 }
 
 void PhotonicDirectorApp::drawGui()
