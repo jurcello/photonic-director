@@ -26,6 +26,7 @@
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		915B0F98D6144ADFBB53A7F1 /* CinderApp.icns in Resources */ = {isa = PBXBuildFile; fileRef = 818B056276D44D5BA9C5A596 /* CinderApp.icns */; };
 		CC5E093671A54FEE84E2ED88 /* QuickTime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F23E0EEF695A4C1194AB9C09 /* QuickTime.framework */; };
+		CF8622A91FB0945C004FF46B /* Output.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CF8622A71FB0945C004FF46B /* Output.cpp */; };
 		CF8E76BF1F961E5A00AF8CA0 /* Visualizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CF8E76BB1F961E5A00AF8CA0 /* Visualizer.cpp */; };
 		CF8E76C01F961E5A00AF8CA0 /* ConfigManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CF8E76BC1F961E5A00AF8CA0 /* ConfigManager.cpp */; };
 		CF8E76C11F961E5A00AF8CA0 /* Light.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CF8E76BD1F961E5A00AF8CA0 /* Light.cpp */; };
@@ -68,6 +69,8 @@
 		CC44975D30944292A5EF8D2D /* imgui_internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = imgui_internal.h; path = ../../../cinder_0.9.1_mac/blocks/ImGui/lib/imgui/imgui_internal.h; sourceTree = "<group>"; };
 		CDF1964F2BF848A1911ED4D8 /* imgui.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = imgui.h; path = ../../../cinder_0.9.1_mac/blocks/ImGui/lib/imgui/imgui.h; sourceTree = "<group>"; };
 		CF5DAF111FA0CD370096F749 /* Utils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Utils.h; path = ../src/Utils.h; sourceTree = "<group>"; };
+		CF8622A71FB0945C004FF46B /* Output.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Output.cpp; path = ../src/Output.cpp; sourceTree = "<group>"; };
+		CF8622A81FB0945C004FF46B /* Output.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Output.h; path = ../src/Output.h; sourceTree = "<group>"; };
 		CF8E76B91F961E5900AF8CA0 /* ConfigManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ConfigManager.h; path = ../src/ConfigManager.h; sourceTree = "<group>"; };
 		CF8E76BA1F961E5A00AF8CA0 /* Light.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Light.h; path = ../src/Light.h; sourceTree = "<group>"; };
 		CF8E76BB1F961E5A00AF8CA0 /* Visualizer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Visualizer.cpp; path = ../src/Visualizer.cpp; sourceTree = "<group>"; };
@@ -146,6 +149,8 @@
 				CFAE26761F9F76B900F98A37 /* Effects.cpp */,
 				CFAE26771F9F76B900F98A37 /* Effects.h */,
 				CF5DAF111FA0CD370096F749 /* Utils.h */,
+				CF8622A71FB0945C004FF46B /* Output.cpp */,
+				CF8622A81FB0945C004FF46B /* Output.h */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -422,6 +427,7 @@
 				1B6219A581044E87A22A2A22 /* imgui.cpp in Sources */,
 				FDB2AEC3D35943089ABEBDC6 /* imgui_draw.cpp in Sources */,
 				CF8E76BF1F961E5A00AF8CA0 /* Visualizer.cpp in Sources */,
+				CF8622A91FB0945C004FF46B /* Output.cpp in Sources */,
 				60045B0B089C418B83840FEE /* imgui_demo.cpp in Sources */,
 				52181618CAD54BA2B635FADC /* Osc.cpp in Sources */,
 				CF8E76C01F961E5A00AF8CA0 /* ConfigManager.cpp in Sources */,

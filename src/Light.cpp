@@ -14,14 +14,14 @@ using namespace photonic;
 int Light::initNameNumber = 0;
 
 Light::Light(vec3 cPosition, vec4 cColor, float cIntensity)
-: position(vec4(cPosition, 1.0f)), color(cColor), intensity(cIntensity)
+: position(vec4(cPosition, 1.0f)), color(cColor), intensity(cIntensity), mDmxChannel(0)
 {
     mUuid = generate_uuid();
     mName = "Lamp " + std::to_string(++initNameNumber);
 }
 
 Light::Light(vec3 cPosition, vec4 cColor, float cIntensity, std::string uuid)
-: position(vec4(cPosition, 1.0f)), color(cColor), intensity(cIntensity), mUuid(uuid)
+: position(vec4(cPosition, 1.0f)), color(cColor), intensity(cIntensity), mUuid(uuid), mDmxChannel(0)
 {
     mName = "Lamp " + std::to_string(++initNameNumber);
 }

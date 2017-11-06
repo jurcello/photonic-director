@@ -50,6 +50,11 @@ void ConfigManager::readLights(std::vector<Light *> &lights)
         // Uuid.
         std::string uuid = lightNode.getAttribute("uuid");
         Light* newLight = new Light(position, color, intensity, uuid);
+        if (lightNode.hasChild("dmxChannel")) {
+            // Dmx channel.
+            int dmxChannel = lightNode.getChild("dmxChannel").getValue<int>();
+            newLight->mDmxChannel = dmxChannel;
+        }
         lights.push_back(newLight);
     }
 }
@@ -148,6 +153,12 @@ void ConfigManager::writeLights(std::vector<Light *> &lights)
         intensity.setTag("intensity");
         intensity.setValue(light->intensity);
         lightNode.push_back(intensity);
+        
+        XmlTree dmxChannel;
+        dmxChannel.setTag("dmxChannel");
+        dmxChannel.setValue(light->mDmxChannel);
+        lightNode.push_back(dmxChannel);
+        
         lightsNode.push_back(lightNode);
     }
     mDoc.push_back(lightsNode);

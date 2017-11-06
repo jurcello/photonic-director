@@ -11,6 +11,7 @@
 #include "Effects.h"
 #include "ConfigManager.h"
 #include "Visualizer.h"
+#include "Output.h"
 #include "Osc.h"
 
 using namespace ci;
@@ -88,8 +89,11 @@ protected:
     void drawChannelControls();
     void drawLightControls();
     void drawEffectControls();
+    void drawDmxInspector();
     GuiStatusData mGuiStatusData;
 
+    // Dmx output.
+    DmxOutput mDmxOut;
     
 };
 
@@ -313,6 +317,9 @@ void PhotonicDirectorApp::update()
     for (auto effect : mEffects) {
         effect->execute(0.f);
     }
+    // Prepare DMX output.
+    mDmxOut.reset();
+    
     /////////////////////////////////////////////
     // Light handling.
     /////////////////////////////////////////////
@@ -324,6 +331,9 @@ void PhotonicDirectorApp::update()
             }
         }
         light->intensity = endIntensity;
+        if (light->mDmxChannel > 0) {
+            mDmxOut.setChannelValue(light->mDmxChannel, light->intensity);
+        }
     }
 }
 
@@ -332,6 +342,7 @@ void PhotonicDirectorApp::drawGui()
     static bool showLightEditor = true;
     static bool showChannelEditor = true;
     static bool showEffectEditor = true;
+    static bool showDmxInspector = false;
     // Draw the general ui.
     ui::ScopedWindow window("Controls");
     
@@ -342,10 +353,33 @@ void PhotonicDirectorApp::drawGui()
         setupOsc(mOscPort);
     }
     ui::Separator();
+    ui::Text("Dmx settins");
+    if (! mDmxOut.isConnected()) {
+        auto devices = mDmxOut.getDevicesList();
+        ui::ListBoxHeader("Choose device", devices.size());
+        for (auto device : devices) {
+            if (ui::Selectable(device.c_str())) {
+                mDmxOut.connect(device);
+            }
+        }
+        ui::ListBoxFooter();
+    }
+    else {
+        ui::Text("Connected to: ");
+        const std::string deviceInfo = mDmxOut.getConnectedDevice();
+        ui::Text(deviceInfo.c_str());
+        ui::SameLine();
+        if (ui::Button("Disconnect")) {
+            mDmxOut.disConnect();
+        }
+    }
+
+    ui::Separator();
     ui::Text("Widgets");
     ui::Checkbox("Show light editor", &showLightEditor);
     ui::Checkbox("Show channel editor", &showChannelEditor);
     ui::Checkbox("Show effect editor", &showEffectEditor);
+    ui::Checkbox("Show DMX inspector", &showDmxInspector);
     ui::Separator();
     ui::Text("File");
     ui::Spacing();
@@ -365,6 +399,9 @@ void PhotonicDirectorApp::drawGui()
     }
     if (showLightEditor) {
         drawLightControls();
+    }
+    if (showDmxInspector) {
+        drawDmxInspector();
     }
 }
 
@@ -403,6 +440,7 @@ void PhotonicDirectorApp::drawLightControls()
         ui::SliderFloat("Intensity", &mGuiStatusData.lightToEdit->intensity, 0.f, 1.f);
         ui::ColorEdit4("Color", &mGuiStatusData.lightToEdit->color[0]);
         ui::DragFloat3("Position", &mGuiStatusData.lightToEdit->position[0]);
+        ui::InputInt("DMX channel", &mGuiStatusData.lightToEdit->mDmxChannel, 0, 256);
         if (ui::Button("Done")) {
             mGuiStatusData.lightToEdit = nullptr;
             mGuiStatusData.status = IDLE;
@@ -574,6 +612,14 @@ void PhotonicDirectorApp::drawEffectControls()
     
 }
 
+void PhotonicDirectorApp::drawDmxInspector()
+{
+    ui::ScopedWindow window("Dmx inspector");
+    if (! ui::IsWindowCollapsed()) {
+        auto dmxVisuals = mDmxOut.getVisualizeTexture();
+        ui::Image(dmxVisuals, dmxVisuals->getSize());
+    }
+}
 void PhotonicDirectorApp::resize()
 {
     mVisualizer.resize();
@@ -588,7 +634,6 @@ void PhotonicDirectorApp::draw()
 {
     
     gl::clear( Color( 0, 0, 0 ) );
-    
     mVisualizer.draw(mLights);
     
     // Delegate some gui drawing to the visualizer.
@@ -615,7 +660,6 @@ void PhotonicDirectorApp::draw()
     if (mGuiStatusData.pickedLight) {
         mVisualizer.highLightLight(mGuiStatusData.pickedLight);
     }
-
 }
 
 PhotonicDirectorApp::~PhotonicDirectorApp()

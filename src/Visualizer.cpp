@@ -34,8 +34,9 @@ void Visualizer::setup(std::vector<Light*> lights)
     
     geom::Cube myCube = geom::Cube();
     mCube = gl::Batch::create(myCube, mObjectShader);
-    mTextureWood->bind(0);
-    mObjectShader->uniform("texture1", 0);
+    // TODO: this might be dangerous. Look how we can bind the texture to an unique number.
+    mTextureWood->bind(10);
+    mObjectShader->uniform("texture1", 10);
 
     // Create the light shader.
     mLightShader = gl::GlslProg::create(loadAsset("light_shader.vertex"), loadAsset("light_shader.fragment"));
@@ -84,8 +85,10 @@ void Visualizer::resize()
 
 void Visualizer::draw(std::vector<Light *> lights)
 {
+    gl::ScopedColor color(Color::gray(1.0f));
     gl::enableDepthRead();
     gl::enableDepthWrite();
+    gl::pushMatrices();
     gl::setMatrices(mCam);
 
     // First draw the wireplane.
@@ -115,6 +118,7 @@ void Visualizer::draw(std::vector<Light *> lights)
     {
         drawLight(light);
     }
+    gl::popMatrices();
 }
 
 void Visualizer::enableEditingMode()
@@ -157,6 +161,7 @@ void Visualizer::highLightLight(Light *light, Color color)
     // Create a pulsating box by altering the scale.
     double scaleRatio = 1.1 + 0.1 * sin(4.0 * (getElapsedSeconds() + color.b + 10 * color.g + 100 * color.r));
     gl::pushMatrices();
+    gl::setMatrices(mCam);
     gl::translate(vec3(light->position));
     gl::scale(vec3(LIGHT_SPHERE_SIZE * scaleRatio));
     gl::ScopedColor scopedColor(Color(color.r, color.g, color.b));
@@ -168,6 +173,7 @@ void Visualizer::highLightLight(Light *light, Color color)
 void Visualizer::drawLight(Light *light)
 {
     gl::pushMatrices();
+    gl::setMatrices(mCam);
     gl::translate(vec3(light->position));
     gl::scale(vec3(LIGHT_SPHERE_SIZE));
     mLightShader->uniform("LightColor", light->color);
