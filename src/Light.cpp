@@ -15,14 +15,14 @@ using namespace photonic;
 int Light::initNameNumber = 0;
 
 Light::Light(vec3 cPosition, vec4 cColor, float cIntensity)
-: position(vec4(cPosition, 1.0f)), color(cColor), intensity(cIntensity), mDmxChannel(0), mDmxOutput(nullptr)
+: position(vec4(cPosition, 1.0f)), color(cColor), intensity(cIntensity), mDmxChannel(0), mDmxOutput(nullptr), mDmxOffsetIntentsityValue(0)
 {
     mUuid = generate_uuid();
     mName = "Lamp " + std::to_string(++initNameNumber);
 }
 
 Light::Light(vec3 cPosition, vec4 cColor, float cIntensity, std::string uuid)
-: position(vec4(cPosition, 1.0f)), color(cColor), intensity(cIntensity), mUuid(uuid), mDmxChannel(0), mDmxOutput(nullptr)
+: position(vec4(cPosition, 1.0f)), color(cColor), intensity(cIntensity), mUuid(uuid), mDmxChannel(0), mDmxOutput(nullptr), mDmxOffsetIntentsityValue(0)
 {
     mName = "Lamp " + std::to_string(++initNameNumber);
 }
@@ -57,6 +57,11 @@ bool Light::setDmxChannel(int dmxChannel)
 int Light::getDmxChannel()
 {
     return mDmxChannel;
+}
+
+int Light::getCorrectedDmxValue()
+{
+    return (mDmxOffsetIntentsityValue + (256 - mDmxOffsetIntentsityValue) * intensity);
 }
 
 void Light::injectDmxChecker(DmxOutput *checker)

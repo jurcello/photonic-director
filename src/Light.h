@@ -23,6 +23,8 @@ public:
     static int initNameNumber;
     ColorA color;
     float intensity;
+    int mDmxOffsetIntentsityValue;
+    
     std::string mUuid;
     std::string mName;
     vec4 position;
@@ -35,6 +37,8 @@ public:
     
     bool setDmxChannel(int dmxChannel);
     int getDmxChannel();
+    
+    int getCorrectedDmxValue();
     
     void injectDmxChecker(DmxOutput* checker);
     
@@ -52,7 +56,6 @@ protected:
     
     int mDmxChannel;
     DmxOutput* mDmxOutput;
-
 };
 
 // Struct for sending light data to the buffer.

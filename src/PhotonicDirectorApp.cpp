@@ -337,7 +337,7 @@ void PhotonicDirectorApp::update()
         }
         light->intensity = endIntensity;
         if (light->getDmxChannel() > 0) {
-            mDmxOut.setChannelValue(light->getDmxChannel(), light->intensity);
+            mDmxOut.setChannelValue(light->getDmxChannel(), light->getCorrectedDmxValue());
         }
     }
 }
@@ -456,6 +456,7 @@ void PhotonicDirectorApp::drawLightControls()
                 ui::TextColored(Color(1.f, 0.f, 0.f), "The channel is already taken");
             }
         }
+        ui::SliderInt("Dmx offset", &mGuiStatusData.lightToEdit->mDmxOffsetIntentsityValue, 0, 255);
         if (ui::Button("Done")) {
             mGuiStatusData.lightToEdit = nullptr;
             mGuiStatusData.status = IDLE;
