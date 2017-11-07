@@ -13,7 +13,7 @@ Visualizer::Visualizer()
 {
 }
 
-void Visualizer::setup(std::vector<Light*> lights)
+void Visualizer::setup(std::vector<Light*> &lights)
 {
     mMousePos = vec2(0.f);
     // Setup the camera.
@@ -47,9 +47,9 @@ void Visualizer::setup(std::vector<Light*> lights)
 
     // Create the uniform buffer object for the lights.
     unsigned long dataSize = sizeof(Light) * lights.size();
-    std::vector<Light> bufferLights;
-    for (Light* light: lights) {
-        bufferLights.push_back(*light);
+    std::vector<LightBufferData> bufferLights;
+    for (auto& light: lights) {
+        bufferLights.push_back(LightBufferData(light));
     }
     mLightsUbo = gl::Ubo::create(dataSize, bufferLights.data(), GL_DYNAMIC_DRAW);
     mLightsUbo->bindBufferBase(0);
@@ -100,8 +100,8 @@ void Visualizer::draw(std::vector<Light *> lights)
     // Fill the uniform buffer object.
     unsigned long dataSize = sizeof(Light) * lights.size();
     std::vector<LightBufferData> bufferLights;
-    for (Light* light: lights) {
-        bufferLights.push_back(LightBufferData(*light));
+    for (auto& light: lights) {
+        bufferLights.push_back(LightBufferData(light));
     }
     
     mLightsUbo->bufferData(dataSize, bufferLights.data(), GL_DYNAMIC_DRAW);

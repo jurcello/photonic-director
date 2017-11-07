@@ -25,6 +25,9 @@ public:
     bool isConnected();
     std::string getConnectedDevice();
     
+    bool registerChannel(int channel, std::string uid);
+    void releaseChannels(std::string uid);
+    
     // Should this be in a separate class?
     void visualize();
     cinder::gl::TextureRef getVisualizeTexture();
@@ -33,6 +36,7 @@ private:
     int mOut[512];
     cinder::gl::FboRef mFbo;
     int mWidth, mHeight;
+    std::map<int, std::string> mChannelRegistry;
     
     DMXProRef mDmxPro;
     bool mDmxProIsConnected;

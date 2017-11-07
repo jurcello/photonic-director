@@ -10,7 +10,7 @@
 
 #include <stdio.h>
 #include "cinder/gl/gl.h"
-#include "Utils.h"
+#include "Output.h"
 
 using namespace cinder;
 
@@ -33,8 +33,10 @@ public:
     void setPosition(vec3 newPosition);
     vec3 getPosition();
     
-    void setDmxChannel(int dmxChannel);
+    bool setDmxChannel(int dmxChannel);
     int getDmxChannel();
+    
+    void injectDmxChecker(DmxOutput* checker);
     
     // Effect setters and getters.
     void setEffectIntensity(std::string effectId, float targetIntensity);
@@ -42,11 +44,14 @@ public:
     void setEffectColor(std::string effectId, ColorA color);
     ColorA getEffectColor(std::string effectId);
     
+    ~Light();
+    
 protected:
     std::map<std::string, float> effectIntensities;
     std::map<std::string, ColorA> effectColors;
     
     int mDmxChannel;
+    DmxOutput* mDmxOutput;
 
 };
 
@@ -59,7 +64,7 @@ struct LightBufferData
     vec3 dummy;
   
     LightBufferData(vec3 cPosition, vec4 cColor, float cIntensity);
-    LightBufferData(Light light);
+    LightBufferData(Light* light);
 };
 
 #endif /* Light_h */

@@ -6,6 +6,7 @@
 //
 
 #include "Effects.h"
+#include "Utils.h"
 
 using namespace cinder::app;
 using namespace ph;

@@ -172,6 +172,10 @@ void PhotonicDirectorApp::setup()
     mLights.push_back(new Light(vec3(2.0f, 2.0f, 0.0f), vec4(1.0f, 0.0f, 0.0f, 1.0f), 0.6f));
     mLights.push_back(new Light(vec3(1.0f, 1.0, 1.0f), vec4(0.0f, 1.0f, 0.0f, 1.0f), 0.99f));
     mLights.push_back(new Light(vec3(3.0f, 2.0f, -1.0f), vec4(0.0f, 0.0f, 1.0f, 1.0f), 0.9f));
+    // Add the dmx output to the lights.
+    for (auto light : mLights) {
+        light->injectDmxChecker(&mDmxOut);
+    }
     
     // Setup visualizer.
     mVisualizer.setup(mLights);
@@ -224,6 +228,7 @@ void PhotonicDirectorApp::oscReceive(const osc::Message &message)
 
 void PhotonicDirectorApp::addLight() {
     Light* newLight = new Light(vec3(1.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), 0.5f);
+    newLight->injectDmxChecker(&mDmxOut);
     mLights.push_back(newLight);
     mGuiStatusData.lightToEdit = newLight;
     mGuiStatusData.status = EDITING_LIGHT;
@@ -296,7 +301,7 @@ void PhotonicDirectorApp::load()
             mOscPort = oscPort;
             setupOsc(mOscPort);
         }
-        config.readLights(mLights);
+        config.readLights(mLights, &mDmxOut);
         config.readChannels(mChannels);
         config.readEffects(mEffects, mLights, mChannels);
     }
@@ -353,7 +358,7 @@ void PhotonicDirectorApp::drawGui()
         setupOsc(mOscPort);
     }
     ui::Separator();
-    ui::Text("Dmx settins");
+    ui::Text("Dmx settings");
     if (! mDmxOut.isConnected()) {
         auto devices = mDmxOut.getDevicesList();
         ui::ListBoxHeader("Choose device", devices.size());
@@ -419,6 +424,10 @@ void PhotonicDirectorApp::drawLightControls()
         if (ui::Button("Remove")) {
             auto it = std::find(mLights.begin(), mLights.end(), mGuiStatusData.lightToEdit);
             if (it != mLights.end()) {
+                // First remove the light from the effects.
+                for (auto effect : mEffects) {
+                    effect->removeLight(*it);
+                }
                 mLights.erase(it);
                 delete mGuiStatusData.lightToEdit;
                 mGuiStatusData.lightToEdit = nullptr;
@@ -443,7 +452,9 @@ void PhotonicDirectorApp::drawLightControls()
         static int dmxChannel;
         dmxChannel = mGuiStatusData.lightToEdit->getDmxChannel();
         if (ui::InputInt("DMX channel", &dmxChannel, 0, 256)) {
-            mGuiStatusData.lightToEdit->setDmxChannel(dmxChannel);
+            if (!(mGuiStatusData.lightToEdit->setDmxChannel(dmxChannel))) {
+                ui::TextColored(Color(1.f, 0.f, 0.f), "The channel is already taken");
+            }
         }
         if (ui::Button("Done")) {
             mGuiStatusData.lightToEdit = nullptr;

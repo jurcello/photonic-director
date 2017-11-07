@@ -13,6 +13,7 @@
 #include "cinder/Utilities.h"
 #include "Light.h"
 #include "Effects.h"
+#include "Output.h"
 
 using namespace photonic;
 
@@ -20,7 +21,7 @@ class ConfigManager {
 public:
     ConfigManager();
     void readFromFile(fs::path path);
-    void readLights(std::vector<Light*> &lights);
+    void readLights(std::vector<Light*> &lights, DmxOutput* dmxOutput);
     void readChannels(std::vector<InputChannelRef> &channels);
     void readEffects(std::vector<EffectRef> &effects, const std::vector<Light*> &lights, const std::vector<InputChannelRef> &channels);
     int readInt(std::string name);

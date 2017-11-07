@@ -6,6 +6,7 @@
 //
 
 #include "Light.h"
+#include "Utils.h"
 
 using namespace cinder;
 using namespace cinder::app;
@@ -14,14 +15,14 @@ using namespace photonic;
 int Light::initNameNumber = 0;
 
 Light::Light(vec3 cPosition, vec4 cColor, float cIntensity)
-: position(vec4(cPosition, 1.0f)), color(cColor), intensity(cIntensity), mDmxChannel(0)
+: position(vec4(cPosition, 1.0f)), color(cColor), intensity(cIntensity), mDmxChannel(0), mDmxOutput(nullptr)
 {
     mUuid = generate_uuid();
     mName = "Lamp " + std::to_string(++initNameNumber);
 }
 
 Light::Light(vec3 cPosition, vec4 cColor, float cIntensity, std::string uuid)
-: position(vec4(cPosition, 1.0f)), color(cColor), intensity(cIntensity), mUuid(uuid), mDmxChannel(0)
+: position(vec4(cPosition, 1.0f)), color(cColor), intensity(cIntensity), mUuid(uuid), mDmxChannel(0), mDmxOutput(nullptr)
 {
     mName = "Lamp " + std::to_string(++initNameNumber);
 }
@@ -36,14 +37,31 @@ vec3 Light::getPosition()
     return vec3(position.x, position.y, position.z);
 }
 
-void Light::setDmxChannel(int dmxChannel)
+bool Light::setDmxChannel(int dmxChannel)
 {
-    mDmxChannel = dmxChannel;
+    // If there is a checker defined, check it here.
+    if (mDmxOutput) {
+        mDmxOutput->releaseChannels(mUuid);
+        if (mDmxOutput->registerChannel(dmxChannel, mUuid)) {
+            mDmxChannel = dmxChannel;
+            return true;
+        }
+        return false;
+    }
+    else {
+        mDmxChannel = dmxChannel;
+    }
+    return true;
 }
 
 int Light::getDmxChannel()
 {
     return mDmxChannel;
+}
+
+void Light::injectDmxChecker(DmxOutput *checker)
+{
+    mDmxOutput = checker;
 }
 
 void Light::setEffectIntensity(std::string effectId, float targetIntensity)
@@ -61,6 +79,11 @@ void Light::setEffectColor(std::string effectId, ColorA color)
     effectColors[effectId] = color;
 }
 
+Light::~Light()
+{
+    mDmxOutput->releaseChannels(mUuid);
+}
+
 ColorA Light::getEffectColor(std::string effectId)
 {
     return effectColors[effectId];
@@ -71,7 +94,7 @@ LightBufferData::LightBufferData(vec3 cPosition, vec4 cColor, float cIntensity)
 {
 }
 
-LightBufferData::LightBufferData(Light light)
-: position(light.position), color(light.color), intensity(light.intensity)
+LightBufferData::LightBufferData(Light* light)
+: position(light->position), color(light->color), intensity(light->intensity)
 {    
 }

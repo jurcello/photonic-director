@@ -22,7 +22,7 @@ void ConfigManager::readFromFile(fs::path path)
 
 }
 
-void ConfigManager::readLights(std::vector<Light *> &lights)
+void ConfigManager::readLights(std::vector<Light *> &lights, DmxOutput* dmxOutput)
 {
     // Overwrite the current lights.
     if (lights.size() > 0) {
@@ -50,6 +50,7 @@ void ConfigManager::readLights(std::vector<Light *> &lights)
         // Uuid.
         std::string uuid = lightNode.getAttribute("uuid");
         Light* newLight = new Light(position, color, intensity, uuid);
+        newLight->injectDmxChecker(dmxOutput);
         if (lightNode.hasChild("dmxChannel")) {
             // Dmx channel.
             int dmxChannel = lightNode.getChild("dmxChannel").getValue<int>();

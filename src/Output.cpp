@@ -92,6 +92,36 @@ std::string DmxOutput::getConnectedDevice()
     return "";
 }
 
+bool DmxOutput::registerChannel(int channel, std::string uid)
+{
+    auto existingRecord = mChannelRegistry.find(channel);
+    if (existingRecord == mChannelRegistry.end()) {
+        mChannelRegistry[channel] = uid;
+        return true;
+    }
+    else {
+        if (existingRecord->second == uid) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void DmxOutput::releaseChannels(std::string uid)
+{
+    if (mChannelRegistry.size() > 0) {
+        auto it = mChannelRegistry.begin();
+        while (it != mChannelRegistry.end()) {
+            if (it->second == uid) {
+                it = mChannelRegistry.erase(it);
+            }
+            else {
+                it++;
+            }
+        }
+    }
+}
+
 void DmxOutput::visualize()
 {
     gl::draw(getVisualizeTexture(), vec2(10,10));

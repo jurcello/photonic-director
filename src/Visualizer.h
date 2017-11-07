@@ -24,7 +24,7 @@ using namespace ci::app;
 class Visualizer {
 public:
     Visualizer();
-    void setup(std::vector<Light*> lights);
+    void setup(std::vector<Light*> &lights);
     void mouseDown(MouseEvent event);
     void mouseUp(MouseEvent event);
     void mouseDrag(MouseEvent event);
