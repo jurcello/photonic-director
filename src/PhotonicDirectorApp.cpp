@@ -331,8 +331,8 @@ void PhotonicDirectorApp::update()
             }
         }
         light->intensity = endIntensity;
-        if (light->mDmxChannel > 0) {
-            mDmxOut.setChannelValue(light->mDmxChannel, light->intensity);
+        if (light->getDmxChannel() > 0) {
+            mDmxOut.setChannelValue(light->getDmxChannel(), light->intensity);
         }
     }
 }
@@ -440,7 +440,11 @@ void PhotonicDirectorApp::drawLightControls()
         ui::SliderFloat("Intensity", &mGuiStatusData.lightToEdit->intensity, 0.f, 1.f);
         ui::ColorEdit4("Color", &mGuiStatusData.lightToEdit->color[0]);
         ui::DragFloat3("Position", &mGuiStatusData.lightToEdit->position[0]);
-        ui::InputInt("DMX channel", &mGuiStatusData.lightToEdit->mDmxChannel, 0, 256);
+        static int dmxChannel;
+        dmxChannel = mGuiStatusData.lightToEdit->getDmxChannel();
+        if (ui::InputInt("DMX channel", &dmxChannel, 0, 256)) {
+            mGuiStatusData.lightToEdit->setDmxChannel(dmxChannel);
+        }
         if (ui::Button("Done")) {
             mGuiStatusData.lightToEdit = nullptr;
             mGuiStatusData.status = IDLE;

@@ -53,7 +53,7 @@ void ConfigManager::readLights(std::vector<Light *> &lights)
         if (lightNode.hasChild("dmxChannel")) {
             // Dmx channel.
             int dmxChannel = lightNode.getChild("dmxChannel").getValue<int>();
-            newLight->mDmxChannel = dmxChannel;
+            newLight->setDmxChannel(dmxChannel);
         }
         lights.push_back(newLight);
     }
@@ -156,7 +156,7 @@ void ConfigManager::writeLights(std::vector<Light *> &lights)
         
         XmlTree dmxChannel;
         dmxChannel.setTag("dmxChannel");
-        dmxChannel.setValue(light->mDmxChannel);
+        dmxChannel.setValue(light->getDmxChannel());
         lightNode.push_back(dmxChannel);
         
         lightsNode.push_back(lightNode);

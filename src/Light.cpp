@@ -36,6 +36,16 @@ vec3 Light::getPosition()
     return vec3(position.x, position.y, position.z);
 }
 
+void Light::setDmxChannel(int dmxChannel)
+{
+    mDmxChannel = dmxChannel;
+}
+
+int Light::getDmxChannel()
+{
+    return mDmxChannel;
+}
+
 void Light::setEffectIntensity(std::string effectId, float targetIntensity)
 {
     effectIntensities[effectId] = targetIntensity;

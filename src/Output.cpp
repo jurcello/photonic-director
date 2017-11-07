@@ -24,7 +24,7 @@ void DmxOutput::setChannelValue(int channel, int value)
 {
     mOut[channel - 1] = value;
     if (mDmxPro != nullptr && mDmxPro->isConnected()) {
-        mDmxPro->setValue(value, channel);
+        mDmxPro->setValue(value, channel - 1);
     }
 }
 
