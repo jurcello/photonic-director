@@ -414,6 +414,14 @@ void PhotonicDirectorApp::drawGui()
 void PhotonicDirectorApp::drawLightControls()
 {
     ui::ScopedWindow window("Lights");
+    static bool editingMode = false;
+    ui::Checkbox("Edit mode", &editingMode);
+    if (editingMode) {
+        mVisualizer.enableEditingMode();
+    }
+    else {
+        mVisualizer.disableEditingMode();
+    }
     if (ui::Button("Add")) {
         Light* newLight = new Light(vec3(1.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), 0.5f);
         mLights.push_back(newLight);
@@ -654,26 +662,27 @@ void PhotonicDirectorApp::draw()
     mVisualizer.draw(mLights);
     
     // Delegate some gui drawing to the visualizer.
-    if (mGuiStatusData.status != IDLE) {
-        switch (mGuiStatusData.status) {
-            case EDITING_LIGHT:
-                if (mGuiStatusData.lightToEdit != nullptr) {
-                    mVisualizer.highLightLight(mGuiStatusData.lightToEdit, Color(0.f, 1.f, 1.f));
-                }
-                break;
+    
+    switch (mGuiStatusData.status) {
+        case EDITING_LIGHT:
+        case IDLE:
+            if (mGuiStatusData.lightToEdit != nullptr) {
+                mVisualizer.highLightLight(mGuiStatusData.lightToEdit, Color(0.f, 1.f, 1.f));
+            }
+            break;
 
-            case ADDING_LIGHT_TO_EFFECT:
-                if (mGuiStatusData.pickLightEffect != nullptr) {
-                    auto effectLights = mGuiStatusData.pickLightEffect->getLights();
-                    for (auto light : effectLights) {
-                        mVisualizer.highLightLight(light, Color(0.f, 1.f, 0.f));
-                    }
+        case ADDING_LIGHT_TO_EFFECT:
+            if (mGuiStatusData.pickLightEffect != nullptr) {
+                auto effectLights = mGuiStatusData.pickLightEffect->getLights();
+                for (auto light : effectLights) {
+                    mVisualizer.highLightLight(light, Color(0.f, 1.f, 0.f));
                 }
+            }
 
-            default:
-                break;
-        }
+        default:
+            break;
     }
+
     if (mGuiStatusData.pickedLight) {
         mVisualizer.highLightLight(mGuiStatusData.pickedLight);
     }
