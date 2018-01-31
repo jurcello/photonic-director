@@ -56,6 +56,10 @@ void ConfigManager::readLights(std::vector<Light *> &lights, DmxOutput* dmxOutpu
             int dmxChannel = lightNode.getChild("dmxChannel").getValue<int>();
             newLight->setDmxChannel(dmxChannel);
         }
+        if (lightNode.hasChild("name")) {
+            std::string name = lightNode.getChild("name").getValue<std::string>();
+            newLight->mName = name;
+        }
         lights.push_back(newLight);
     }
 }
@@ -160,6 +164,11 @@ void ConfigManager::writeLights(std::vector<Light *> &lights)
         dmxChannel.setValue(light->getDmxChannel());
         lightNode.push_back(dmxChannel);
         
+        XmlTree name;
+        name.setTag("name");
+        name.setValue(light->mName);
+        lightNode.push_back(name);
+        
         lightsNode.push_back(lightNode);
     }
     mDoc.push_back(lightsNode);
@@ -199,7 +208,9 @@ void ConfigManager::writeEffects(std::vector<EffectRef> &effects)
         effectNode.push_back(nameNode);
         XmlTree channelNode;
         channelNode.setTag("channel");
-        channelNode.setValue(effect->getChannel()->getUuid());
+        if (effect->getChannel()) {
+            channelNode.setValue(effect->getChannel()->getUuid());
+        }
         effectNode.push_back(channelNode);
         XmlTree lightsNode;
         lightsNode.setTag("lights");

@@ -340,6 +340,7 @@ void PhotonicDirectorApp::update()
             mDmxOut.setChannelValue(light->getDmxChannel(), light->getCorrectedDmxValue());
         }
     }
+    mDmxOut.update();
 }
 
 void PhotonicDirectorApp::drawGui()

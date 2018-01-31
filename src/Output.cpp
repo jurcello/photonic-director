@@ -23,9 +23,9 @@ DmxOutput::DmxOutput()
 void DmxOutput::setChannelValue(int channel, int value)
 {
     mOut[channel - 1] = value;
-    if (mDmxPro != nullptr && mDmxPro->isConnected()) {
-        mDmxPro->setValue(value, channel - 1);
-    }
+//    if (mDmxPro != nullptr && mDmxPro->isConnected()) {
+//        mDmxPro->setValue(value, channel - 1);
+//    }
 }
 
 void DmxOutput::setChannelValue(int channel, float value)
@@ -53,13 +53,22 @@ void DmxOutput::reset()
     std::fill_n(mOut, 512, 0);
 }
 
+void DmxOutput::update()
+{
+    if (mDmxPro != nullptr && mDmxPro->isConnected()) {
+        for (int i = 0; i < 256; i++) {
+            mDmxPro->setValue(mOut[i], i);
+        }
+    }
+}
+
 std::vector<std::string> DmxOutput::getDevicesList() {
     std::vector<std::string> devices = DMXPro::getDevicesList();
     std::vector<std::string> dmxDevices;
     for (auto deviceName : devices) {
-        if (deviceName.find("ENT") != std::string::npos) {
+//        if (deviceName.find("ENT") != std::string::npos) {
             dmxDevices.push_back(deviceName);
-        }
+//        }
     }
     return dmxDevices;
 }

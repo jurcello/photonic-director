@@ -18,6 +18,7 @@ public:
     void setChannelValue(int channel, float value);
     int getChannelValue(int channel);
     void reset();
+    void update();
     
     std::vector<std::string> getDevicesList();
     void connect(std::string deviceName);
