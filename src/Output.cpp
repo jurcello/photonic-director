@@ -66,9 +66,9 @@ std::vector<std::string> DmxOutput::getDevicesList() {
     std::vector<std::string> devices = DMXPro::getDevicesList();
     std::vector<std::string> dmxDevices;
     for (auto deviceName : devices) {
-//        if (deviceName.find("ENT") != std::string::npos) {
+        if (deviceName.find("tty.usbserial") != std::string::npos) {
             dmxDevices.push_back(deviceName);
-//        }
+        }
     }
     return dmxDevices;
 }
