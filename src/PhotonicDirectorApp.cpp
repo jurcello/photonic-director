@@ -360,26 +360,27 @@ void PhotonicDirectorApp::drawGui()
     }
     ui::Separator();
     ui::Text("Dmx settings");
-    if (! mDmxOut.isConnected()) {
-        auto devices = mDmxOut.getDevicesList();
-        ui::ListBoxHeader("Choose device", devices.size());
-        for (auto device : devices) {
-            if (ui::Selectable(device.c_str())) {
-                mDmxOut.connect(device);
+    if (! ui::IsWindowCollapsed()) {
+        if (! mDmxOut.isConnected()) {
+            auto devices = mDmxOut.getDevicesList();
+            ui::ListBoxHeader("Choose device", devices.size());
+            for (auto device : devices) {
+                if (ui::Selectable(device.c_str())) {
+                    mDmxOut.connect(device);
+                }
+            }
+            ui::ListBoxFooter();
+        }
+        else {
+            ui::Text("Connected to: ");
+            const std::string deviceInfo = mDmxOut.getConnectedDevice();
+            ui::Text(deviceInfo.c_str());
+            ui::SameLine();
+            if (ui::Button("Disconnect")) {
+                mDmxOut.disConnect();
             }
         }
-        ui::ListBoxFooter();
     }
-    else {
-        ui::Text("Connected to: ");
-        const std::string deviceInfo = mDmxOut.getConnectedDevice();
-        ui::Text(deviceInfo.c_str());
-        ui::SameLine();
-        if (ui::Button("Disconnect")) {
-            mDmxOut.disConnect();
-        }
-    }
-
     ui::Separator();
     ui::Text("Widgets");
     ui::Checkbox("Show light editor", &showLightEditor);
@@ -581,7 +582,8 @@ void PhotonicDirectorApp::drawEffectControls()
         if (! ui::IsWindowCollapsed()) {
             ui::ListBoxHeader("Edit effects");
             for (EffectRef& effect : mEffects) {
-                if (ui::Selectable(effect->getName().c_str(), effectSelection == &effect)) {
+                std::string effectName = effect->getName() + " (" + effect->getTypeName() + ")";
+                if (ui::Selectable(effectName.c_str(), effectSelection == &effect)) {
                     effectSelection = &effect;
                 }
             }

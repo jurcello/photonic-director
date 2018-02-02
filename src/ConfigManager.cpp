@@ -87,10 +87,11 @@ void ConfigManager::readEffects(std::vector<EffectRef> &effects, const std::vect
     if (mDoc.hasChild("effects")) {
         auto effectsNodes = mDoc.getChild("effects");
         for (auto effectNode : effectsNodes) {
+            std::string type = effectNode.getChild("type").getValue();
             std::string name = effectNode.getChild("name").getValue();
             std::string uuid = effectNode.getAttributeValue<std::string>("uuid");
             // Create the effect.
-            EffectRef newEffect = Effect::create(name, uuid);
+            EffectRef newEffect = Effect::create(type, name, uuid);
             if (effectNode.hasChild("channel")) {
                 std::string channelUuid = effectNode.getChild("channel").getValue();
                 // Get the channel from the uuid.
@@ -202,6 +203,10 @@ void ConfigManager::writeEffects(std::vector<EffectRef> &effects)
         XmlTree effectNode;
         effectNode.setTag("effect");
         effectNode.setAttribute("uuid", effect->getUuid());
+        XmlTree typeNode;
+        typeNode.setTag("type");
+        typeNode.setValue(effect->getTypeClassName());
+        effectNode.push_back(typeNode);
         XmlTree nameNode;
         nameNode.setTag("name");
         nameNode.setValue(effect->getName());

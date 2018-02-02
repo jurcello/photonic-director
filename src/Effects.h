@@ -84,7 +84,9 @@ namespace photonic {
         void setChannel(InputChannelRef channel);
         InputChannelRef getChannel();
         
+        virtual std::string getTypeClassName() = 0;
         virtual void execute(float dt) = 0;
+        virtual std::string getTypeName() = 0;
         
     protected:
         std::string mUuid;
@@ -103,6 +105,8 @@ namespace photonic {
         SimpleVolumeEffect(std::string name, std::string uuid): Effect(name, uuid){};
         
         virtual void execute(float dt);
+        virtual std::string getTypeName();
+        virtual std::string getTypeClassName();
     };
     
     class StaticValueEffect : public Effect {
@@ -111,6 +115,8 @@ namespace photonic {
         StaticValueEffect(std::string name, std::string uuid): Effect(name, uuid){};
         
         virtual void execute(float dt);
+        virtual std::string getTypeName();
+        virtual std::string getTypeClassName();
     };
 }
 

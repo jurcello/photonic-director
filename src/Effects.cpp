@@ -170,12 +170,28 @@ void SimpleVolumeEffect::execute(float dt) {
     }
 }
 
+std::string SimpleVolumeEffect::getTypeName() {
+    return "Simple volume";
+}
+
+std::string SimpleVolumeEffect::getTypeClassName() {
+    return "SimpleVolumeEffect";
+}
+
 REGISTER_TYPE(SimpleVolumeEffect)
 
 void StaticValueEffect::execute(float dt) {
     for (auto light: mLights) {
         light->setEffectIntensity(mUuid, 0.5);
     }
+}
+
+std::string StaticValueEffect::getTypeName() {
+    return "Static volume";
+}
+
+std::string StaticValueEffect::getTypeClassName() {
+    return "StaticValueEffect";
 }
 
 REGISTER_TYPE(StaticValueEffect)
