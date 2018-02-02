@@ -552,9 +552,13 @@ void PhotonicDirectorApp::drawEffectControls()
         }
         if (ui::BeginPopupModal("Create effect")) {
             static std::string effectName;
+            static int effectType = 0;
             ui::InputText("Name", &effectName);
+            ui::Combo("Type", &effectType, Effect::getTypes());
             if (ui::Button("Done")) {
-                EffectRef newEffect = Effect::create(effectName);
+                std::string type = Effect::getTypes()[effectType];
+                console() << effectName << ", " << type << endl;
+                EffectRef newEffect = Effect::create(type, effectName);
                 // TODO: Now add all lights. Later lights should be picked.
                 for (auto light : mLights) {
                     newEffect->addLight(light);

@@ -13,6 +13,21 @@
 #include <ctime>
 #include "Light.h"
 
+#define REGISTER_TYPE(klass) \
+class klass##Factory : public EffectFactory { \
+public: \
+    klass##Factory() { \
+        Effect::registerType(#klass, this); \
+    } \
+    virtual EffectRef create(std::string name) { \
+        return EffectRef(new klass(name)); \
+    } \
+    virtual EffectRef create(std::string name, std::string uuid) { \
+        return EffectRef(new klass(name, uuid)); \
+    } \
+}; \
+static klass##Factory global_##klass##Factory;
+
 namespace photonic {
     class InputChannel;
     typedef std::shared_ptr<InputChannel> InputChannelRef;
@@ -36,15 +51,28 @@ namespace photonic {
         std::string mName;
     };
     
+    // Todo: refactor this to the object factory as described at:
+    // https://blog.noctua-software.com/object-factory-c++.html
     class Effect;
     typedef std::shared_ptr<Effect> EffectRef;
     
+    // Virtual factory to create new effects.
+    class EffectFactory {
+    public:
+        virtual EffectRef create(std::string name) = 0;
+        virtual EffectRef create(std::string name, std::string uuid) = 0;
+    };
+    
     class Effect {
     public:
-        static EffectRef create(std::string name);
-        static EffectRef create(std::string name, std::string uuid);
+        static void registerType(const std::string type, EffectFactory* factory);
+        static EffectRef create(std::string type, std::string name);
+        static EffectRef create(std::string type, std::string name, std::string uuid);
+        static std::vector<std::string> getTypes();
+        
         Effect(std::string name);
         Effect(std::string name, std::string uuid);
+        
         std::string getUuid();
         std::string getName();
         void setName(std::string name);
@@ -56,13 +84,33 @@ namespace photonic {
         void setChannel(InputChannelRef channel);
         InputChannelRef getChannel();
         
-        void execute(float dt);
+        virtual void execute(float dt) = 0;
         
     protected:
         std::string mUuid;
         std::string mName;
         std::vector<Light*> mLights;
         InputChannelRef mChannel;
+        
+    private:
+        static std::map<std::string, EffectFactory*> factories;
+        static std::vector<std::string> types;
+    };
+    
+    class SimpleVolumeEffect : public Effect {
+    public:
+        SimpleVolumeEffect(std::string name): Effect(name){};
+        SimpleVolumeEffect(std::string name, std::string uuid): Effect(name, uuid){};
+        
+        virtual void execute(float dt);
+    };
+    
+    class StaticValueEffect : public Effect {
+    public:
+        StaticValueEffect(std::string name): Effect(name){};
+        StaticValueEffect(std::string name, std::string uuid): Effect(name, uuid){};
+        
+        virtual void execute(float dt);
     };
 }
 

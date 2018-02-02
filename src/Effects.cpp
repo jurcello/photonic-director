@@ -66,14 +66,26 @@ std::string InputChannel::getName() const
 /// Start effects.
 //////////////////////////////////////////////////////////////////
 
-EffectRef Effect::create(std::string name)
-{
-    return EffectRef(new Effect(name));
+std::map<std::string, EffectFactory*> Effect::factories;
+std::vector<std::string> Effect::types;
+
+void Effect::registerType(const std::string type, EffectFactory* factory) {
+    factories[type] = factory;
+    types.push_back(type);
 }
 
-EffectRef Effect::create(std::string name, std::string uuid)
+std::vector<std::string> Effect::getTypes() {
+    return types;
+}
+
+EffectRef Effect::create(std::string type, std::string name)
 {
-    return EffectRef(new Effect(name, uuid));
+    return Effect::factories[type]->create(name);
+}
+
+EffectRef Effect::create(std::string type, std::string name, std::string uuid)
+{
+    return Effect::factories[type]->create(name, uuid);
 }
 
 Effect::Effect(std::string name)
@@ -147,10 +159,24 @@ InputChannelRef Effect::getChannel()
 {
     return mChannel;
 }
+//////////////////////////////////////////////////////////////////
+/// Start SimpleVolume
+//////////////////////////////////////////////////////////////////
 
-void Effect::execute(float dt) {
+void SimpleVolumeEffect::execute(float dt) {
     for (Light* light: mLights) {
         if (mChannel)
             light->setEffectIntensity(mUuid, mChannel->getValue());
     }
 }
+
+REGISTER_TYPE(SimpleVolumeEffect)
+
+void StaticValueEffect::execute(float dt) {
+    for (auto light: mLights) {
+        light->setEffectIntensity(mUuid, 0.5);
+    }
+}
+
+REGISTER_TYPE(StaticValueEffect)
+
