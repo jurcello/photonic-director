@@ -569,25 +569,36 @@ void PhotonicDirectorApp::drawEffectControls()
             }
             ui::EndPopup();
         }
-        if (effectSelection) {
-            ui::SameLine();
+        /////////////////////////////////////////////
+        /////// Effect overview
+        /////////////////////////////////////////////
+        
+        ui::Text("Effects");
+        ui::Separator();
+        int testId = 0;
+        for (auto effect : mEffects) {
+            ui::PushID(testId);
+            auto it = std::find(mEffects.begin(), mEffects.end(), effect);
             if (ui::Button("Remove")) {
-                auto it = std::find(mEffects.begin(), mEffects.end(), *effectSelection);
                 if (it != mEffects.end()) {
                     mEffects.erase(it);
                     effectSelection = nullptr;
                 }
             }
-        }
-        if (! ui::IsWindowCollapsed()) {
-            ui::ListBoxHeader("Edit effects");
-            for (EffectRef& effect : mEffects) {
-                std::string effectName = effect->getName() + " (" + effect->getTypeName() + ")";
-                if (ui::Selectable(effectName.c_str(), effectSelection == &effect)) {
-                    effectSelection = &effect;
+            if (effect) {
+                ui::SameLine();
+                if(ui::Button("Edit")) {
+                    // By dereferencing the iterator we end up at the EffectRef.
+                    // Because the effectSelection is a pointer to the EffectRef, we then need
+                    // to get the address of the EffectRef.
+                    effectSelection = &*it;
                 }
+                ui::SameLine();
+                std::string effectName = effect->getName() + " (" + effect->getTypeName() + ")";
+                ui::Text(effectName.c_str());
             }
-            ui::ListBoxFooter();
+            ui::PopID();
+            testId++;
         }
     }
     if (effectSelection != nullptr) {
