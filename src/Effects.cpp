@@ -7,6 +7,7 @@
 
 #include "Effects.h"
 #include "Utils.h"
+#include "CinderImGui.h"
 
 using namespace cinder::app;
 using namespace ph;
@@ -159,6 +160,10 @@ InputChannelRef Effect::getChannel()
 {
     return mChannel;
 }
+
+void Effect::drawEditGui() {
+    // This might be used in the child classes.
+}
 //////////////////////////////////////////////////////////////////
 /// Start SimpleVolume
 //////////////////////////////////////////////////////////////////
@@ -182,7 +187,7 @@ REGISTER_TYPE(SimpleVolumeEffect)
 
 void StaticValueEffect::execute(float dt) {
     for (auto light: mLights) {
-        light->setEffectIntensity(mUuid, 0.5);
+        light->setEffectIntensity(mUuid, mStaticVolume);
     }
 }
 
@@ -192,6 +197,10 @@ std::string StaticValueEffect::getTypeName() {
 
 std::string StaticValueEffect::getTypeClassName() {
     return "StaticValueEffect";
+}
+
+void StaticValueEffect::drawEditGui() {
+    ui::DragFloat("Volume", &mStaticVolume, 0.01f, 0.0f, 1.0f);
 }
 
 REGISTER_TYPE(StaticValueEffect)

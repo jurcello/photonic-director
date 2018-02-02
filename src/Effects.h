@@ -87,6 +87,7 @@ namespace photonic {
         virtual std::string getTypeClassName() = 0;
         virtual void execute(float dt) = 0;
         virtual std::string getTypeName() = 0;
+        virtual void drawEditGui();
         
     protected:
         std::string mUuid;
@@ -117,6 +118,10 @@ namespace photonic {
         virtual void execute(float dt);
         virtual std::string getTypeName();
         virtual std::string getTypeClassName();
+        virtual void drawEditGui();
+        
+    protected:
+        float mStaticVolume = 0.5;
     };
 }
 

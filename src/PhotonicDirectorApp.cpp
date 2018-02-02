@@ -643,7 +643,8 @@ void PhotonicDirectorApp::drawEffectControls()
             }
             ui::ListBoxFooter();
         }
-        
+        ui::Separator();
+        effect->drawEditGui();
         if (ui::Button("Done")) {
             effectSelection = nullptr;
             mGuiStatusData.pickLightEffect = nullptr;
