@@ -374,7 +374,7 @@ void PhotonicDirectorApp::drawGui()
         else {
             ui::Text("Connected to: ");
             const std::string deviceInfo = mDmxOut.getConnectedDevice();
-            ui::Text(deviceInfo.c_str());
+            ui::Text("%s", deviceInfo.c_str());
             ui::SameLine();
             if (ui::Button("Disconnect")) {
                 mDmxOut.disConnect();
@@ -467,6 +467,7 @@ void PhotonicDirectorApp::drawLightControls()
             }
         }
         ui::SliderInt("Dmx offset", &mGuiStatusData.lightToEdit->mDmxOffsetIntentsityValue, 0, 255);
+        mGuiStatusData.lightToEdit->drawGui();
         if (ui::Button("Done")) {
             mGuiStatusData.lightToEdit = nullptr;
             mGuiStatusData.status = IDLE;
@@ -576,29 +577,26 @@ void PhotonicDirectorApp::drawEffectControls()
         ui::Text("Effects");
         ui::Separator();
         int testId = 0;
-        for (auto effect : mEffects) {
+        for (auto it = mEffects.begin(); it != mEffects.end(); ) {
             ui::PushID(testId);
-            auto it = std::find(mEffects.begin(), mEffects.end(), effect);
             if (ui::Button("Remove")) {
-                if (it != mEffects.end()) {
-                    mEffects.erase(it);
-                    effectSelection = nullptr;
-                }
+                it = mEffects.erase(it);
+                effectSelection = nullptr;
+                ui::PopID();
+                continue;
             }
-            if (effect) {
-                ui::SameLine();
-                if(ui::Button("Edit")) {
-                    // By dereferencing the iterator we end up at the EffectRef.
-                    // Because the effectSelection is a pointer to the EffectRef, we then need
-                    // to get the address of the EffectRef.
-                    effectSelection = &*it;
-                }
-                ui::SameLine();
-                std::string effectName = effect->getName() + " (" + effect->getTypeName() + ")";
-                ui::Text(effectName.c_str());
+            EffectRef & effectRef = *it;
+            ui::SameLine();
+            if(ui::Button("Edit")) {
+                effectSelection = &effectRef;
             }
+            ui::SameLine();
+            std::string effectName = effectRef->getName() + " (" + effectRef->getTypeName() + ")";
+            ui::Text("%s", effectName.c_str());
             ui::PopID();
             testId++;
+            
+            it++;
         }
     }
     if (effectSelection != nullptr) {
@@ -639,7 +637,7 @@ void PhotonicDirectorApp::drawEffectControls()
         if (! ui::IsWindowCollapsed()) {
             ui::ListBoxHeader("Lights");
             for (const auto light : effect->getLights()) {
-                ui::BulletText(light->mName.c_str());
+                ui::BulletText("%s", light->mName.c_str());
             }
             ui::ListBoxFooter();
         }
