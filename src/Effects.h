@@ -51,8 +51,20 @@ namespace photonic {
         std::string mName;
     };
     
-    // Todo: refactor this to the object factory as described at:
-    // https://blog.noctua-software.com/object-factory-c++.html
+    struct Parameter {
+        enum Type {
+            kType_float,
+            kType_string,
+            kType_int,
+        };
+        
+        Type type;
+        float floatValue;
+        std::string stringValue;
+        int intValue;
+        std::string description;
+    };
+    
     class Effect;
     typedef std::shared_ptr<Effect> EffectRef;
     
@@ -65,6 +77,13 @@ namespace photonic {
     
     class Effect {
     public:
+        enum Status {
+            kStatus_On,
+            kStatus_Off,
+            kStatus_FadingOut,
+            kStatus_FadingIn,
+        };
+        
         static void registerType(const std::string type, EffectFactory* factory);
         static EffectRef create(std::string type, std::string name);
         static EffectRef create(std::string type, std::string name, std::string uuid);
@@ -75,6 +94,10 @@ namespace photonic {
         
         std::string getUuid();
         std::string getName();
+        std::string getStatusName();
+        Status getStatus();
+        double getFadeValue();
+        
         void setName(std::string name);
         void addLight(Light* light);
         void removeLight(Light* light);
@@ -85,15 +108,22 @@ namespace photonic {
         InputChannelRef getChannel();
         
         virtual std::string getTypeClassName() = 0;
-        virtual void execute(float dt) = 0;
         virtual std::string getTypeName() = 0;
         virtual void drawEditGui();
+        virtual void execute(float dt);
+        
+        // Public accessable variables. Part of the interface!
+        float fadeTime;
+        bool isTurnedOn;
         
     protected:
         std::string mUuid;
         std::string mName;
         std::vector<Light*> mLights;
         InputChannelRef mChannel;
+        Status mStatus;
+        double mStatusChangeTime;
+        double mFadeValue;
         
     private:
         static std::map<std::string, EffectFactory*> factories;
@@ -112,6 +142,8 @@ namespace photonic {
     
     class StaticValueEffect : public Effect {
     public:
+        std::map<std::string, Parameter> mParams;
+        // Todo: move implementation to the implementation file.
         StaticValueEffect(std::string name): Effect(name){};
         StaticValueEffect(std::string name, std::string uuid): Effect(name, uuid){};
         

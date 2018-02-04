@@ -90,12 +90,12 @@ EffectRef Effect::create(std::string type, std::string name, std::string uuid)
 }
 
 Effect::Effect(std::string name)
-:mName(name), mUuid(generate_uuid())
+:mName(name), mUuid(generate_uuid()), mStatus(kStatus_Off), isTurnedOn(false), fadeTime(2.0f), mFadeValue(0.0)
 {
 }
 
 Effect::Effect(std::string name, std::string uuid)
-:mName(name), mUuid(uuid)
+:mName(name), mUuid(uuid), mStatus(kStatus_Off), isTurnedOn(false), fadeTime(2.0f), mFadeValue(0.0)
 {
 }
 
@@ -107,6 +107,38 @@ std::string Effect::getUuid()
 std::string Effect::getName()
 {
     return mName;
+}
+
+std::string Effect::getStatusName() {
+    switch (mStatus) {
+        case kStatus_Off:
+            return "Off";
+            break;
+            
+        case kStatus_On:
+            return "On";
+            break;
+            
+        case kStatus_FadingOut:
+            return "Fading out";
+            break;
+            
+        case kStatus_FadingIn:
+            return "Fading in";
+            break;
+            
+        default:
+            break;
+    }
+    return "Not implemented yet.";
+}
+
+photonic::Effect::Status Effect::getStatus() {
+    return mStatus;
+}
+
+double Effect::getFadeValue() {
+    return mFadeValue;
 }
 
 void Effect::setName(std::string name)
@@ -164,11 +196,48 @@ InputChannelRef Effect::getChannel()
 void Effect::drawEditGui() {
     // This might be used in the child classes.
 }
+
+void Effect::execute(float dt) {
+    // First handle the fading.
+    // Start with updating the start of the status transitions.
+    if (isTurnedOn && mStatus == kStatus_Off) {
+        // The status is update to fading.
+        mStatus = kStatus_FadingIn;
+        mStatusChangeTime = getElapsedSeconds();
+    }
+    if (! isTurnedOn && mStatus == kStatus_On) {
+        mStatus = kStatus_FadingOut;
+        mStatusChangeTime = getElapsedSeconds();
+    }
+    
+    // Start with the end of the status transitions.
+    if ( isTurnedOn && mStatus == kStatus_FadingIn) {
+        if (getElapsedSeconds() - mStatusChangeTime > fadeTime) {
+            mStatus = kStatus_On;
+            mFadeValue = 1.0;
+            mStatusChangeTime = 0.0;
+        }
+        else {
+            mFadeValue = (getElapsedSeconds() - mStatusChangeTime) / fadeTime;
+        }
+    }
+    if ( !isTurnedOn && mStatus == kStatus_FadingOut) {
+        if (getElapsedSeconds() - mStatusChangeTime > fadeTime) {
+            mStatus = kStatus_Off;
+            mFadeValue = 0.0;
+            mStatusChangeTime = 0.0;
+        }
+        else {
+            mFadeValue = 1.0 - (getElapsedSeconds() - mStatusChangeTime) / fadeTime;
+        }
+    }
+}
 //////////////////////////////////////////////////////////////////
 /// Start SimpleVolume
 //////////////////////////////////////////////////////////////////
 
 void SimpleVolumeEffect::execute(float dt) {
+    Effect::execute(dt);
     for (Light* light: mLights) {
         if (mChannel)
             light->setEffectIntensity(mUuid, mChannel->getValue());
@@ -186,6 +255,7 @@ std::string SimpleVolumeEffect::getTypeClassName() {
 REGISTER_TYPE(SimpleVolumeEffect)
 
 void StaticValueEffect::execute(float dt) {
+    Effect::execute(dt);
     for (auto light: mLights) {
         light->setEffectIntensity(mUuid, mStaticVolume);
     }
@@ -200,7 +270,16 @@ std::string StaticValueEffect::getTypeClassName() {
 }
 
 void StaticValueEffect::drawEditGui() {
-    ui::DragFloat("Volume", &mStaticVolume, 0.01f, 0.0f, 1.0f);
+    for (auto &param : mParams) {
+        switch (param.second.type) {
+            case Parameter::kType_float:
+                ui::DragFloat("Float", &param.second.floatValue);
+                break;
+                
+            default:
+                break;
+        }
+    }
 }
 
 REGISTER_TYPE(StaticValueEffect)

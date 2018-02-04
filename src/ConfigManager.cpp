@@ -92,6 +92,14 @@ void ConfigManager::readEffects(std::vector<EffectRef> &effects, const std::vect
             std::string uuid = effectNode.getAttributeValue<std::string>("uuid");
             // Create the effect.
             EffectRef newEffect = Effect::create(type, name, uuid);
+            if (effectNode.hasChild("fadetime")) {
+                float fadeTime = effectNode.getChild("fadetime").getValue<float>();
+                newEffect->fadeTime = fadeTime;
+            }
+            if (effectNode.hasChild("isActive")) {
+                bool isActive = effectNode.getChild("isActive").getValue<bool>();
+                newEffect->isTurnedOn = isActive;
+            }
             if (effectNode.hasChild("channel")) {
                 std::string channelUuid = effectNode.getChild("channel").getValue();
                 // Get the channel from the uuid.
@@ -211,7 +219,15 @@ void ConfigManager::writeEffects(std::vector<EffectRef> &effects)
         nameNode.setTag("name");
         nameNode.setValue(effect->getName());
         effectNode.push_back(nameNode);
+        XmlTree fadeTimeNode;
+        fadeTimeNode.setTag("fadetime");
+        fadeTimeNode.setValue(effect->fadeTime);
+        effectNode.push_back(fadeTimeNode);
         XmlTree channelNode;
+        XmlTree activeNode;
+        activeNode.setTag("isActive");
+        activeNode.setValue(effect->isTurnedOn);
+        effectNode.push_back(activeNode);
         channelNode.setTag("channel");
         if (effect->getChannel()) {
             channelNode.setValue(effect->getChannel()->getUuid());

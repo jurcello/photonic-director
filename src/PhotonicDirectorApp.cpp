@@ -332,7 +332,7 @@ void PhotonicDirectorApp::update()
         float endIntensity = 0.f;
         for (auto effect : mEffects) {
             if (effect->hasLight(light)) {
-                endIntensity += light->getEffetcIntensity(effect->getUuid());
+                endIntensity += light->getEffetcIntensity(effect->getUuid()) * effect->getFadeValue();
             }
         }
         light->intensity = endIntensity;
@@ -577,15 +577,21 @@ void PhotonicDirectorApp::drawEffectControls()
         ui::Text("Effects");
         ui::Separator();
         int testId = 0;
+        // Create colors for the texts.
+        ColorA colorActive(0.0, 1.0, 0.0, 1.0);
+        ColorA colorInActive(1.0, 0.0, 0.0, 1.0);
+        ColorA colorFading(1.0, 1.0, 0.0, 1.0);
         for (auto it = mEffects.begin(); it != mEffects.end(); ) {
             ui::PushID(testId);
+            EffectRef & effectRef = *it;
+            ui::Checkbox("", &effectRef->isTurnedOn);
+            ui::SameLine();
             if (ui::Button("Remove")) {
                 it = mEffects.erase(it);
                 effectSelection = nullptr;
                 ui::PopID();
                 continue;
             }
-            EffectRef & effectRef = *it;
             ui::SameLine();
             if(ui::Button("Edit")) {
                 effectSelection = &effectRef;
@@ -593,9 +599,24 @@ void PhotonicDirectorApp::drawEffectControls()
             ui::SameLine();
             std::string effectName = effectRef->getName() + " (" + effectRef->getTypeName() + ")";
             ui::Text("%s", effectName.c_str());
+            ui::SameLine();
+            ColorA statusColor;
+            switch (effectRef->getStatus()) {
+                case photonic::Effect::kStatus_On:
+                    statusColor = colorActive;
+                    break;
+                    
+                case photonic::Effect::kStatus_Off:
+                    statusColor = colorInActive;
+                    break;
+                    
+                default:
+                    statusColor = colorFading;
+                    break;
+            }
+            ui::TextColored(statusColor, "%s", effectRef->getStatusName().c_str());
             ui::PopID();
             testId++;
-            
             it++;
         }
     }
@@ -609,6 +630,7 @@ void PhotonicDirectorApp::drawEffectControls()
             effect->setName(name);
         }
         ui::Separator();
+        ui::InputFloat("FadeTime", &effect->fadeTime);
         ui::Spacing();
         if (! ui::IsWindowCollapsed()) {
             ui::ListBoxHeader("Choose input channel",mChannels.size());
