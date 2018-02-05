@@ -117,10 +117,48 @@ void ConfigManager::readEffects(std::vector<EffectRef> &effects, const std::vect
                     }
                 }
             }
+            if (effectNode.hasChild("params")) {
+                for (const auto &paramNode: effectNode.getChild("params").getChildren()) {
+                    Parameter::Type type = (Parameter::Type) paramNode->getAttributeValue<int>("type");
+                    int index = paramNode->getAttributeValue<int>("index");
+                    Parameter* param = newEffect->getParam(index);
+                    switch (type) {
+                        case photonic::Parameter::kType_float:
+                            param->floatValue = paramNode->getValue<float>();
+                            break;
+                            
+                        case photonic::Parameter::kType_int:
+                            param->intValue = paramNode->getValue<int>();
+                            
+                        default:
+                            break;
+                    }
+                    
+                }
+            }
             effects.push_back(newEffect);
         }
         
     }
+}
+
+Parameter ConfigManager::readParam(cinder::XmlTree paramNode)
+{
+    // We only need the type and the value
+    Parameter::Type type = (Parameter::Type) paramNode.getAttributeValue<int>("type");
+    Parameter param(type);
+    switch (type) {
+        case photonic::Parameter::kType_float:
+            param.floatValue = paramNode.getValue<float>();
+            break;
+            
+        case photonic::Parameter::kType_int:
+            param.intValue = paramNode.getValue<int>();
+            
+        default:
+            break;
+    }
+    return param;
 }
 
 int ConfigManager::readInt(std::string name)
@@ -241,10 +279,38 @@ void ConfigManager::writeEffects(std::vector<EffectRef> &effects)
             lightNode.setValue(light->mUuid);
             lightsNode.push_back(lightNode);
         }
+        XmlTree paramsNode;
+        paramsNode.setTag("params");
+        for (auto &param: effect->getParams()) {
+            writeParameter(paramsNode, param.second, param.first);
+        }
+        effectNode.push_back(paramsNode);
         effectNode.push_back(lightsNode);
         effectsNode.push_back(effectNode);
     }
     mDoc.push_back(effectsNode);
+}
+
+void ConfigManager::writeParameter(cinder::XmlTree &paramsNode, photonic::Parameter *param, int index)
+{
+    XmlTree paramnode;
+    paramnode.setTag("param");
+    paramnode.setAttribute("type", param->type);
+    paramnode.setAttribute("description", param->description);
+    paramnode.setAttribute("index", index);
+    switch (param->type) {
+        case photonic::Parameter::kType_float:
+            paramnode.setValue(param->floatValue);
+            break;
+
+        case photonic::Parameter::kType_int:
+            paramnode.setValue(param->intValue);
+            break;
+
+        default:
+            break;
+    }
+    paramsNode.push_back(paramnode);
 }
 
 void ConfigManager::writeInt(std::string name, int value)

@@ -64,6 +64,19 @@ std::string InputChannel::getName() const
 }
 
 //////////////////////////////////////////////////////////////////
+/// Start parameters.
+//////////////////////////////////////////////////////////////////
+Parameter::Parameter(Type type, std::string description)
+: description(description), type(type)
+{
+}
+
+Parameter::Parameter()
+: description("Default"), type(Parameter::Type::kType_float)
+{
+}
+
+//////////////////////////////////////////////////////////////////
 /// Start effects.
 //////////////////////////////////////////////////////////////////
 
@@ -89,14 +102,19 @@ EffectRef Effect::create(std::string type, std::string name, std::string uuid)
     return Effect::factories[type]->create(name, uuid);
 }
 
-Effect::Effect(std::string name)
-:mName(name), mUuid(generate_uuid()), mStatus(kStatus_Off), isTurnedOn(false), fadeTime(2.0f), mFadeValue(0.0)
-{
-}
-
 Effect::Effect(std::string name, std::string uuid)
 :mName(name), mUuid(uuid), mStatus(kStatus_Off), isTurnedOn(false), fadeTime(2.0f), mFadeValue(0.0)
 {
+    if (uuid == "") {
+        mUuid = generate_uuid();
+    }
+}
+
+Effect::~Effect()
+{
+    for (auto param: mParams) {
+        delete param.second;
+    }
 }
 
 std::string Effect::getUuid()
@@ -193,6 +211,16 @@ InputChannelRef Effect::getChannel()
     return mChannel;
 }
 
+Parameter* Effect::getParam(int index)
+{
+    return mParams.at(index);
+}
+
+std::map<int, Parameter*>& Effect::getParams()
+{
+    return mParams;
+}
+
 void Effect::drawEditGui() {
     // This might be used in the child classes.
 }
@@ -254,8 +282,17 @@ std::string SimpleVolumeEffect::getTypeClassName() {
 
 REGISTER_TYPE(SimpleVolumeEffect)
 
+StaticValueEffect::StaticValueEffect(std::string name, std::string uuid)
+: Effect(name, uuid)
+{
+    Parameter* newParam = new Parameter(Parameter::Type::kType_float, "Volume");
+    newParam->floatValue = 0.5f;
+    mParams[kInput_Volume] = newParam;
+}
+
 void StaticValueEffect::execute(float dt) {
     Effect::execute(dt);
+    float mStaticVolume = getParam(kInput_Volume)->floatValue;
     for (auto light: mLights) {
         light->setEffectIntensity(mUuid, mStaticVolume);
     }
@@ -267,19 +304,6 @@ std::string StaticValueEffect::getTypeName() {
 
 std::string StaticValueEffect::getTypeClassName() {
     return "StaticValueEffect";
-}
-
-void StaticValueEffect::drawEditGui() {
-    for (auto &param : mParams) {
-        switch (param.second.type) {
-            case Parameter::kType_float:
-                ui::DragFloat("Float", &param.second.floatValue);
-                break;
-                
-            default:
-                break;
-        }
-    }
 }
 
 REGISTER_TYPE(StaticValueEffect)

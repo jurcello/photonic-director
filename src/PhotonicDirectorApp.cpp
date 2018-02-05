@@ -664,6 +664,28 @@ void PhotonicDirectorApp::drawEffectControls()
             ui::ListBoxFooter();
         }
         ui::Separator();
+        // Draw the params.
+        std::map<int, Parameter*> params = effect->getParams();
+        int paramId = 100;
+        for (auto &item : params) {
+            ui::PushID(paramId);
+            Parameter* &param = item.second;
+            switch (param->type) {
+                case photonic::Parameter::kType_int:
+                    ui::InputInt(param->description.c_str(), &param->intValue);
+                    break;
+                    
+                case photonic::Parameter::kType_float:
+                    ui::InputFloat(param->description.c_str(), &param->floatValue);
+                    break;
+                    
+                default:
+                    break;
+            }
+            ui::PopID();
+            paramId++;
+        }
+        
         effect->drawEditGui();
         if (ui::Button("Done")) {
             effectSelection = nullptr;

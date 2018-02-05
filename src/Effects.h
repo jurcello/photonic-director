@@ -26,7 +26,7 @@ public: \
         return EffectRef(new klass(name, uuid)); \
     } \
 }; \
-static klass##Factory global_##klass##Factory;
+static klass##Factory global_##klass##Factory; \
 
 namespace photonic {
     class InputChannel;
@@ -54,13 +54,13 @@ namespace photonic {
     struct Parameter {
         enum Type {
             kType_float,
-            kType_string,
             kType_int,
         };
-        
+        Parameter();
+        Parameter(Type type, std::string description = "");
+      
         Type type;
         float floatValue;
-        std::string stringValue;
         int intValue;
         std::string description;
     };
@@ -89,8 +89,8 @@ namespace photonic {
         static EffectRef create(std::string type, std::string name, std::string uuid);
         static std::vector<std::string> getTypes();
         
-        Effect(std::string name);
-        Effect(std::string name, std::string uuid);
+        Effect(std::string name, std::string uuid = "");
+        ~Effect();
         
         std::string getUuid();
         std::string getName();
@@ -106,6 +106,10 @@ namespace photonic {
         std::vector<Light*> getLights();
         void setChannel(InputChannelRef channel);
         InputChannelRef getChannel();
+        // Params section.
+        Parameter* getParam(int index);
+        std::map<int, Parameter*>& getParams();
+        
         
         virtual std::string getTypeClassName() = 0;
         virtual std::string getTypeName() = 0;
@@ -124,6 +128,7 @@ namespace photonic {
         Status mStatus;
         double mStatusChangeTime;
         double mFadeValue;
+        std::map<int, Parameter*> mParams;
         
     private:
         static std::map<std::string, EffectFactory*> factories;
@@ -132,8 +137,7 @@ namespace photonic {
     
     class SimpleVolumeEffect : public Effect {
     public:
-        SimpleVolumeEffect(std::string name): Effect(name){};
-        SimpleVolumeEffect(std::string name, std::string uuid): Effect(name, uuid){};
+        SimpleVolumeEffect(std::string name, std::string uuid = ""): Effect(name, uuid){};
         
         virtual void execute(float dt);
         virtual std::string getTypeName();
@@ -142,18 +146,17 @@ namespace photonic {
     
     class StaticValueEffect : public Effect {
     public:
-        std::map<std::string, Parameter> mParams;
+        enum Inputs {
+            kInput_Volume = 1
+        };
+        
         // Todo: move implementation to the implementation file.
-        StaticValueEffect(std::string name): Effect(name){};
-        StaticValueEffect(std::string name, std::string uuid): Effect(name, uuid){};
+        StaticValueEffect(std::string name, std::string uuid = "");
         
-        virtual void execute(float dt);
-        virtual std::string getTypeName();
-        virtual std::string getTypeClassName();
-        virtual void drawEditGui();
-        
-    protected:
-        float mStaticVolume = 0.5;
+        virtual void execute(float dt) override;
+        virtual std::string getTypeName() override;
+        virtual std::string getTypeClassName() override;
+
     };
 }
 
