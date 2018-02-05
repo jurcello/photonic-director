@@ -332,7 +332,7 @@ void PhotonicDirectorApp::update()
         float endIntensity = 0.f;
         for (auto effect : mEffects) {
             if (effect->hasLight(light)) {
-                endIntensity += light->getEffetcIntensity(effect->getUuid());
+                endIntensity += light->getEffetcIntensity(effect->getUuid()) * effect->getFadeValue();
             }
         }
         light->intensity = endIntensity;
@@ -360,26 +360,27 @@ void PhotonicDirectorApp::drawGui()
     }
     ui::Separator();
     ui::Text("Dmx settings");
-    if (! mDmxOut.isConnected()) {
-        auto devices = mDmxOut.getDevicesList();
-        ui::ListBoxHeader("Choose device", devices.size());
-        for (auto device : devices) {
-            if (ui::Selectable(device.c_str())) {
-                mDmxOut.connect(device);
+    if (! ui::IsWindowCollapsed()) {
+        if (! mDmxOut.isConnected()) {
+            auto devices = mDmxOut.getDevicesList();
+            ui::ListBoxHeader("Choose device", devices.size());
+            for (auto device : devices) {
+                if (ui::Selectable(device.c_str())) {
+                    mDmxOut.connect(device);
+                }
+            }
+            ui::ListBoxFooter();
+        }
+        else {
+            ui::Text("Connected to: ");
+            const std::string deviceInfo = mDmxOut.getConnectedDevice();
+            ui::Text("%s", deviceInfo.c_str());
+            ui::SameLine();
+            if (ui::Button("Disconnect")) {
+                mDmxOut.disConnect();
             }
         }
-        ui::ListBoxFooter();
     }
-    else {
-        ui::Text("Connected to: ");
-        const std::string deviceInfo = mDmxOut.getConnectedDevice();
-        ui::Text(deviceInfo.c_str());
-        ui::SameLine();
-        if (ui::Button("Disconnect")) {
-            mDmxOut.disConnect();
-        }
-    }
-
     ui::Separator();
     ui::Text("Widgets");
     ui::Checkbox("Show light editor", &showLightEditor);
@@ -466,6 +467,7 @@ void PhotonicDirectorApp::drawLightControls()
             }
         }
         ui::SliderInt("Dmx offset", &mGuiStatusData.lightToEdit->mDmxOffsetIntentsityValue, 0, 255);
+        mGuiStatusData.lightToEdit->drawGui();
         if (ui::Button("Done")) {
             mGuiStatusData.lightToEdit = nullptr;
             mGuiStatusData.status = IDLE;
@@ -552,9 +554,13 @@ void PhotonicDirectorApp::drawEffectControls()
         }
         if (ui::BeginPopupModal("Create effect")) {
             static std::string effectName;
+            static int effectType = 0;
             ui::InputText("Name", &effectName);
+            ui::Combo("Type", &effectType, Effect::getTypes());
             if (ui::Button("Done")) {
-                EffectRef newEffect = Effect::create(effectName);
+                std::string type = Effect::getTypes()[effectType];
+                console() << effectName << ", " << type << endl;
+                EffectRef newEffect = Effect::create(type, effectName);
                 // TODO: Now add all lights. Later lights should be picked.
                 for (auto light : mLights) {
                     newEffect->addLight(light);
@@ -564,24 +570,54 @@ void PhotonicDirectorApp::drawEffectControls()
             }
             ui::EndPopup();
         }
-        if (effectSelection) {
+        /////////////////////////////////////////////
+        /////// Effect overview
+        /////////////////////////////////////////////
+        
+        ui::Text("Effects");
+        ui::Separator();
+        int testId = 0;
+        // Create colors for the texts.
+        ColorA colorActive(0.0, 1.0, 0.0, 1.0);
+        ColorA colorInActive(1.0, 0.0, 0.0, 1.0);
+        ColorA colorFading(1.0, 1.0, 0.0, 1.0);
+        for (auto it = mEffects.begin(); it != mEffects.end(); ) {
+            ui::PushID(testId);
+            EffectRef & effectRef = *it;
+            ui::Checkbox("", &effectRef->isTurnedOn);
             ui::SameLine();
             if (ui::Button("Remove")) {
-                auto it = std::find(mEffects.begin(), mEffects.end(), *effectSelection);
-                if (it != mEffects.end()) {
-                    mEffects.erase(it);
-                    effectSelection = nullptr;
-                }
+                it = mEffects.erase(it);
+                effectSelection = nullptr;
+                ui::PopID();
+                continue;
             }
-        }
-        if (! ui::IsWindowCollapsed()) {
-            ui::ListBoxHeader("Edit effects");
-            for (EffectRef& effect : mEffects) {
-                if (ui::Selectable(effect->getName().c_str(), effectSelection == &effect)) {
-                    effectSelection = &effect;
-                }
+            ui::SameLine();
+            if(ui::Button("Edit")) {
+                effectSelection = &effectRef;
             }
-            ui::ListBoxFooter();
+            ui::SameLine();
+            std::string effectName = effectRef->getName() + " (" + effectRef->getTypeName() + ")";
+            ui::Text("%s", effectName.c_str());
+            ui::SameLine();
+            ColorA statusColor;
+            switch (effectRef->getStatus()) {
+                case photonic::Effect::kStatus_On:
+                    statusColor = colorActive;
+                    break;
+                    
+                case photonic::Effect::kStatus_Off:
+                    statusColor = colorInActive;
+                    break;
+                    
+                default:
+                    statusColor = colorFading;
+                    break;
+            }
+            ui::TextColored(statusColor, "%s", effectRef->getStatusName().c_str());
+            ui::PopID();
+            testId++;
+            it++;
         }
     }
     if (effectSelection != nullptr) {
@@ -594,6 +630,7 @@ void PhotonicDirectorApp::drawEffectControls()
             effect->setName(name);
         }
         ui::Separator();
+        ui::InputFloat("FadeTime", &effect->fadeTime);
         ui::Spacing();
         if (! ui::IsWindowCollapsed()) {
             ui::ListBoxHeader("Choose input channel",mChannels.size());
@@ -622,11 +659,37 @@ void PhotonicDirectorApp::drawEffectControls()
         if (! ui::IsWindowCollapsed()) {
             ui::ListBoxHeader("Lights");
             for (const auto light : effect->getLights()) {
-                ui::BulletText(light->mName.c_str());
+                ui::BulletText("%s", light->mName.c_str());
             }
             ui::ListBoxFooter();
         }
+        ui::Separator();
+        // Draw the params.
+        std::map<int, Parameter*> params = effect->getParams();
+        int paramId = 100;
+        for (auto &item : params) {
+            ui::PushID(paramId);
+            Parameter* &param = item.second;
+            switch (param->type) {
+                case photonic::Parameter::kType_Int:
+                    ui::InputInt(param->description.c_str(), &param->intValue);
+                    break;
+                    
+                case photonic::Parameter::kType_Float:
+                    ui::InputFloat(param->description.c_str(), &param->floatValue);
+                    break;
+                    
+                case photonic::Parameter::kType_Color:
+                    ui::ColorPicker4(param->description.c_str(), &param->colorValue[0]);
+                    
+                default:
+                    break;
+            }
+            ui::PopID();
+            paramId++;
+        }
         
+        effect->drawEditGui();
         if (ui::Button("Done")) {
             effectSelection = nullptr;
             mGuiStatusData.pickLightEffect = nullptr;
