@@ -53,8 +53,9 @@ namespace photonic {
     
     struct Parameter {
         enum Type {
-            kType_float,
-            kType_int,
+            kType_Float,
+            kType_Int,
+            kType_Color,
         };
         Parameter();
         Parameter(Type type, std::string description = "");
@@ -62,6 +63,7 @@ namespace photonic {
         Type type;
         float floatValue;
         int intValue;
+        ColorA colorValue;
         std::string description;
     };
     
@@ -147,7 +149,8 @@ namespace photonic {
     class StaticValueEffect : public Effect {
     public:
         enum Inputs {
-            kInput_Volume = 1
+            kInput_Volume = 1,
+            kInput_Color = 2,
         };
         
         // Todo: move implementation to the implementation file.

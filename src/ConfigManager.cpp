@@ -118,21 +118,10 @@ void ConfigManager::readEffects(std::vector<EffectRef> &effects, const std::vect
                 }
             }
             if (effectNode.hasChild("params")) {
-                for (const auto &paramNode: effectNode.getChild("params").getChildren()) {
-                    Parameter::Type type = (Parameter::Type) paramNode->getAttributeValue<int>("type");
+                for (auto &paramNode: effectNode.getChild("params").getChildren()) {
                     int index = paramNode->getAttributeValue<int>("index");
                     Parameter* param = newEffect->getParam(index);
-                    switch (type) {
-                        case photonic::Parameter::kType_float:
-                            param->floatValue = paramNode->getValue<float>();
-                            break;
-                            
-                        case photonic::Parameter::kType_int:
-                            param->intValue = paramNode->getValue<int>();
-                            
-                        default:
-                            break;
-                    }
+                    readParam(paramNode, param);
                     
                 }
             }
@@ -142,23 +131,32 @@ void ConfigManager::readEffects(std::vector<EffectRef> &effects, const std::vect
     }
 }
 
-Parameter ConfigManager::readParam(cinder::XmlTree paramNode)
+void ConfigManager::readParam(std::unique_ptr<XmlTree> &paramNode, Parameter* param)
 {
     // We only need the type and the value
-    Parameter::Type type = (Parameter::Type) paramNode.getAttributeValue<int>("type");
-    Parameter param(type);
+    Parameter::Type type = (Parameter::Type) paramNode->getAttributeValue<int>("type");
     switch (type) {
-        case photonic::Parameter::kType_float:
-            param.floatValue = paramNode.getValue<float>();
+        case photonic::Parameter::kType_Float:
+            param->floatValue = paramNode->getValue<float>();
             break;
             
-        case photonic::Parameter::kType_int:
-            param.intValue = paramNode.getValue<int>();
+        case photonic::Parameter::kType_Int:
+            param->intValue = paramNode->getValue<int>();
+            break;
             
+        case photonic::Parameter::kType_Color:
+        {
+            float r = paramNode->getAttributeValue<float>("r");
+            float g = paramNode->getAttributeValue<float>("g");
+            float b = paramNode->getAttributeValue<float>("b");
+            float a = paramNode->getAttributeValue<float>("a");
+            param->colorValue = ColorA(r, g, b, a);
+            break;
+        }
+
         default:
             break;
     }
-    return param;
 }
 
 int ConfigManager::readInt(std::string name)
@@ -299,14 +297,21 @@ void ConfigManager::writeParameter(cinder::XmlTree &paramsNode, photonic::Parame
     paramnode.setAttribute("description", param->description);
     paramnode.setAttribute("index", index);
     switch (param->type) {
-        case photonic::Parameter::kType_float:
+        case photonic::Parameter::kType_Float:
             paramnode.setValue(param->floatValue);
             break;
 
-        case photonic::Parameter::kType_int:
+        case photonic::Parameter::kType_Int:
             paramnode.setValue(param->intValue);
             break;
-
+            
+        case photonic::Parameter::kType_Color:
+            paramnode.setAttribute("r", param->colorValue.r);
+            paramnode.setAttribute("g", param->colorValue.g);
+            paramnode.setAttribute("b", param->colorValue.b);
+            paramnode.setAttribute("a", param->colorValue.a);
+            break;
+            
         default:
             break;
     }

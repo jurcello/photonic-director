@@ -25,7 +25,7 @@ public:
     void readChannels(std::vector<InputChannelRef> &channels);
     void readEffects(std::vector<EffectRef> &effects, const std::vector<Light*> &lights, const std::vector<InputChannelRef> &channels);
     int readInt(std::string name);
-    Parameter readParam(XmlTree paramNode);
+    void readParam(std::unique_ptr<XmlTree> &paramNode, Parameter* param);
     
     void startNewDoc();
     void writeLights(std::vector<Light*> &lights);

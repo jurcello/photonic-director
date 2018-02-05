@@ -671,13 +671,16 @@ void PhotonicDirectorApp::drawEffectControls()
             ui::PushID(paramId);
             Parameter* &param = item.second;
             switch (param->type) {
-                case photonic::Parameter::kType_int:
+                case photonic::Parameter::kType_Int:
                     ui::InputInt(param->description.c_str(), &param->intValue);
                     break;
                     
-                case photonic::Parameter::kType_float:
+                case photonic::Parameter::kType_Float:
                     ui::InputFloat(param->description.c_str(), &param->floatValue);
                     break;
+                    
+                case photonic::Parameter::kType_Color:
+                    ui::ColorPicker4(param->description.c_str(), &param->colorValue[0]);
                     
                 default:
                     break;

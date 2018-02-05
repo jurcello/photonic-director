@@ -72,7 +72,7 @@ Parameter::Parameter(Type type, std::string description)
 }
 
 Parameter::Parameter()
-: description("Default"), type(Parameter::Type::kType_float)
+: description("Default"), type(Parameter::Type::kType_Float)
 {
 }
 
@@ -285,9 +285,16 @@ REGISTER_TYPE(SimpleVolumeEffect)
 StaticValueEffect::StaticValueEffect(std::string name, std::string uuid)
 : Effect(name, uuid)
 {
-    Parameter* newParam = new Parameter(Parameter::Type::kType_float, "Volume");
+    // Input volume.
+    Parameter* newParam = new Parameter(Parameter::Type::kType_Float, "Volume");
     newParam->floatValue = 0.5f;
     mParams[kInput_Volume] = newParam;
+    
+    // Efefct color.
+    Parameter* color = new Parameter(Parameter::Type::kType_Color, "Color");
+    color->colorValue = ColorA(Color::gray(0.5f));
+    mParams[kInput_Color] = color;
+    
 }
 
 void StaticValueEffect::execute(float dt) {
