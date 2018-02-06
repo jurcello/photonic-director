@@ -1,17 +1,14 @@
 #include "cinder/app/App.h"
 #include "cinder/app/RendererGl.h"
 #include "cinder/gl/gl.h"
-#include "cinder/TriMesh.h"
-#include "cinder/Camera.h"
-#include "cinder/CameraUi.h"
 #include "cinder/params/Params.h"
 #include "cinder/Log.h"
 #include "CinderImGui.h"
+#include "cinder/Clipboard.h"
 #include "Light.h"
 #include "Effects.h"
 #include "ConfigManager.h"
 #include "Visualizer.h"
-#include "Output.h"
 #include "Osc.h"
 
 using namespace ci;
@@ -31,8 +28,8 @@ enum gui_status {
 
 struct GuiStatusData {
     EffectRef pickLightEffect;
-    Light* lightToEdit;
-    Light* pickedLight;
+    LightRef lightToEdit;
+    LightRef pickedLight;
     bool drawGui;
     
     gui_status status;
@@ -59,16 +56,14 @@ public:
     void load();
     
     void pickLight();
-    void addLight();
-    
+
     void setupOsc(int port);
-    
-    ~PhotonicDirectorApp();
     
 protected:
     ConfigManager config;
     
-    vector<Light*> mLights;
+    vector<LightRef> mLights;
+    LightFactory mLightFactory;
     
     // Visualizer.
     Visualizer mVisualizer;
@@ -98,7 +93,7 @@ protected:
 };
 
 PhotonicDirectorApp::PhotonicDirectorApp()
-: mOscReceiver(nullptr), mOscPort(10000)
+: mOscReceiver(nullptr), mOscPort(10000), mLightFactory(&mDmxOut)
 {
     mGuiStatusData.pickLightEffect = nullptr;
     mGuiStatusData.lightToEdit = nullptr;
@@ -167,16 +162,13 @@ void PhotonicDirectorApp::setup()
     ImGui::Options options;
     setTheme(options);
     ImGui::initialize(options);
+    ImGui::connectWindow(getWindow());
     
     // Setup some initial lights.
-    mLights.push_back(new Light(vec3(2.0f, 2.0f, 0.0f), vec4(1.0f, 0.0f, 0.0f, 1.0f), 0.6f));
-    mLights.push_back(new Light(vec3(1.0f, 1.0, 1.0f), vec4(0.0f, 1.0f, 0.0f, 1.0f), 0.99f));
-    mLights.push_back(new Light(vec3(3.0f, 2.0f, -1.0f), vec4(0.0f, 0.0f, 1.0f, 1.0f), 0.9f));
-    // Add the dmx output to the lights.
-    for (auto light : mLights) {
-        light->injectDmxChecker(&mDmxOut);
-    }
-    
+    mLights.push_back(mLightFactory.create(vec3(2.0f, 2.0f, 0.0f)));
+    mLights.push_back(mLightFactory.create(vec3(1.0f, 1.0f, 1.0f)));
+    mLights.push_back(mLightFactory.create(vec3(3.0f, 2.0f, -1.0f)));
+
     // Setup visualizer.
     mVisualizer.setup(mLights);
     
@@ -224,14 +216,6 @@ void PhotonicDirectorApp::oscReceive(const osc::Message &message)
             }
         }
     }
-}
-
-void PhotonicDirectorApp::addLight() {
-    Light* newLight = new Light(vec3(1.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), 0.5f);
-    newLight->injectDmxChecker(&mDmxOut);
-    mLights.push_back(newLight);
-    mGuiStatusData.lightToEdit = newLight;
-    mGuiStatusData.status = EDITING_LIGHT;
 }
 
 void PhotonicDirectorApp::mouseDown( MouseEvent event )
@@ -301,7 +285,7 @@ void PhotonicDirectorApp::load()
             mOscPort = oscPort;
             setupOsc(mOscPort);
         }
-        config.readLights(mLights, &mDmxOut);
+        config.readLights(mLights, &mLightFactory);
         config.readChannels(mChannels);
         config.readEffects(mEffects, mLights, mChannels);
     }
@@ -335,6 +319,7 @@ void PhotonicDirectorApp::update()
                 endIntensity += light->getEffetcIntensity(effect->getUuid()) * effect->getFadeValue();
             }
         }
+        //
         light->intensity = endIntensity;
         if (light->getDmxChannel() > 0) {
             mDmxOut.setChannelValue(light->getDmxChannel(), light->getCorrectedDmxValue());
@@ -424,7 +409,7 @@ void PhotonicDirectorApp::drawLightControls()
         mVisualizer.disableEditingMode();
     }
     if (ui::Button("Add")) {
-        Light* newLight = new Light(vec3(1.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), 0.5f);
+        LightRef newLight = mLightFactory.create(vec3(1.0f));
         mLights.push_back(newLight);
         mGuiStatusData.lightToEdit = newLight;
         mGuiStatusData.status = EDITING_LIGHT;
@@ -439,14 +424,13 @@ void PhotonicDirectorApp::drawLightControls()
                     effect->removeLight(*it);
                 }
                 mLights.erase(it);
-                delete mGuiStatusData.lightToEdit;
                 mGuiStatusData.lightToEdit = nullptr;
             }
         }
     }
     if (! ui::IsWindowCollapsed()) {
         ui::ListBoxHeader("Edit lights");
-        for (Light* light: mLights) {
+        for (LightRef light: mLights) {
             if (ui::Selectable(light->mName.c_str(), mGuiStatusData.lightToEdit == light)) {
                 mGuiStatusData.lightToEdit = light;
             }
@@ -459,6 +443,8 @@ void PhotonicDirectorApp::drawLightControls()
         ui::SliderFloat("Intensity", &mGuiStatusData.lightToEdit->intensity, 0.f, 1.f);
         ui::ColorEdit4("Color", &mGuiStatusData.lightToEdit->color[0]);
         ui::DragFloat3("Position", &mGuiStatusData.lightToEdit->position[0]);
+        ui::Text("DMX Settings");
+        ui::Spacing();
         static int dmxChannel;
         dmxChannel = mGuiStatusData.lightToEdit->getDmxChannel();
         if (ui::InputInt("DMX channel", &dmxChannel, 0, 256)) {
@@ -466,8 +452,7 @@ void PhotonicDirectorApp::drawLightControls()
                 ui::TextColored(Color(1.f, 0.f, 0.f), "The channel is already taken");
             }
         }
-        ui::SliderInt("Dmx offset", &mGuiStatusData.lightToEdit->mDmxOffsetIntentsityValue, 0, 255);
-        mGuiStatusData.lightToEdit->drawGui();
+        ui::InputInt("Dmx offset", &mGuiStatusData.lightToEdit->mDmxOffsetIntentsityValue, 0, 255);
         if (ui::Button("Done")) {
             mGuiStatusData.lightToEdit = nullptr;
             mGuiStatusData.status = IDLE;
@@ -547,7 +532,7 @@ void PhotonicDirectorApp::drawEffectControls()
     // Effects ui.
     static EffectRef* effectSelection = nullptr;
     {
-        ui::ScopedWindow window("Effects");
+        ImGui::ScopedWindow window("Effects");
         // Add the button.
         if (ui::Button("Create Effect")) {
             ui::OpenPopup("Create effect");
@@ -622,7 +607,7 @@ void PhotonicDirectorApp::drawEffectControls()
     }
     if (effectSelection != nullptr) {
         ui::ScopedWindow window("Effect inspector");
-        
+
         EffectRef effect = *effectSelection;
         static std::string name;
         name = effect->getName();
@@ -633,8 +618,8 @@ void PhotonicDirectorApp::drawEffectControls()
         ui::InputFloat("FadeTime", &effect->fadeTime);
         ui::Spacing();
         if (! ui::IsWindowCollapsed()) {
-            ui::ListBoxHeader("Choose input channel",mChannels.size());
-            for (auto channel : mChannels) {
+            ui::ListBoxHeader("Choose input channel", (int) mChannels.size());
+            for (const auto channel : mChannels) {
                 if (ui::Selectable(channel->getName().c_str(), channel == effect->getChannel())) {
                     effect->setChannel(channel);
                 }
@@ -749,14 +734,6 @@ void PhotonicDirectorApp::draw()
     if (mGuiStatusData.pickedLight) {
         mVisualizer.highLightLight(mGuiStatusData.pickedLight);
     }
-}
-
-PhotonicDirectorApp::~PhotonicDirectorApp()
-{
-    for (Light* light : mLights) {
-        delete light;
-    }
-    // Delete the osc receiver.
 }
 
 CINDER_APP( PhotonicDirectorApp, RendererGl( RendererGl::Options().msaa(8)), [](cinder::app::AppBase::Settings *settings){

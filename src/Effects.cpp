@@ -164,7 +164,7 @@ void Effect::setName(std::string name)
     mName = name;
 }
 
-void Effect::addLight(Light* light)
+void Effect::addLight(LightRef light)
 {
     // First check if the light is present.
     auto it = std::find(mLights.begin(), mLights.end(), light);
@@ -172,14 +172,14 @@ void Effect::addLight(Light* light)
         mLights.push_back(light);
 }
 
-void Effect::removeLight(Light *light)
+void Effect::removeLight(LightRef light)
 {
     auto it = std::find(mLights.begin(), mLights.end(), light);
     if (it != mLights.end())
         mLights.erase(it);
 }
 
-void Effect::toggleLight(Light *light)
+void Effect::toggleLight(LightRef light)
 {
     auto it = std::find(mLights.begin(), mLights.end(), light);
     if (it != mLights.end()) {
@@ -190,13 +190,13 @@ void Effect::toggleLight(Light *light)
     }    
 }
 
-bool Effect::hasLight(Light *light)
+bool Effect::hasLight(LightRef light)
 {
     auto it = std::find(mLights.begin(), mLights.end(), light);
     return it != mLights.end();
 }
 
-std::vector<Light*> Effect::getLights()
+std::vector<LightRef> Effect::getLights()
 {
     return mLights;
 }
@@ -266,7 +266,7 @@ void Effect::execute(float dt) {
 
 void SimpleVolumeEffect::execute(float dt) {
     Effect::execute(dt);
-    for (Light* light: mLights) {
+    for (LightRef light: mLights) {
         if (mChannel)
             light->setEffectIntensity(mUuid, mChannel->getValue());
     }
