@@ -314,13 +314,18 @@ void PhotonicDirectorApp::update()
     /////////////////////////////////////////////
     for (auto light : mLights) {
         float endIntensity = 0.f;
+        ColorA endColor(0.0f, 0.0f, 0.0f, 1.0f);
         for (auto effect : mEffects) {
             if (effect->hasLight(light)) {
                 endIntensity += light->getEffetcIntensity(effect->getUuid()) * effect->getFadeValue();
+                endColor += light->getEffectColor(effect->getUuid()) * effect->getFadeValue();
             }
         }
         //
         light->intensity = endIntensity;
+        // Be sure that the alfa channel is always 1.0.
+        endColor.a = 1.0f;
+        light->color = endColor;
         if (light->getDmxChannel() > 0) {
             mDmxOut.setChannelValue(light->getDmxChannel(), light->getCorrectedDmxValue());
         }
@@ -335,7 +340,7 @@ void PhotonicDirectorApp::drawGui()
     static bool showEffectEditor = true;
     static bool showDmxInspector = false;
     // Draw the general ui.
-    ui::ScopedWindow window("Controls");
+    ImGui::ScopedWindow window("Controls");
     
     ui::Separator();
     ui::Text("Osc settings");
@@ -399,7 +404,7 @@ void PhotonicDirectorApp::drawGui()
 
 void PhotonicDirectorApp::drawLightControls()
 {
-    ui::ScopedWindow window("Lights");
+    ImGui::ScopedWindow window("Lights");
     static bool editingMode = false;
     ui::Checkbox("Edit mode", &editingMode);
     if (editingMode) {
@@ -438,7 +443,7 @@ void PhotonicDirectorApp::drawLightControls()
         ui::ListBoxFooter();
     }
     if (mGuiStatusData.lightToEdit) {
-        ui::ScopedWindow lightEditWindow("Edit light");
+        ImGui::ScopedWindow lightEditWindow("Edit light");
         ui::InputText("Name", &mGuiStatusData.lightToEdit->mName);
         ui::SliderFloat("Intensity", &mGuiStatusData.lightToEdit->intensity, 0.f, 1.f);
         ui::ColorEdit4("Color", &mGuiStatusData.lightToEdit->color[0]);
@@ -465,7 +470,7 @@ void PhotonicDirectorApp::drawChannelControls()
     static const InputChannelRef* channelSelection = nullptr;
     {
         
-        ui::ScopedWindow window("Channels");
+        ImGui::ScopedWindow window("Channels");
         // Add the buttons.
         if (ui::Button("Add Channel")) {
             ui::OpenPopup("Create channel");
@@ -506,7 +511,7 @@ void PhotonicDirectorApp::drawChannelControls()
     }
     
     if (channelSelection != nullptr) {
-        ui::ScopedWindow window("Channel inspector");
+        ImGui::ScopedWindow window("Channel inspector");
         
         InputChannelRef channel = *channelSelection;
         static std::string name;
@@ -606,7 +611,7 @@ void PhotonicDirectorApp::drawEffectControls()
         }
     }
     if (effectSelection != nullptr) {
-        ui::ScopedWindow window("Effect inspector");
+        ImGui::ScopedWindow window("Effect inspector");
 
         EffectRef effect = *effectSelection;
         static std::string name;
@@ -687,7 +692,7 @@ void PhotonicDirectorApp::drawEffectControls()
 
 void PhotonicDirectorApp::drawDmxInspector()
 {
-    ui::ScopedWindow window("Dmx inspector");
+    ImGui::ScopedWindow window("Dmx inspector");
     if (! ui::IsWindowCollapsed()) {
         auto dmxVisuals = mDmxOut.getVisualizeTexture();
         ui::Image(dmxVisuals, dmxVisuals->getSize());

@@ -300,8 +300,10 @@ StaticValueEffect::StaticValueEffect(std::string name, std::string uuid)
 void StaticValueEffect::execute(float dt) {
     Effect::execute(dt);
     float mStaticVolume = getParam(kInput_Volume)->floatValue;
+    ColorA effectColor = mParams[kInput_Color]->colorValue * mParams[kInput_Volume]->floatValue;
     for (auto light: mLights) {
         light->setEffectIntensity(mUuid, mStaticVolume);
+        light->setEffectColor(mUuid, effectColor);
     }
 }
 
