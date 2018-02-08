@@ -18,6 +18,18 @@ using namespace cinder;
 class Light;
 typedef std::shared_ptr<Light> LightRef;
 
+struct LightType {
+
+    LightType(const std::string &name, std::string machineName, int colorChannelPosition, int intensityChannelPosition,
+              int numChannels);
+
+    std::string name;
+    std::string machineName;
+    int numChannels;
+    int colorChannelPosition;
+    int intensityChannelPosition;
+};
+
 class Light
 {
 public:
@@ -33,23 +45,22 @@ public:
     std::string mName;
     vec4 position;
     
-    Light(vec3 cPosition, std::string cType, std::string uuid = "");
+    Light(vec3 cPosition, LightType *cType, std::string uuid = "");
     
     void setPosition(vec3 newPosition);
     vec3 getPosition();
     std::string getUuid();
+    LightType* getLightType();
     
     bool setDmxChannel(int dmxChannel);
     int getDmxChannel();
-    int getMNumChannels() const;
-    Light* setNumChannels(int numChannels);
+    int getNumChannels() const;
     int getColorChannelPosition() const;
-    Light* setColorChannelPosition(int colorChannelPosition);
     int getIntensityChannelPosition() const;
-    Light* setIntensityChannelPosition(int intensityChannelPosition);
     int getCorrectedDmxValue();
 
     void injectDmxOutput(DmxOutput *dmxOutput);
+    void updateDmx();
     
     // Effect setters and getters.
     void setEffectIntensity(std::string effectId, float targetIntensity);
@@ -64,7 +75,7 @@ protected:
     std::map<std::string, ColorA> effectColors;
 
     std::string mUuid;
-    std::string mType;
+    LightType* mType;
     int mDmxChannel;
     int mNumChannels;
     int mColorChannelPosition;
@@ -76,13 +87,19 @@ class LightFactory {
 public:
     explicit LightFactory(DmxOutput* dmxOutput);
 
-    std::vector<std::string> getAvailableTypes();
-    std::string getDefaultType();
+    std::vector<std::string> getAvailableTypeNames();
+    std::vector<LightType*> getAvailableTypes();
+    LightType* getDefaultType();
 
-    LightRef create(vec3 position, std::string type = "", std::string uuid = "", int numDmxChannels = 1, int colorChannelPosition = 0, int intensityChannelPosition = 0);
+    LightRef create(vec3 position, LightType *type, std::string uuid);
+    LightRef create(vec3 position, std::string type, std::string uuid);
+
+    virtual ~LightFactory();
 
 protected:
     DmxOutput* mDmxOut;
+    std::vector<LightType*> mLightTypes;
+
 };
 
 // Struct for sending light data to the buffer.

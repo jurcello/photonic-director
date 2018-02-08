@@ -44,7 +44,13 @@ void ConfigManager::readLights(std::vector<LightRef> &lights, LightFactory* ligh
         float intensity = lightNode.getChild("intensity").getValue<float>();
         // Uuid.
         std::string uuid = lightNode.getAttribute("uuid");
-        LightRef newLight = lightFactory->create(position, "", uuid);
+        LightRef newLight;
+        if (lightNode.hasAttribute("type")) { ;
+            newLight = lightFactory->create(position, lightNode.getAttribute("type"), uuid);
+        }
+        else {
+            newLight = lightFactory->create(position, NULL, uuid);
+        }
         if (lightNode.hasChild("dmxChannel")) {
             // Dmx channel.
             int dmxChannel = lightNode.getChild("dmxChannel").getValue<int>();
@@ -177,6 +183,7 @@ void ConfigManager::writeLights(std::vector<LightRef> &lights)
         XmlTree lightNode;
         lightNode.setTag("light");
         lightNode.setAttribute("uuid", light->getUuid());
+        lightNode.setAttribute("type", light->getLightType()->machineName);
         XmlTree position;
         position.setTag("position");
         position.setAttribute("x", light->position.x);

@@ -165,9 +165,9 @@ void PhotonicDirectorApp::setup()
     ImGui::connectWindow(getWindow());
     
     // Setup some initial lights.
-    mLights.push_back(mLightFactory.create(vec3(2.0f, 2.0f, 0.0f)));
-    mLights.push_back(mLightFactory.create(vec3(1.0f, 1.0f, 1.0f)));
-    mLights.push_back(mLightFactory.create(vec3(3.0f, 2.0f, -1.0f)));
+    mLights.push_back(mLightFactory.create(vec3(2.0f, 2.0f, 0.0f), nullptr, std::string()));
+    mLights.push_back(mLightFactory.create(vec3(1.0f, 1.0f, 1.0f), nullptr, std::string()));
+    mLights.push_back(mLightFactory.create(vec3(3.0f, 2.0f, -1.0f), nullptr, std::string()));
 
     // Setup visualizer.
     mVisualizer.setup(mLights);
@@ -326,9 +326,7 @@ void PhotonicDirectorApp::update()
         // Be sure that the alfa channel is always 1.0.
         endColor.a = 1.0f;
         light->color = endColor;
-        if (light->getDmxChannel() > 0) {
-            mDmxOut.setChannelValue(light->getDmxChannel(), light->getCorrectedDmxValue());
-        }
+        light->updateDmx();
     }
     mDmxOut.update();
 }
@@ -413,12 +411,33 @@ void PhotonicDirectorApp::drawLightControls()
     else {
         mVisualizer.disableEditingMode();
     }
-    if (ui::Button("Add")) {
-        LightRef newLight = mLightFactory.create(vec3(1.0f));
-        mLights.push_back(newLight);
-        mGuiStatusData.lightToEdit = newLight;
-        mGuiStatusData.status = EDITING_LIGHT;
+    if (ui::Button("Add Light")) {
+        ui::OpenPopup("Create Light");
     }
+    if (ui::BeginPopupModal("Create Light")) {
+        static std::string lightName;
+        static int lightType = 0;
+        ui::InputText("Name", &lightName);
+        ui::Combo("Type", &lightType, mLightFactory.getAvailableTypeNames());
+        if (ui::Button("Done")) {
+            std::vector<LightType*> lightTypes = mLightFactory.getAvailableTypes();
+            LightRef newLight = mLightFactory.create(vec3(1.0f), lightTypes[lightType], std::string());
+            newLight->mName = lightName;
+            mLights.push_back(newLight);
+            ui::CloseCurrentPopup();
+        }
+        if (ui::Button("Cancel")) {
+            ui::CloseCurrentPopup();
+        }
+        ui::EndPopup();
+    }
+
+//    if (ui::Button("Add")) {
+//        LightRef newLight = mLightFactory.create(vec3(1.0f));
+//        mLights.push_back(newLight);
+//        mGuiStatusData.lightToEdit = newLight;
+//        mGuiStatusData.status = EDITING_LIGHT;
+//    }
     if (mGuiStatusData.lightToEdit) {
         ui::SameLine();
         if (ui::Button("Remove")) {
@@ -448,6 +467,25 @@ void PhotonicDirectorApp::drawLightControls()
         ui::SliderFloat("Intensity", &mGuiStatusData.lightToEdit->intensity, 0.f, 1.f);
         ui::ColorEdit4("Color", &mGuiStatusData.lightToEdit->color[0]);
         ui::DragFloat3("Position", &mGuiStatusData.lightToEdit->position[0]);
+        ui::Spacing();
+        ui::Text("Light type");
+        ui::Separator();
+        LightType* lightType = mGuiStatusData.lightToEdit->getLightType();
+        std::string lightTypeName = "Type: " + lightType->name;
+        ui::Text("%s", lightTypeName.c_str());
+        int numChannels = mGuiStatusData.lightToEdit->getNumChannels();
+        if (numChannels > 1) {
+            std::string numberOfChannels = "Number of channels: " + std::to_string(numChannels);
+            ui::Text("%s", numberOfChannels.c_str());
+            std::string colorChannelPostion =
+                    "Color channel position: " + std::to_string(mGuiStatusData.lightToEdit->getColorChannelPosition());
+            ui::Text("%s", colorChannelPostion.c_str());
+            std::string intensityChannelPosition =
+                    "Intensity channel position: " + std::to_string(mGuiStatusData.lightToEdit->getIntensityChannelPosition());
+            ui::Text("%s", intensityChannelPosition.c_str());
+        }
+        ui::Spacing();
+        ui::Separator();
         ui::Text("DMX Settings");
         ui::Spacing();
         static int dmxChannel;
