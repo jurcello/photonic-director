@@ -118,15 +118,13 @@ bool DmxOutput::registerChannel(int channel, std::string uid)
 
 void DmxOutput::releaseChannels(std::string uid)
 {
-    if (mChannelRegistry.size() > 0) {
-        auto it = mChannelRegistry.begin();
-        while (it != mChannelRegistry.end()) {
+    if (! mChannelRegistry.empty()) {
+        for (auto it = mChannelRegistry.begin(); it != mChannelRegistry.end(); ) {
             if (it->second == uid) {
                 it = mChannelRegistry.erase(it);
+                continue;
             }
-            else {
-                it++;
-            }
+            it++;
         }
     }
 }
