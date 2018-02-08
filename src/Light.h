@@ -21,13 +21,14 @@ typedef std::shared_ptr<Light> LightRef;
 struct LightType {
 
     LightType(const std::string &name, std::string machineName, int colorChannelPosition, int intensityChannelPosition,
-              int numChannels);
+                  int numChannels, ColorA editColor);
 
     std::string name;
     std::string machineName;
     int numChannels;
     int colorChannelPosition;
     int intensityChannelPosition;
+    ColorA editColor;
 };
 
 class Light

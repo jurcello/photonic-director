@@ -16,9 +16,9 @@ int Light::initNameNumber = 0;
 
 
 LightType::LightType(const std::string &name, std::string machineName, int colorChannelPosition, int intensityChannelPosition,
-                     int numChannels)
+                     int numChannels, ColorA editColor)
         : name(name), machineName(machineName), numChannels(numChannels), colorChannelPosition(colorChannelPosition),
-          intensityChannelPosition(intensityChannelPosition) {}
+          intensityChannelPosition(intensityChannelPosition), editColor(editColor) {}
 
 
 Light::Light(vec3 cPosition, LightType *cType, std::string uuid)
@@ -164,9 +164,9 @@ LightFactory::LightFactory(DmxOutput *dmxOutput)
 {
     // Create some types.
     // TODO: create them form a file later on.
-    mLightTypes.push_back(new LightType("Single Channel (dimmer)", "single_channel", 0, 0, 1));
-    mLightTypes.push_back(new LightType("Simple Color (3 channels)", "simple_color", 1, 0, 3));
-    mLightTypes.push_back(new LightType("Advanced Color (6 channels)", "advanced_color", 1, 4, 3));
+    mLightTypes.push_back(new LightType("Single Channel (dimmer)", "single_channel", 0, 0, 1, cinder::ColorA(252.0f/256.0f, 211.0f/256.0f, 3.0f/256.0f, 0)));
+    mLightTypes.push_back(new LightType("Simple Color (3 channels)", "simple_color", 1, 0, 3, cinder::ColorA(1.0f, 0, 0, 0)));
+    mLightTypes.push_back(new LightType("Advanced Color (6 channels)", "advanced_color", 1, 4, 3, cinder::ColorA(1.0f, 0, 1.0f, 0)));
 }
 
 

@@ -176,7 +176,8 @@ void Visualizer::drawLight(LightRef light)
     gl::setMatrices(mCam);
     gl::translate(vec3(light->position));
     gl::scale(vec3(LIGHT_SPHERE_SIZE));
-    mLightShader->uniform("LightColor", light->color);
+    ColorA &color = mEditingMode ? light->getLightType()->editColor : light->color;
+    mLightShader->uniform("LightColor", color);
     // If in editingmode, draw a light at full intensity,
     float intensity = mEditingMode ? 1.f : light->intensity;
     mLightShader->uniform("LightIntensity", intensity);
