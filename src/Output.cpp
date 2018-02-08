@@ -116,6 +116,17 @@ bool DmxOutput::registerChannel(int channel, std::string uid)
     return false;
 }
 
+bool DmxOutput::checkRangeAvailable(int channel, int channelAmount, std::string uuid) {
+    for (int i = channel; i < channel + channelAmount; i++) {
+        if (mChannelRegistry.find(i) != mChannelRegistry.end()) {
+            if (mChannelRegistry.find(i)->second != uuid) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 void DmxOutput::releaseChannels(std::string uid)
 {
     if (! mChannelRegistry.empty()) {

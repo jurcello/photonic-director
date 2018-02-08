@@ -417,15 +417,19 @@ void PhotonicDirectorApp::drawLightControls()
     if (ui::BeginPopupModal("Create Light")) {
         static std::string lightName;
         static int lightType = 0;
+        static vec3 lightPosition;
         ui::InputText("Name", &lightName);
         ui::Combo("Type", &lightType, mLightFactory.getAvailableTypeNames());
+        ui::InputFloat3("Position", &lightPosition[0]);
+
         if (ui::Button("Done")) {
             std::vector<LightType*> lightTypes = mLightFactory.getAvailableTypes();
-            LightRef newLight = mLightFactory.create(vec3(1.0f), lightTypes[lightType], std::string());
+            LightRef newLight = mLightFactory.create(lightPosition, lightTypes[lightType], std::string());
             newLight->mName = lightName;
             mLights.push_back(newLight);
             ui::CloseCurrentPopup();
         }
+        ui::SameLine();
         if (ui::Button("Cancel")) {
             ui::CloseCurrentPopup();
         }

@@ -53,19 +53,17 @@ LightType *Light::getLightType() {
 
 bool Light::setDmxChannel(int dmxChannel)
 {
-    // TODO: Check what is happening when more than one channel is needed.
     // If there is a checker defined, check it here.
     if (mDmxOutput) {
-        mDmxOutput->releaseChannels(mUuid);
-        if (mDmxOutput->registerChannel(dmxChannel, mUuid)) {
-            mDmxChannel = dmxChannel;
-            return true;
+        if (!mDmxOutput->checkRangeAvailable(dmxChannel, mType->numChannels, mUuid)) {
+            return false;
         }
-        return false;
+        mDmxOutput->releaseChannels(mUuid);
+        for (int i = dmxChannel; i < dmxChannel + mType->numChannels; i++) {
+            mDmxOutput->registerChannel(i, mUuid);
+        }
     }
-    else {
-        mDmxChannel = dmxChannel;
-    }
+    mDmxChannel = dmxChannel;
     return true;
 }
 
@@ -166,7 +164,7 @@ LightFactory::LightFactory(DmxOutput *dmxOutput)
     // TODO: create them form a file later on.
     mLightTypes.push_back(new LightType("Single Channel (dimmer)", "single_channel", 0, 0, 1, cinder::ColorA(252.0f/256.0f, 211.0f/256.0f, 3.0f/256.0f, 0)));
     mLightTypes.push_back(new LightType("Simple Color (3 channels)", "simple_color", 1, 0, 3, cinder::ColorA(1.0f, 0, 0, 0)));
-    mLightTypes.push_back(new LightType("Advanced Color (6 channels)", "advanced_color", 1, 4, 3, cinder::ColorA(1.0f, 0, 1.0f, 0)));
+    mLightTypes.push_back(new LightType("Advanced Color (6 channels)", "advanced_color", 1, 4, 6, cinder::ColorA(1.0f, 0, 1.0f, 0)));
 }
 
 
