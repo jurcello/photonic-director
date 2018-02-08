@@ -27,6 +27,7 @@ public:
     std::string getConnectedDevice();
     
     bool registerChannel(int channel, std::string uid);
+    bool checkRangeAvailable(int channel, int channelAmount, std::string uuid);
     void releaseChannels(std::string uid);
     
     // Should this be in a separate class?

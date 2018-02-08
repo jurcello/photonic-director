@@ -22,14 +22,9 @@ void ConfigManager::readFromFile(fs::path path)
 
 }
 
-void ConfigManager::readLights(std::vector<Light *> &lights, DmxOutput* dmxOutput)
+void ConfigManager::readLights(std::vector<LightRef> &lights, LightFactory* lightFactory)
 {
     // Overwrite the current lights.
-    if (lights.size() > 0) {
-        for (Light* light : lights) {
-            delete light;
-        }
-    }
     lights.clear();
     auto lightNodes = mDoc.getChild("lights");
     for (auto lightNode : lightNodes) {
@@ -49,8 +44,13 @@ void ConfigManager::readLights(std::vector<Light *> &lights, DmxOutput* dmxOutpu
         float intensity = lightNode.getChild("intensity").getValue<float>();
         // Uuid.
         std::string uuid = lightNode.getAttribute("uuid");
-        Light* newLight = new Light(position, color, intensity, uuid);
-        newLight->injectDmxChecker(dmxOutput);
+        LightRef newLight;
+        if (lightNode.hasAttribute("type")) { ;
+            newLight = lightFactory->create(position, lightNode.getAttribute("type"), uuid);
+        }
+        else {
+            newLight = lightFactory->create(position, NULL, uuid);
+        }
         if (lightNode.hasChild("dmxChannel")) {
             // Dmx channel.
             int dmxChannel = lightNode.getChild("dmxChannel").getValue<int>();
@@ -81,7 +81,7 @@ void ConfigManager::readChannels(std::vector<InputChannelRef> &channels)
     }
 }
 
-void ConfigManager::readEffects(std::vector<EffectRef> &effects, const std::vector<Light *> &lights, const std::vector<InputChannelRef> &channels)
+void ConfigManager::readEffects(std::vector<EffectRef> &effects, const std::vector<LightRef> &lights, const std::vector<InputChannelRef> &channels)
 {
     effects.clear();
     if (mDoc.hasChild("effects")) {
@@ -111,7 +111,7 @@ void ConfigManager::readEffects(std::vector<EffectRef> &effects, const std::vect
             if (effectNode.hasChild("lights")) {
                 for (const auto &lightNode : effectNode.getChild("lights").getChildren()) {
                     std::string lightUuid = lightNode->getValue();
-                    auto it = std::find_if(lights.begin(), lights.end(), [&lightUuid](const Light* lightCandidate){ return lightCandidate->mUuid == lightUuid;});
+                    auto it = std::find_if(lights.begin(), lights.end(), [&lightUuid](const LightRef lightCandidate){ return lightCandidate->getUuid() == lightUuid;});
                     if (it != lights.end()) {
                         newEffect->addLight(*it);
                     }
@@ -175,14 +175,15 @@ void ConfigManager::startNewDoc()
     mDoc = XmlTree(beginXmlString);
 }
 
-void ConfigManager::writeLights(std::vector<Light *> &lights)
+void ConfigManager::writeLights(std::vector<LightRef> &lights)
 {
     XmlTree lightsNode;
     lightsNode.setTag("lights");
-    for (Light* light : lights) {
+    for (LightRef light : lights) {
         XmlTree lightNode;
         lightNode.setTag("light");
-        lightNode.setAttribute("uuid", light->mUuid);
+        lightNode.setAttribute("uuid", light->getUuid());
+        lightNode.setAttribute("type", light->getLightType()->machineName);
         XmlTree position;
         position.setTag("position");
         position.setAttribute("x", light->position.x);
@@ -274,7 +275,7 @@ void ConfigManager::writeEffects(std::vector<EffectRef> &effects)
         for (auto light : effect->getLights()) {
             XmlTree lightNode;
             lightNode.setTag("light");
-            lightNode.setValue(light->mUuid);
+            lightNode.setValue(light->getUuid());
             lightsNode.push_back(lightNode);
         }
         XmlTree paramsNode;

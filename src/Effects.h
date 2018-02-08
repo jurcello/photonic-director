@@ -101,11 +101,11 @@ namespace photonic {
         double getFadeValue();
         
         void setName(std::string name);
-        void addLight(Light* light);
-        void removeLight(Light* light);
-        void toggleLight(Light* light);
-        bool hasLight(Light* light);
-        std::vector<Light*> getLights();
+        void addLight(LightRef light);
+        void removeLight(LightRef light);
+        void toggleLight(LightRef light);
+        bool hasLight(LightRef light);
+        std::vector<LightRef> getLights();
         void setChannel(InputChannelRef channel);
         InputChannelRef getChannel();
         // Params section.
@@ -125,7 +125,7 @@ namespace photonic {
     protected:
         std::string mUuid;
         std::string mName;
-        std::vector<Light*> mLights;
+        std::vector<LightRef> mLights;
         InputChannelRef mChannel;
         Status mStatus;
         double mStatusChangeTime;

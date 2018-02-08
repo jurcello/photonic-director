@@ -13,7 +13,7 @@ Visualizer::Visualizer()
 {
 }
 
-void Visualizer::setup(std::vector<Light*> &lights)
+void Visualizer::setup(std::vector<LightRef> &lights)
 {
     mMousePos = vec2(0.f);
     // Setup the camera.
@@ -83,7 +83,7 @@ void Visualizer::resize()
     mCam.setPerspective(45.f, getWindowAspectRatio(), 0.1, 10000.);
 }
 
-void Visualizer::draw(std::vector<Light *> lights)
+void Visualizer::draw(std::vector<LightRef> lights)
 {
     gl::ScopedColor color(Color::gray(1.0f));
     gl::enableDepthRead();
@@ -131,13 +131,13 @@ void Visualizer::disableEditingMode()
     mEditingMode = false;
 }
 
-Light* Visualizer::pickLight(std::vector<Light*> lights)
+LightRef Visualizer::pickLight(std::vector<LightRef> lights)
 {
     float u = mMousePos.x / (float) getWindowWidth();
     float v = mMousePos.y / (float) getWindowHeight();
     Ray ray = mCam.generateRay(u, 1.0f - v, getWindowAspectRatio());
-    Light* pickedLight = nullptr;
-    for (Light* light : lights) {
+    LightRef pickedLight = nullptr;
+    for (LightRef light : lights) {
         mat4 transform = mat4(1.0f);
         transform *= translate(vec3(light->position));
         transform *= scale(vec3(LIGHT_SPHERE_SIZE));
@@ -151,12 +151,12 @@ Light* Visualizer::pickLight(std::vector<Light*> lights)
     return pickedLight;
 }
 
-void Visualizer::highLightLight(Light *light)
+void Visualizer::highLightLight(LightRef light)
 {
     highLightLight(light, Color(1.0f, 1.0f, 0.0f));
 }
 
-void Visualizer::highLightLight(Light *light, Color color)
+void Visualizer::highLightLight(LightRef light, Color color)
 {
     // Create a pulsating box by altering the scale.
     double scaleRatio = 1.1 + 0.1 * sin(4.0 * (getElapsedSeconds() + color.b + 10 * color.g + 100 * color.r));
@@ -170,13 +170,14 @@ void Visualizer::highLightLight(Light *light, Color color)
 }
 
 
-void Visualizer::drawLight(Light *light)
+void Visualizer::drawLight(LightRef light)
 {
     gl::pushMatrices();
     gl::setMatrices(mCam);
     gl::translate(vec3(light->position));
     gl::scale(vec3(LIGHT_SPHERE_SIZE));
-    mLightShader->uniform("LightColor", light->color);
+    ColorA &color = mEditingMode ? light->getLightType()->editColor : light->color;
+    mLightShader->uniform("LightColor", color);
     // If in editingmode, draw a light at full intensity,
     float intensity = mEditingMode ? 1.f : light->intensity;
     mLightShader->uniform("LightIntensity", intensity);

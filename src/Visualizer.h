@@ -24,20 +24,20 @@ using namespace ci::app;
 class Visualizer {
 public:
     Visualizer();
-    void setup(std::vector<Light*> &lights);
+    void setup(std::vector<LightRef> &lights);
     void mouseDown(MouseEvent event);
     void mouseUp(MouseEvent event);
     void mouseDrag(MouseEvent event);
     void mouseMove(MouseEvent event);
-    void draw(std::vector<Light*> lights);
+    void draw(std::vector<LightRef> lights);
     
     void enableEditingMode();
     void disableEditingMode();
     
     void resize();
-    Light* pickLight(std::vector<Light*> lights);
-    void highLightLight(Light* light);
-    void highLightLight(Light* light, Color color);
+    LightRef pickLight(std::vector<LightRef> lights);
+    void highLightLight(LightRef light);
+    void highLightLight(LightRef light, Color color);
     
 protected:
     gl::BatchRef mCube, mLight;
@@ -55,9 +55,8 @@ protected:
     CameraUi mCamUI;
     vec2 mMousePos;
     
-    void drawLight(Light* light);
+    void drawLight(LightRef light);
     bool mEditingMode;
-    
-    
+
 };
 #endif /* Visualizer_hpp */
