@@ -19,9 +19,12 @@ class Light;
 typedef std::shared_ptr<Light> LightRef;
 
 struct LightType {
-
+    enum RgbType {
+        RGB,
+        RBG,
+    };
     LightType(const std::string &name, std::string machineName, int colorChannelPosition, int intensityChannelPosition,
-                  int numChannels, ColorA editColor);
+                  int numChannels, ColorA editColor, RgbType rgbType = RGB);
 
     std::string name;
     std::string machineName;
@@ -29,6 +32,7 @@ struct LightType {
     int colorChannelPosition;
     int intensityChannelPosition;
     ColorA editColor;
+    RgbType rgbType;
 };
 
 class Light

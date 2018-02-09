@@ -16,9 +16,9 @@ int Light::initNameNumber = 0;
 
 
 LightType::LightType(const std::string &name, std::string machineName, int colorChannelPosition, int intensityChannelPosition,
-                     int numChannels, ColorA editColor)
+                     int numChannels, ColorA editColor, RgbType rgbType)
         : name(name), machineName(machineName), numChannels(numChannels), colorChannelPosition(colorChannelPosition),
-          intensityChannelPosition(intensityChannelPosition), editColor(editColor) {}
+          intensityChannelPosition(intensityChannelPosition), editColor(editColor), rgbType(rgbType) {}
 
 
 Light::Light(vec3 cPosition, LightType *cType, std::string uuid)
@@ -127,6 +127,11 @@ void Light::updateDmx() {
             int redChannel = mDmxChannel + getColorChannelPosition() - 1;
             int greenChannel = redChannel + 1;
             int blueChannel = redChannel + 2;
+            // For some strange reason some lights have blue before green.
+            if (mType->rgbType == LightType::RgbType::RBG) {
+                greenChannel = redChannel + 2;
+                blueChannel = redChannel + 1;
+            }
             mDmxOutput->setChannelValue(redChannel, color.r);
             mDmxOutput->setChannelValue(greenChannel, color.g);
             mDmxOutput->setChannelValue(blueChannel, color.b);
@@ -162,9 +167,39 @@ LightFactory::LightFactory(DmxOutput *dmxOutput)
 {
     // Create some types.
     // TODO: create them form a file later on.
-    mLightTypes.push_back(new LightType("Single Channel (dimmer)", "single_channel", 0, 0, 1, cinder::ColorA(252.0f/256.0f, 211.0f/256.0f, 3.0f/256.0f, 0)));
-    mLightTypes.push_back(new LightType("Simple Color (3 channels)", "simple_color", 1, 0, 3, cinder::ColorA(1.0f, 0, 0, 0)));
-    mLightTypes.push_back(new LightType("Advanced Color (6 channels)", "advanced_color", 1, 4, 6, cinder::ColorA(1.0f, 0, 1.0f, 0)));
+    mLightTypes.push_back(new LightType(
+            "Single Channel (dimmer)",
+            "single_channel",
+            0,
+            0,
+            1,
+            ColorA(252.0f / 256.0f, 211.0f / 256.0f, 3.0f / 256.0f, 0))
+    );
+    mLightTypes.push_back(new LightType(
+            "Simple Color (3 channels)",
+            "simple_color",
+            1,
+            0,
+            3,
+            ColorA(1.0f, 0, 0, 0))
+    );
+    mLightTypes.push_back(new LightType(
+            "Led Ball",
+            "led_ball",
+            1,
+            4,
+            4,
+            cinder::ColorA(1.0f, 0.5f, 0, 0),
+            LightType::RgbType::RBG)
+    );
+    mLightTypes.push_back(new LightType(
+            "Advanced Color (6 channels)",
+            "advanced_color",
+            1,
+            4,
+            6,
+            ColorA(1.0f, 0, 1.0f, 0)
+    ));
 }
 
 

@@ -701,7 +701,7 @@ void PhotonicDirectorApp::drawEffectControls()
         int paramId = 100;
         for (auto &item : params) {
             ui::PushID(paramId);
-            Parameter* &param = item.second;
+            Parameter* param = item.second;
             switch (param->type) {
                 case photonic::Parameter::kType_Int:
                     ui::InputInt(param->description.c_str(), &param->intValue);
