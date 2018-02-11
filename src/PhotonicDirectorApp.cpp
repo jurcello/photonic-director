@@ -4,8 +4,8 @@
 #include "cinder/params/Params.h"
 #include "cinder/Log.h"
 #include "CinderImGui.h"
-#include "cinder/Clipboard.h"
 #include "Light.h"
+#include "LightCalibrator.h"
 #include "Effects.h"
 #include "ConfigManager.h"
 #include "Visualizer.h"
@@ -23,7 +23,8 @@ const int WINDOW_HEIGHT = 768;
 enum gui_status {
     IDLE,
     EDITING_LIGHT,
-    ADDING_LIGHT_TO_EFFECT
+    ADDING_LIGHT_TO_EFFECT,
+    CALIBRATING_LIGHT,
 };
 
 struct GuiStatusData {
@@ -57,21 +58,25 @@ public:
     
     void pickLight();
 
-    void setupOsc(int port);
+    void setupOsc(int receivePort, int sendPort);
     
 protected:
     ConfigManager config;
     
     vector<LightRef> mLights;
     LightFactory mLightFactory;
+    LightCalibrator mLightCalibrator;
     
     // Visualizer.
     Visualizer mVisualizer;
     
     // Osc related stuff.
     osc::ReceiverUdp* mOscReceiver;
-    int mOscPort;
-    
+    osc::SenderUdp*	mOscSender;
+    osc::UdpSocketRef	mOscSocket;
+    int mOscReceivePort;
+    int mOscSendPort;
+
     // Channel stuff.
     vector<InputChannelRef> mChannels;
     
@@ -93,7 +98,12 @@ protected:
 };
 
 PhotonicDirectorApp::PhotonicDirectorApp()
-: mOscReceiver(nullptr), mOscPort(10000), mLightFactory(&mDmxOut)
+: mOscReceiver(nullptr),
+  mOscSender(nullptr),
+  mOscSocket(nullptr),
+  mOscReceivePort(10000),
+  mOscSendPort(10001),
+  mLightFactory(&mDmxOut)
 {
     mGuiStatusData.pickLightEffect = nullptr;
     mGuiStatusData.lightToEdit = nullptr;
@@ -173,17 +183,30 @@ void PhotonicDirectorApp::setup()
     mVisualizer.setup(mLights);
     
     // Initialize params.
-    setupOsc(mOscPort);
-    setupOsc(mOscPort);
+    setupOsc(mOscReceivePort, mOscSendPort);
+    mLightCalibrator.setLights(mLights);
 }
 
-void PhotonicDirectorApp::setupOsc(int port)
+void PhotonicDirectorApp::setupOsc(int receivePort, int sendPort)
 {
     if (mOscReceiver) {
         mOscReceiver->close();
         delete mOscReceiver;
     }
-    mOscReceiver = new osc::ReceiverUdp(port);
+    if (mOscSender) {
+        try {
+            mOscSender->close();
+            delete mOscSender;
+        }
+        catch (Exception exception){
+            console() << "An exception occured closing the connection";
+        }
+
+    }
+    if (mOscSocket) {
+        mOscSocket = nullptr;
+    }
+    mOscReceiver = new osc::ReceiverUdp(receivePort);
     // Setup osc to listen to all addresses.
     mOscReceiver->setListener("/*",[&](const osc::Message &message){
         oscReceive(message);
@@ -205,6 +228,15 @@ void PhotonicDirectorApp::setupOsc(int port)
         }
     });
 
+    //////////////////////////
+    // Setup sender.
+    //////////////////////////
+    // Us a local port of 31,000 because that one most probably is not used.
+    mOscSocket = osc::UdpSocketRef(new protocol::socket(App::get()->io_service(), protocol::endpoint( protocol::v4(), 31000 ) ));
+    mOscSocket->set_option( asio::socket_base::broadcast(true) );
+    mOscSender = new osc::SenderUdp( mOscSocket, protocol::endpoint( asio::ip::address_v4::broadcast(), sendPort ) );
+    mLightCalibrator.setOscSender(mOscSender);
+
 }
 
 void PhotonicDirectorApp::oscReceive(const osc::Message &message)
@@ -216,6 +248,7 @@ void PhotonicDirectorApp::oscReceive(const osc::Message &message)
             }
         }
     }
+    mLightCalibrator.receiveOscMessage(message);
 }
 
 void PhotonicDirectorApp::mouseDown( MouseEvent event )
@@ -269,7 +302,7 @@ void PhotonicDirectorApp::save()
         config.writeLights(mLights);
         config.writeChannels(mChannels);
         config.writeEffects(mEffects);
-        config.writeInt("oscPort", mOscPort);
+        config.writeInt("oscPort", mOscReceivePort);
         config.writeToFile(savePath);
     }
 }
@@ -282,8 +315,8 @@ void PhotonicDirectorApp::load()
         config.readFromFile(loadPath);
         int oscPort = config.readInt("oscPort");
         if (oscPort > 0) {
-            mOscPort = oscPort;
-            setupOsc(mOscPort);
+            mOscReceivePort = oscPort;
+            setupOsc(mOscReceivePort, 0);
         }
         config.readLights(mLights, &mLightFactory);
         config.readChannels(mChannels);
@@ -312,20 +345,26 @@ void PhotonicDirectorApp::update()
     /////////////////////////////////////////////
     // Light handling.
     /////////////////////////////////////////////
-    for (auto light : mLights) {
-        float endIntensity = 0.f;
-        ColorA endColor(0.0f, 0.0f, 0.0f, 1.0f);
-        for (auto effect : mEffects) {
-            if (effect->hasLight(light)) {
-                endIntensity += light->getEffetcIntensity(effect->getUuid()) * effect->getFadeValue();
-                endColor += light->getEffectColor(effect->getUuid()) * effect->getFadeValue();
+    for (const auto light : mLights) {
+        if (mLightCalibrator.isCalibrating()) {
+            light->color = light->getLightType()->editColor;
+            const float calibratedLightIntensity = static_cast<const float>(((sin(getElapsedSeconds()) + 1.0) / 4) + 0.5f);
+            light->intensity = (light == mLightCalibrator.getCurrentLight()) ? calibratedLightIntensity : 0.1f;
+        } else {
+            float endIntensity = 0.f;
+            ColorA endColor(0.0f, 0.0f, 0.0f, 1.0f);
+            for (const auto effect : mEffects) {
+                if (effect->hasLight(light)) {
+                    endIntensity += light->getEffetcIntensity(effect->getUuid()) * effect->getFadeValue();
+                    endColor += light->getEffectColor(effect->getUuid()) * effect->getFadeValue();
+                }
             }
+            //
+            light->intensity = endIntensity;
+            // Be sure that the alfa channel is always 1.0.
+            endColor.a = 1.0f;
+            light->color = endColor;
         }
-        //
-        light->intensity = endIntensity;
-        // Be sure that the alfa channel is always 1.0.
-        endColor.a = 1.0f;
-        light->color = endColor;
         light->updateDmx();
     }
     mDmxOut.update();
@@ -343,9 +382,13 @@ void PhotonicDirectorApp::drawGui()
     ui::Separator();
     ui::Text("Osc settings");
     ui::Spacing();
-    if  (ui::InputInt("Port", &mOscPort)) {
-        setupOsc(mOscPort);
+    if  (ui::InputInt("Osc Receive Port", &mOscReceivePort)) {
+        setupOsc(mOscReceivePort, mOscSendPort);
     }
+    if  (ui::InputInt("Osc Send Port", &mOscSendPort)) {
+        setupOsc(mOscReceivePort, mOscSendPort);
+    }
+
     ui::Separator();
     ui::Text("Dmx settings");
     if (! ui::IsWindowCollapsed()) {
@@ -368,6 +411,16 @@ void PhotonicDirectorApp::drawGui()
                 mDmxOut.disConnect();
             }
         }
+    }
+    ui::Separator();
+    ui::Text("Calibrator");
+    if (ui::Button("Start calibration")) {
+        mLightCalibrator.setLights(mLights);
+        mLightCalibrator.start();
+    }
+    if (mLightCalibrator.isCalibrating()) {
+        ui::Text("Now calibrating: %s", mLightCalibrator.getCurrentLight()->mName.c_str());
+        ui::InputFloat3("Position: ", &mLightCalibrator.currentPosition[0]);
     }
     ui::Separator();
     ui::Text("Widgets");
@@ -780,6 +833,10 @@ void PhotonicDirectorApp::draw()
 
     if (mGuiStatusData.pickedLight) {
         mVisualizer.highLightLight(mGuiStatusData.pickedLight);
+    }
+    // If we are calibrating, highlight the light as well.
+    if (mLightCalibrator.isCalibrating()) {
+        mVisualizer.highLightLight(mLightCalibrator.getCurrentLight(), Color(53, 252, 0));
     }
 }
 
