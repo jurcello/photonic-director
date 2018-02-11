@@ -14,6 +14,7 @@ set( SRC_FILES
 	${APP_PATH}/src/ConfigManager.cpp
 	${APP_PATH}/src/Effects.cpp
 	${APP_PATH}/src/Light.cpp
+	${APP_PATH}/src/LightCalibrator.cpp
 	${APP_PATH}/src/Output.cpp
 	${APP_PATH}/src/PhotonicDirectorApp.cpp
 	${APP_PATH}/src/Visualizer.cpp
