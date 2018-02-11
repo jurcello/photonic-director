@@ -4,7 +4,6 @@
 #include "cinder/params/Params.h"
 #include "cinder/Log.h"
 #include "CinderImGui.h"
-#include "cinder/Clipboard.h"
 #include "Light.h"
 #include "LightCalibrator.h"
 #include "Effects.h"
@@ -24,7 +23,8 @@ const int WINDOW_HEIGHT = 768;
 enum gui_status {
     IDLE,
     EDITING_LIGHT,
-    ADDING_LIGHT_TO_EFFECT
+    ADDING_LIGHT_TO_EFFECT,
+    CALIBRATING_LIGHT,
 };
 
 struct GuiStatusData {
@@ -345,20 +345,26 @@ void PhotonicDirectorApp::update()
     /////////////////////////////////////////////
     // Light handling.
     /////////////////////////////////////////////
-    for (auto light : mLights) {
-        float endIntensity = 0.f;
-        ColorA endColor(0.0f, 0.0f, 0.0f, 1.0f);
-        for (auto effect : mEffects) {
-            if (effect->hasLight(light)) {
-                endIntensity += light->getEffetcIntensity(effect->getUuid()) * effect->getFadeValue();
-                endColor += light->getEffectColor(effect->getUuid()) * effect->getFadeValue();
+    for (const auto light : mLights) {
+        if (mLightCalibrator.isCalibrating()) {
+            light->color = light->getLightType()->editColor;
+            const float calibratedLightIntensity = static_cast<const float>(((sin(getElapsedSeconds()) + 1.0) / 4) + 0.5f);
+            light->intensity = (light == mLightCalibrator.getCurrentLight()) ? calibratedLightIntensity : 0.1f;
+        } else {
+            float endIntensity = 0.f;
+            ColorA endColor(0.0f, 0.0f, 0.0f, 1.0f);
+            for (const auto effect : mEffects) {
+                if (effect->hasLight(light)) {
+                    endIntensity += light->getEffetcIntensity(effect->getUuid()) * effect->getFadeValue();
+                    endColor += light->getEffectColor(effect->getUuid()) * effect->getFadeValue();
+                }
             }
+            //
+            light->intensity = endIntensity;
+            // Be sure that the alfa channel is always 1.0.
+            endColor.a = 1.0f;
+            light->color = endColor;
         }
-        //
-        light->intensity = endIntensity;
-        // Be sure that the alfa channel is always 1.0.
-        endColor.a = 1.0f;
-        light->color = endColor;
         light->updateDmx();
     }
     mDmxOut.update();
@@ -827,6 +833,10 @@ void PhotonicDirectorApp::draw()
 
     if (mGuiStatusData.pickedLight) {
         mVisualizer.highLightLight(mGuiStatusData.pickedLight);
+    }
+    // If we are calibrating, highlight the light as well.
+    if (mLightCalibrator.isCalibrating()) {
+        mVisualizer.highLightLight(mLightCalibrator.getCurrentLight(), Color(53, 252, 0));
     }
 }
 
