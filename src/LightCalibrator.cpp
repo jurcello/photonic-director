@@ -4,7 +4,7 @@
 
 #include "LightCalibrator.h"
 
-void LightCalibrator::setLights(std::vector<LightRef> &lights) {
+void LightCalibrator::setLights(std::vector<LightRef> *lights) {
     mLights = lights;
 }
 
@@ -32,7 +32,7 @@ void LightCalibrator::receiveOscMessage(const osc::Message &message) {
     }
     if (message.getAddress() == "/lightCalib/next" && message.getArgFloat(0) == 1) {
         mCurrentLightIterator++;
-        if (mCurrentLightIterator == mLights.end()) {
+        if (mCurrentLightIterator == mLights->end()) {
             mIsCalibrating = false;
             mCurrentLight = nullptr;
         }
@@ -49,7 +49,7 @@ void LightCalibrator::receiveOscMessage(const osc::Message &message) {
 
 void LightCalibrator::start() {
     mIsCalibrating = true;
-    mCurrentLightIterator = mLights.begin();
+    mCurrentLightIterator = mLights->begin();
     mCurrentLight = *mCurrentLightIterator;
     currentPosition = mCurrentLight->getPosition();
     broadcastCurrentLight();

@@ -41,6 +41,9 @@ class PhotonicDirectorApp : public App {
 public:
     
     PhotonicDirectorApp();
+
+    virtual ~PhotonicDirectorApp();
+
     void setTheme(ImGui::Options &options);
     
     void setup() override;
@@ -185,7 +188,7 @@ void PhotonicDirectorApp::setup()
     
     // Initialize params.
     setupOsc(mOscReceivePort, mOscSendPort);
-    mLightCalibrator.setLights(mLights);
+    mLightCalibrator.setLights(&mLights);
 
     mLastUpdate = getElapsedSeconds();
 }
@@ -321,6 +324,8 @@ void PhotonicDirectorApp::load()
             mOscReceivePort = oscPort;
             setupOsc(mOscReceivePort, 0);
         }
+        // Reset the channelRegistry of the dmx out.
+        mDmxOut.clearRegistry();
         config.readLights(mLights, &mLightFactory);
         config.readChannels(mChannels);
         config.readEffects(mEffects, mLights, mChannels);
@@ -420,7 +425,6 @@ void PhotonicDirectorApp::drawGui()
     ui::Separator();
     ui::Text("Calibrator");
     if (ui::Button("Start calibration")) {
-        mLightCalibrator.setLights(mLights);
         mLightCalibrator.start();
     }
     if (mLightCalibrator.isCalibrating()) {
@@ -849,6 +853,15 @@ void PhotonicDirectorApp::draw()
         if (mLightCalibrator.isCalibrating()) {
             mVisualizer.highLightLight(mLightCalibrator.getCurrentLight(), Color(53, 252, 0));
         }
+    }
+}
+
+PhotonicDirectorApp::~PhotonicDirectorApp() {
+    // The setting of the dmx channel is needed, because the director app
+    // is destroyed first, and then the lights, that try to reach the dmxOuput
+    // which is already destroyed.
+    for (const auto light : mLights) {
+        light->setDmxChannel(0);
     }
 }
 

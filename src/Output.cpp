@@ -23,9 +23,6 @@ DmxOutput::DmxOutput()
 void DmxOutput::setChannelValue(int channel, int value)
 {
     mOut[channel - 1] = value;
-//    if (mDmxPro != nullptr && mDmxPro->isConnected()) {
-//        mDmxPro->setValue(value, channel - 1);
-//    }
 }
 
 void DmxOutput::setChannelValue(int channel, float value)
@@ -56,7 +53,7 @@ void DmxOutput::reset()
 void DmxOutput::update()
 {
     if (mDmxPro != nullptr && mDmxPro->isConnected()) {
-        for (int i = 0; i < 256; i++) {
+        for (int i = 0; i < 512; i++) {
             mDmxPro->setValue(mOut[i], i);
         }
     }
@@ -116,6 +113,10 @@ bool DmxOutput::registerChannel(int channel, std::string uid)
     return false;
 }
 
+void DmxOutput::clearRegistry() {
+    mChannelRegistry.clear();
+}
+
 bool DmxOutput::checkRangeAvailable(int channel, int channelAmount, std::string uuid) {
     for (int i = channel; i < channel + channelAmount; i++) {
         if (mChannelRegistry.find(i) != mChannelRegistry.end()) {
@@ -135,7 +136,9 @@ void DmxOutput::releaseChannels(std::string uid)
                 it = mChannelRegistry.erase(it);
                 continue;
             }
-            it++;
+            if (it != mChannelRegistry.end()) {
+                it++;
+            }
         }
     }
 }

@@ -13,7 +13,7 @@ public:
     LightCalibrator();
 
     void receiveOscMessage(const osc::Message &message);
-    void setLights(std::vector<LightRef> &lights);
+    void setLights(std::vector<LightRef> *lights);
     void setOscSender(osc::SenderUdp* OscSender);
     void start();
     void broadcastCurrentLight();
@@ -26,7 +26,7 @@ protected:
     std::vector<LightRef>::iterator mCurrentLightIterator;
     LightRef mCurrentLight;
     osc::SenderUdp* mSender;
-    std::vector<LightRef> mLights;
+    std::vector<LightRef>* mLights;
     bool mIsCalibrating;
 
 };

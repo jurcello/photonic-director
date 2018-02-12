@@ -29,6 +29,7 @@ public:
     bool registerChannel(int channel, std::string uid);
     bool checkRangeAvailable(int channel, int channelAmount, std::string uuid);
     void releaseChannels(std::string uid);
+    void clearRegistry();
     
     // Should this be in a separate class?
     void visualize();

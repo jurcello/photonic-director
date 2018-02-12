@@ -54,7 +54,7 @@ LightType *Light::getLightType() {
 bool Light::setDmxChannel(int dmxChannel)
 {
     // If there is a checker defined, check it here.
-    if (mDmxOutput) {
+    if (mDmxOutput && dmxChannel > 0) {
         if (!mDmxOutput->checkRangeAvailable(dmxChannel, mType->numChannels, mUuid)) {
             return false;
         }
@@ -94,7 +94,9 @@ void Light::setEffectColor(std::string effectId, ColorA color)
 
 Light::~Light()
 {
-    mDmxOutput->releaseChannels(mUuid);
+    if (mDmxChannel > 0) {
+        mDmxOutput->releaseChannels(mUuid);
+    }
 }
 
 ColorA Light::getEffectColor(std::string effectId)
