@@ -154,6 +154,15 @@ void ConfigManager::readParam(std::unique_ptr<XmlTree> &paramNode, Parameter* pa
             break;
         }
 
+        case photonic::Parameter::kType_Vector3:
+        {
+            float x = paramNode->getAttributeValue<float>("x");
+            float y = paramNode->getAttributeValue<float>("y");
+            float z = paramNode->getAttributeValue<float>("z");
+            param->vec3Value = vec3(x, y, z);
+            break;
+        }
+
         default:
             break;
     }
@@ -312,7 +321,13 @@ void ConfigManager::writeParameter(cinder::XmlTree &paramsNode, photonic::Parame
             paramnode.setAttribute("b", param->colorValue.b);
             paramnode.setAttribute("a", param->colorValue.a);
             break;
-            
+
+        case photonic::Parameter::kType_Vector3:
+            paramnode.setAttribute("x", param->vec3Value.x);
+            paramnode.setAttribute("y", param->vec3Value.y);
+            paramnode.setAttribute("z", param->vec3Value.z);
+            break;
+
         default:
             break;
     }

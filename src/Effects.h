@@ -56,6 +56,7 @@ namespace photonic {
             kType_Float,
             kType_Int,
             kType_Color,
+            kType_Vector3,
         };
         Parameter();
         Parameter(Type type, std::string description = "");
@@ -64,6 +65,7 @@ namespace photonic {
         float floatValue;
         int intValue;
         ColorA colorValue;
+        vec3 vec3Value;
         std::string description;
     };
     
@@ -116,8 +118,10 @@ namespace photonic {
         virtual std::string getTypeClassName() = 0;
         virtual std::string getTypeName() = 0;
         virtual void drawEditGui();
-        virtual void execute(float dt);
-        
+        virtual void execute(double dt);
+        bool hasOutput();
+        virtual void init();
+
         // Public accessable variables. Part of the interface!
         float fadeTime;
         bool isTurnedOn;
@@ -141,7 +145,7 @@ namespace photonic {
     public:
         SimpleVolumeEffect(std::string name, std::string uuid = ""): Effect(name, uuid){};
         
-        virtual void execute(float dt);
+        virtual void execute(double dt);
         virtual std::string getTypeName();
         virtual std::string getTypeClassName();
     };
@@ -153,12 +157,11 @@ namespace photonic {
             kInput_Color = 2,
         };
         
-        // Todo: move implementation to the implementation file.
         StaticValueEffect(std::string name, std::string uuid = "");
         
-        virtual void execute(float dt) override;
-        virtual std::string getTypeName() override;
-        virtual std::string getTypeClassName() override;
+        void execute(double dt) override;
+        std::string getTypeName() override;
+        std::string getTypeClassName() override;
 
     };
 }

@@ -225,13 +225,15 @@ void Effect::drawEditGui() {
     // This might be used in the child classes.
 }
 
-void Effect::execute(float dt) {
+void Effect::execute(double dt) {
     // First handle the fading.
     // Start with updating the start of the status transitions.
     if (isTurnedOn && mStatus == kStatus_Off) {
         // The status is update to fading.
         mStatus = kStatus_FadingIn;
         mStatusChangeTime = getElapsedSeconds();
+        // Initialize the effect.
+        init();
     }
     if (! isTurnedOn && mStatus == kStatus_On) {
         mStatus = kStatus_FadingOut;
@@ -260,11 +262,19 @@ void Effect::execute(float dt) {
         }
     }
 }
+
+bool Effect::hasOutput() {
+    return mStatus != kStatus_Off;
+}
+
+void Effect::init() {
+    // Normally nothing should be done.
+}
 //////////////////////////////////////////////////////////////////
 /// Start SimpleVolume
 //////////////////////////////////////////////////////////////////
 
-void SimpleVolumeEffect::execute(float dt) {
+void SimpleVolumeEffect::execute(double dt) {
     Effect::execute(dt);
     for (LightRef light: mLights) {
         if (mChannel)
@@ -297,7 +307,7 @@ StaticValueEffect::StaticValueEffect(std::string name, std::string uuid)
     
 }
 
-void StaticValueEffect::execute(float dt) {
+void StaticValueEffect::execute(double dt) {
     Effect::execute(dt);
     float mStaticVolume = getParam(kInput_Volume)->floatValue;
     ColorA effectColor = mParams[kInput_Color]->colorValue * mParams[kInput_Volume]->floatValue;

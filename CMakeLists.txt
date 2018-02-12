@@ -18,6 +18,7 @@ set( SRC_FILES
 	${APP_PATH}/src/Output.cpp
 	${APP_PATH}/src/PhotonicDirectorApp.cpp
 	${APP_PATH}/src/Visualizer.cpp
+	${APP_PATH}/src/Effects/WaveEffect.cpp
 )
 
 ci_make_app(

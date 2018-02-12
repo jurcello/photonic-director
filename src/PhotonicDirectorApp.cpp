@@ -82,6 +82,7 @@ protected:
     
     // Effects.
     vector<EffectRef> mEffects;
+    double mLastUpdate;
     
     void oscReceive(const osc::Message &message);
     // Gui stuff.
@@ -185,6 +186,8 @@ void PhotonicDirectorApp::setup()
     // Initialize params.
     setupOsc(mOscReceivePort, mOscSendPort);
     mLightCalibrator.setLights(mLights);
+
+    mLastUpdate = getElapsedSeconds();
 }
 
 void PhotonicDirectorApp::setupOsc(int receivePort, int sendPort)
@@ -332,12 +335,13 @@ void PhotonicDirectorApp::update()
         drawGui();
     }
     
-    
+    double now = getElapsedSeconds();
+    double dt = now - mLastUpdate;
     /////////////////////////////////////////////
     // Effect handling.
     /////////////////////////////////////////////
     for (auto effect : mEffects) {
-        effect->execute(0.f);
+        effect->execute(dt);
     }
     // Prepare DMX output.
     mDmxOut.reset();
@@ -354,7 +358,7 @@ void PhotonicDirectorApp::update()
             float endIntensity = 0.f;
             ColorA endColor(0.0f, 0.0f, 0.0f, 1.0f);
             for (const auto effect : mEffects) {
-                if (effect->hasLight(light)) {
+                if (effect->hasOutput() && effect->hasLight(light)) {
                     endIntensity += light->getEffetcIntensity(effect->getUuid()) * effect->getFadeValue();
                     endColor += light->getEffectColor(effect->getUuid()) * effect->getFadeValue();
                 }
@@ -368,6 +372,7 @@ void PhotonicDirectorApp::update()
         light->updateDmx();
     }
     mDmxOut.update();
+    mLastUpdate = now;
 }
 
 void PhotonicDirectorApp::drawGui()
@@ -766,7 +771,12 @@ void PhotonicDirectorApp::drawEffectControls()
                     
                 case photonic::Parameter::kType_Color:
                     ui::ColorPicker4(param->description.c_str(), &param->colorValue[0]);
-                    
+                    break;
+
+                case photonic::Parameter::kType_Vector3:
+                    ui::InputFloat3(param->description.c_str(), &param->vec3Value[0]);
+                    break;
+
                 default:
                     break;
             }
@@ -810,33 +820,35 @@ void PhotonicDirectorApp::draw()
     mVisualizer.draw(mLights);
     
     // Delegate some gui drawing to the visualizer.
-    
-    switch (mGuiStatusData.status) {
-        case EDITING_LIGHT:
-        case IDLE:
-            if (mGuiStatusData.lightToEdit != nullptr) {
-                mVisualizer.highLightLight(mGuiStatusData.lightToEdit, Color(0.f, 1.f, 1.f));
-            }
-            break;
-
-        case ADDING_LIGHT_TO_EFFECT:
-            if (mGuiStatusData.pickLightEffect != nullptr) {
-                auto effectLights = mGuiStatusData.pickLightEffect->getLights();
-                for (auto light : effectLights) {
-                    mVisualizer.highLightLight(light, Color(0.f, 1.f, 0.f));
+    if (mGuiStatusData.drawGui) {
+        switch (mGuiStatusData.status) {
+            case EDITING_LIGHT:
+            case IDLE:
+                if (mGuiStatusData.lightToEdit != nullptr) {
+                    mVisualizer.highLightLight(mGuiStatusData.lightToEdit, Color(0.f, 1.f, 1.f));
                 }
-            }
+                break;
 
-        default:
-            break;
-    }
+            case ADDING_LIGHT_TO_EFFECT:
+                if (mGuiStatusData.pickLightEffect != nullptr) {
+                    auto effectLights = mGuiStatusData.pickLightEffect->getLights();
+                    for (auto light : effectLights) {
+                        mVisualizer.highLightLight(light, Color(0.f, 1.f, 0.f));
+                    }
+                }
 
-    if (mGuiStatusData.pickedLight) {
-        mVisualizer.highLightLight(mGuiStatusData.pickedLight);
-    }
-    // If we are calibrating, highlight the light as well.
-    if (mLightCalibrator.isCalibrating()) {
-        mVisualizer.highLightLight(mLightCalibrator.getCurrentLight(), Color(53, 252, 0));
+            default:
+                break;
+        }
+
+
+        if (mGuiStatusData.pickedLight) {
+            mVisualizer.highLightLight(mGuiStatusData.pickedLight);
+        }
+        // If we are calibrating, highlight the light as well.
+        if (mLightCalibrator.isCalibrating()) {
+            mVisualizer.highLightLight(mLightCalibrator.getCurrentLight(), Color(53, 252, 0));
+        }
     }
 }
 

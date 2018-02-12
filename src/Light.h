@@ -66,6 +66,7 @@ public:
 
     void injectDmxOutput(DmxOutput *dmxOutput);
     void updateDmx();
+    bool isColorEnabled();
     
     // Effect setters and getters.
     void setEffectIntensity(std::string effectId, float targetIntensity);

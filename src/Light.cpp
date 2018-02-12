@@ -118,6 +118,10 @@ int Light::getCorrectedDmxValue() {
     return (int) roundf(mDmxOffsetIntentsityValue + (256 - mDmxOffsetIntentsityValue) * intensity);
 }
 
+bool Light::isColorEnabled() {
+    return mType->colorChannelPosition > 0;
+}
+
 void Light::updateDmx() {
     if (mDmxChannel > 0) {
         // NOTE THAT FOR ALL CHANNEL POSITIONS WE USE HUMAN READABLE NUMBERS.
