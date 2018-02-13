@@ -149,7 +149,8 @@ void Light::updateDmx() {
         // If there is an intensity channel, set that one to the max.
         if (getIntensityChannelPosition() > 0) {
             int channel = mDmxChannel + getIntensityChannelPosition() - 1;
-            mDmxOutput->setChannelValue(channel, 255);
+            int lightIntensity = intensity * 255;
+            mDmxOutput->setChannelValue(channel, lightIntensity);
         }
     }
 

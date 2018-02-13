@@ -356,15 +356,16 @@ void PhotonicDirectorApp::update()
     /////////////////////////////////////////////
     for (const auto light : mLights) {
         if (mLightCalibrator.isCalibrating()) {
-            light->color = light->getLightType()->editColor;
             const float calibratedLightIntensity = static_cast<const float>(((sin(getElapsedSeconds()) + 1.0) / 4) + 0.5f);
             light->intensity = (light == mLightCalibrator.getCurrentLight()) ? calibratedLightIntensity : 0.1f;
+            light->color = light->getLightType()->editColor;
         } else {
             float endIntensity = 0.f;
             ColorA endColor(0.0f, 0.0f, 0.0f, 1.0f);
             for (const auto effect : mEffects) {
                 if (effect->hasOutput() && effect->hasLight(light)) {
                     endIntensity += light->getEffetcIntensity(effect->getUuid()) * effect->getFadeValue();
+                    // TODO: This should be an interpolation rather than an addition.
                     endColor += light->getEffectColor(effect->getUuid()) * effect->getFadeValue();
                 }
             }

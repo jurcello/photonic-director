@@ -79,8 +79,6 @@ ColorA WaveEffect::interPolateColors(ColorA color1, ColorA color2, double intens
     float r = math<float>::max(0.0f, math<float>::min(color1.r + (color2.r - color1.r) * intensity, 1.0f));
     float g = math<float>::max(0.0f, math<float>::min(color1.g + (color2.g - color1.g) * intensity, 1.0f));
     float b = math<float>::max(0.0f, math<float>::min(color1.b + (color2.b - color1.b) * intensity, 1.0f));
-    // TODO: Check why this much simpler implementation fails.
-    // ColorA newColor = intensity * color1 + (1.0 - intensity) * color2;
     return ColorA(r, g, b);
 }
 
