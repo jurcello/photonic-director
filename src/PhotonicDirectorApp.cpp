@@ -250,7 +250,24 @@ void PhotonicDirectorApp::oscReceive(const osc::Message &message)
     if (mChannels.size() > 0) {
         for (InputChannelRef channel : mChannels) {
             if (message.getAddress() == channel->getAddress()) {
-                channel->setValue(message.getArgFloat(0));
+                // Gather the args. There can be up to 3 args.
+                int numArgs = message.getNumArgs();
+                float arg1, arg2, arg3;
+                if (message.getNumArgs() >= 1) {
+                    arg1 = message.getArgFloat(0);
+                    channel->setValue(arg1);
+                    channel->setType(InputChannel::Type::kType_Dim1);
+                    if (numArgs >= 2) {
+                        arg2 = message.getArgFloat(1);
+                        channel->setValue(vec2(arg1, arg2));
+                        channel->setType(InputChannel::Type::kType_Dim2);
+                        if (numArgs >= 3) {
+                            arg3 = message.getArgFloat(3);
+                            channel->setValue(vec3(arg1, arg2, arg3));
+                            channel->setType(InputChannel::Type::kType_Dim3);
+                        }
+                    }
+                }
             }
         }
     }

@@ -28,9 +28,14 @@ void LightCalibrator::receiveOscMessage(const osc::Message &message) {
             currentPosition.y = message.getArgFloat(0);
             send = true;
         }
+        if (message.getAddress() == "/cube") {
+            currentPosition.x = message.getArgFloat(0);
+            currentPosition.y = message.getArgFloat(1);
+            currentPosition.z = message.getArgFloat(2);
+        }
         mCurrentLight->setPosition(currentPosition);
     }
-    if (message.getAddress() == "/lightCalib/next" && message.getArgFloat(0) == 1) {
+    if ((message.getAddress() == "/pfffmaaktnietuitwat" || message.getAddress() == "/lightCalib/next") && message.getArgFloat(0) == 1) {
         mCurrentLightIterator++;
         if (mCurrentLightIterator == mLights->end()) {
             mIsCalibrating = false;

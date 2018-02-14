@@ -20,6 +20,7 @@ set( SRC_FILES
 	${APP_PATH}/src/Visualizer.cpp
 	${APP_PATH}/src/Utils.h
 	${APP_PATH}/src/Effects/WaveEffect.cpp
+	${APP_PATH}/src/Effects/LocationFollow.cpp
 )
 
 ci_make_app(

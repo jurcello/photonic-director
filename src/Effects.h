@@ -34,11 +34,24 @@ namespace photonic {
     
     class InputChannel {
     public:
+        enum Type {
+            kType_Dim1,
+            kType_Dim2,
+            kType_Dim3,
+        };
         static InputChannelRef create(std::string name, std::string address, std::string uuid = "");
         void setAdrress(std::string address);
         void setName(const std::string name);
         void setValue(float value);
+        void setValue(vec2 value);
+        void setValue(vec3 value);
         float getValue();
+        vec2 getVec2Value();
+        vec3 getVec3Value();
+
+        void setType(Type type);
+        Type getType();
+
         std::string getUuid();
         std::string getAddress();
         std::string getName() const;
@@ -46,6 +59,9 @@ namespace photonic {
     protected:
         InputChannel(std::string name, std::string address, std::string uuid = "");
         float mValue;
+        vec2 mVec2Value;
+        vec3 mVec3Value;
+        Type mType;
         std::string mUuid;
         std::string mAddress;
         std::string mName;

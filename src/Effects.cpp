@@ -22,7 +22,7 @@ InputChannelRef InputChannel::create(std::string name, std::string address, std:
 }
 
 InputChannel::InputChannel(std::string name, std::string address, std::string uuid)
-: mName(name), mAddress(address), mValue(0.f), mUuid(uuid)
+: mName(name), mAddress(address), mValue(0.f), mVec2Value(vec2(0.f)), mVec3Value(vec3(0.f)), mUuid(uuid)
 {
     if (mUuid == "")
         mUuid = generate_uuid();
@@ -43,9 +43,33 @@ void InputChannel::setValue(float value)
     mValue = value;
 }
 
+void InputChannel::setValue(vec2 value) {
+    mVec2Value = value;
+}
+
+void InputChannel::setValue(vec3 value) {
+    mVec3Value = value;
+}
+
 float InputChannel::getValue()
 {
     return mValue;
+}
+
+vec2 InputChannel::getVec2Value() {
+    return mVec2Value;
+}
+
+vec3 InputChannel::getVec3Value() {
+    return mVec3Value;
+}
+
+void InputChannel::setType(InputChannel::Type type) {
+    mType = type;
+}
+
+InputChannel::Type InputChannel::getType() {
+    return mType;
 }
 
 std::string InputChannel::getUuid()
