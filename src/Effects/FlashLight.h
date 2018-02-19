@@ -24,6 +24,7 @@ namespace photonic {
         void execute(double dt) override;
         std::string getTypeName() override;
         std::string getTypeClassName() override;
+        void visualize() override;
 
     protected:
         vec3 mEyeLocation;
@@ -31,6 +32,7 @@ namespace photonic {
 
         float calculateDistanceToLine(vec3 itemPosition, vec3 eyePosition, vec3 direction);
         float calculateDistanceToEye(vec3 itemPosition, vec3 eyePosition, vec3 direction);
+        vec3 getNearestPointOnLine(vec3 itemPosition, vec3 eyePosition, vec3 direction);
     };
 
 }

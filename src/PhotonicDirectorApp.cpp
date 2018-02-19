@@ -32,6 +32,7 @@ struct GuiStatusData {
     LightRef lightToEdit;
     LightRef pickedLight;
     bool drawGui;
+    bool visualizeEffects;
     
     gui_status status;
 };
@@ -113,6 +114,7 @@ PhotonicDirectorApp::PhotonicDirectorApp()
     mGuiStatusData.lightToEdit = nullptr;
     mGuiStatusData.pickedLight = nullptr;
     mGuiStatusData.drawGui = true;
+    mGuiStatusData.visualizeEffects = false;
     
     mGuiStatusData.status = IDLE;
 }
@@ -449,6 +451,8 @@ void PhotonicDirectorApp::drawGui()
         ui::Text("Now calibrating: %s", mLightCalibrator.getCurrentLight()->mName.c_str());
         ui::InputFloat3("Position: ", &mLightCalibrator.currentPosition[0]);
     }
+    ui::Separator();
+    ui::Checkbox("Visualize effects", &mGuiStatusData.visualizeEffects);
     ui::Separator();
     ui::Text("Widgets");
     ui::Checkbox("Show light editor", &showLightEditor);
@@ -882,6 +886,9 @@ void PhotonicDirectorApp::draw()
         if (mLightCalibrator.isCalibrating()) {
             mVisualizer.highLightLight(mLightCalibrator.getCurrentLight(), Color(53, 252, 0));
         }
+    }
+    if (mGuiStatusData.visualizeEffects) {
+        mVisualizer.drawEffects(mEffects);
     }
 }
 

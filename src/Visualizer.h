@@ -14,11 +14,13 @@
 #include "cinder/Camera.h"
 #include "cinder/CameraUi.h"
 #include "Light.h"
+#include "Effects.h"
 
 const float LIGHT_SPHERE_SIZE = 0.2f;
 
 using namespace ci;
 using namespace ci::app;
+using namespace photonic;
 
 // This class is mainly intended to keep the main app more readable.
 class Visualizer {
@@ -38,6 +40,7 @@ public:
     LightRef pickLight(std::vector<LightRef> lights);
     void highLightLight(LightRef light);
     void highLightLight(LightRef light, Color color);
+    void drawEffects(std::vector<EffectRef> effect);
     
 protected:
     gl::BatchRef mCube, mLight;
