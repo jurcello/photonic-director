@@ -28,6 +28,9 @@ namespace photonic {
     protected:
         vec3 mEyeLocation;
         vec3 mViewDirection;
+
+        float calculateDistanceToLine(vec3 itemPosition, vec3 eyePosition, vec3 direction);
+        float calculateDistanceToEye(vec3 itemPosition, vec3 eyePosition, vec3 direction);
     };
 
 }

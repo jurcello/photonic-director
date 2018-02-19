@@ -324,7 +324,7 @@ void SimpleVolumeEffect::execute(double dt) {
     }
 }
 
-ColorA SimpleVolumeEffect::interPolateColors(ColorA color1, ColorA color2, double intensity) {
+ColorA Effect::interPolateColors(ColorA color1, ColorA color2, double intensity) {
     float r = math<float>::max(0.0f, math<float>::min(color1.r + (color2.r - color1.r) * intensity, 1.0f));
     float g = math<float>::max(0.0f, math<float>::min(color1.g + (color2.g - color1.g) * intensity, 1.0f));
     float b = math<float>::max(0.0f, math<float>::min(color1.b + (color2.b - color1.b) * intensity, 1.0f));

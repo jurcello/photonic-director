@@ -153,6 +153,8 @@ namespace photonic {
         double mStatusChangeTime;
         double mFadeValue;
         std::map<int, Parameter*> mParams;
+
+        ColorA interPolateColors(ColorA color1, ColorA color2, double intensity);
         
     private:
         static std::map<std::string, EffectFactory*> factories;
@@ -167,7 +169,6 @@ namespace photonic {
         };
         SimpleVolumeEffect(std::string name, std::string uuid = "");
 
-        ColorA interPolateColors(ColorA color1, ColorA color2, double intensity);
         virtual void execute(double dt);
         virtual std::string getTypeName();
         virtual std::string getTypeClassName();
