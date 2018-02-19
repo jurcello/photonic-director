@@ -799,6 +799,17 @@ void PhotonicDirectorApp::drawEffectControls()
                     ui::InputFloat3(param->description.c_str(), &param->vec3Value[0]);
                     break;
 
+                case photonic::Parameter::kType_Channel:
+                    if (! ui::IsWindowCollapsed()) {
+                        ui::ListBoxHeader(param->description.c_str(), (int) mChannels.size());
+                        for (const auto channel : mChannels) {
+                            if (ui::Selectable(channel->getName().c_str(), channel == param->channelRef)) {
+                                param->channelRef = channel;
+                            }
+                        }
+                        ui::ListBoxFooter();
+                    }
+
                 default:
                     break;
             }

@@ -21,6 +21,7 @@ set( SRC_FILES
 	${APP_PATH}/src/Utils.h
 	${APP_PATH}/src/Effects/WaveEffect.cpp
 	${APP_PATH}/src/Effects/LocationFollow.cpp
+	${APP_PATH}/src/Effects/FlashLight.cpp
 )
 
 ci_make_app(

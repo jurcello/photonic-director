@@ -73,6 +73,7 @@ namespace photonic {
             kType_Int,
             kType_Color,
             kType_Vector3,
+            kType_Channel,
         };
         Parameter();
         Parameter(Type type, std::string description = "");
@@ -82,6 +83,7 @@ namespace photonic {
         int intValue;
         ColorA colorValue;
         vec3 vec3Value;
+        InputChannelRef channelRef;
         std::string description;
     };
     
