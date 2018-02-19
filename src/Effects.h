@@ -161,8 +161,13 @@ namespace photonic {
     
     class SimpleVolumeEffect : public Effect {
     public:
-        SimpleVolumeEffect(std::string name, std::string uuid = ""): Effect(name, uuid){};
-        
+        enum Inputs {
+            kInput_BaseColor = 1,
+            kInput_EffectColor = 2,
+        };
+        SimpleVolumeEffect(std::string name, std::string uuid = "");
+
+        ColorA interPolateColors(ColorA color1, ColorA color2, double intensity);
         virtual void execute(double dt);
         virtual std::string getTypeName();
         virtual std::string getTypeClassName();

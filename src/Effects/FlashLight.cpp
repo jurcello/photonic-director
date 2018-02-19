@@ -41,7 +41,16 @@ FlashLight::FlashLight(std::string name, std::string uuid)
 
 void FlashLight::execute(double dt) {
     Effect::execute(dt);
+    if (mParams[kInput_EyeLocation]->channelRef != nullptr && mParams[kInput_ViewDirection]->channelRef != nullptr) {
+        vec3 directionNormal = glm::normalize(mParams[kInput_ViewDirection]->channelRef->getVec3Value());
+        vec3 eyeLoc = mParams[kInput_EyeLocation]->channelRef->getVec3Value();
 
+        if (isTurnedOn) {
+            for (const auto light : mLights) {
+//                double distanceToLine = calculateDistanceToLine(light->getPosition(), eyeLoc, directionNormal);
+            }
+        }
+    }
 }
 
 std::string FlashLight::getTypeName() {
