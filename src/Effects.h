@@ -139,6 +139,7 @@ namespace photonic {
         virtual void execute(double dt);
         bool hasOutput();
         virtual void init();
+        virtual void visualize();
 
         // Public accessable variables. Part of the interface!
         float fadeTime;
@@ -153,6 +154,8 @@ namespace photonic {
         double mStatusChangeTime;
         double mFadeValue;
         std::map<int, Parameter*> mParams;
+
+        ColorA interPolateColors(ColorA color1, ColorA color2, double intensity);
         
     private:
         static std::map<std::string, EffectFactory*> factories;
@@ -161,8 +164,12 @@ namespace photonic {
     
     class SimpleVolumeEffect : public Effect {
     public:
-        SimpleVolumeEffect(std::string name, std::string uuid = ""): Effect(name, uuid){};
-        
+        enum Inputs {
+            kInput_BaseColor = 1,
+            kInput_EffectColor = 2,
+        };
+        SimpleVolumeEffect(std::string name, std::string uuid = "");
+
         virtual void execute(double dt);
         virtual std::string getTypeName();
         virtual std::string getTypeClassName();

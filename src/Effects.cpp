@@ -294,16 +294,45 @@ bool Effect::hasOutput() {
 void Effect::init() {
     // Normally nothing should be done.
 }
+
+void Effect::visualize() {
+    // No default visualisation.
+}
 //////////////////////////////////////////////////////////////////
 /// Start SimpleVolume
 //////////////////////////////////////////////////////////////////
 
+SimpleVolumeEffect::SimpleVolumeEffect(std::string name, std::string uuid)
+:Effect(name, uuid)
+{
+    Parameter* baseColor = new Parameter(Parameter::Type::kType_Color, "Base Color");
+    baseColor->colorValue = ColorA(Color::gray(0.5f));
+    mParams[kInput_BaseColor] = baseColor;
+
+    Parameter* effectColor = new Parameter(Parameter::Type::kType_Color, "Effect Color");
+    effectColor->colorValue = ColorA(Color::gray(0.5f));
+    mParams[kInput_EffectColor] = effectColor;
+}
+
 void SimpleVolumeEffect::execute(double dt) {
     Effect::execute(dt);
-    for (LightRef light: mLights) {
-        if (mChannel)
-            light->setEffectIntensity(mUuid, mChannel->getValue());
+    if (mChannel != nullptr) {
+        const float intensity = mChannel->getValue();
+        for (LightRef light: mLights) {
+            if (mChannel) {
+                light->setEffectIntensity(mUuid, intensity);
+                ColorA endColor = interPolateColors(mParams[kInput_BaseColor]->colorValue, mParams[kInput_EffectColor]->colorValue, intensity);
+                light->setEffectColor(mUuid, endColor);
+            }
+        }
     }
+}
+
+ColorA Effect::interPolateColors(ColorA color1, ColorA color2, double intensity) {
+    float r = math<float>::max(0.0f, math<float>::min(color1.r + (color2.r - color1.r) * intensity, 1.0f));
+    float g = math<float>::max(0.0f, math<float>::min(color1.g + (color2.g - color1.g) * intensity, 1.0f));
+    float b = math<float>::max(0.0f, math<float>::min(color1.b + (color2.b - color1.b) * intensity, 1.0f));
+    return ColorA(r, g, b);
 }
 
 std::string SimpleVolumeEffect::getTypeName() {

@@ -75,13 +75,6 @@ std::string WaveEffect::getTypeClassName() {
     return "WaveEffect";
 }
 
-ColorA WaveEffect::interPolateColors(ColorA color1, ColorA color2, double intensity) {
-    float r = math<float>::max(0.0f, math<float>::min(color1.r + (color2.r - color1.r) * intensity, 1.0f));
-    float g = math<float>::max(0.0f, math<float>::min(color1.g + (color2.g - color1.g) * intensity, 1.0f));
-    float b = math<float>::max(0.0f, math<float>::min(color1.b + (color2.b - color1.b) * intensity, 1.0f));
-    return ColorA(r, g, b);
-}
-
 double WaveEffect::getDistanceToWave(vec3 wavePosition, vec3 position) {
     vec3 distanceVector = wavePosition - position;
     float distance = glm::dot(distanceVector, mPlaneNormal);

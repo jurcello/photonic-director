@@ -31,7 +31,6 @@ namespace photonic {
         vec3 mPlaneNormal;
         vec3 mLastPosition;
         double getBellIntensity(double distance, double width);
-        ColorA interPolateColors(ColorA color1, ColorA color2, double intensity);
         double getDistanceToWave(vec3 wavePosition, vec3 position);
         vec3 getCurrentWavePosition(double dt);
     };

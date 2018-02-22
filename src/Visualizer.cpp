@@ -185,3 +185,12 @@ void Visualizer::drawLight(LightRef light)
     gl::popMatrices();
 
 }
+
+void Visualizer::drawEffects(std::vector<EffectRef> effects) {
+    gl::pushMatrices();
+    gl::setMatrices(mCam);
+    for (const auto effect : effects) {
+        effect->visualize();
+    }
+    gl::popMatrices();
+}
