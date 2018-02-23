@@ -31,7 +31,6 @@ photonic::LocationFollow::LocationFollow(std::string name, std::string uuid)
 
 void photonic::LocationFollow::execute(double dt) {
     float radius = mParams[kInput_Radius]->floatValue;
-    app::console() << mChannel->getVec2Value() << std::endl;
     Effect::execute(dt);
     if (mChannel) {
         for (auto light: mLights) {

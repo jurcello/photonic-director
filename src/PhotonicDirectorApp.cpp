@@ -264,7 +264,7 @@ void PhotonicDirectorApp::oscReceive(const osc::Message &message)
                         channel->setValue(vec2(arg1, arg2));
                         channel->setType(InputChannel::Type::kType_Dim2);
                         if (numArgs >= 3) {
-                            arg3 = message.getArgFloat(3);
+                            arg3 = message.getArgFloat(2);
                             channel->setValue(vec3(arg1, arg2, arg3));
                             channel->setType(InputChannel::Type::kType_Dim3);
                         }
@@ -383,9 +383,10 @@ void PhotonicDirectorApp::update()
             ColorA endColor(0.0f, 0.0f, 0.0f, 1.0f);
             for (const auto effect : mEffects) {
                 if (effect->hasOutput() && effect->hasLight(light)) {
-                    endIntensity += light->getEffetcIntensity(effect->getUuid()) * effect->getFadeValue();
+                    const float effetcIntensity = light->getEffetcIntensity(effect->getUuid());
+                    endIntensity += effetcIntensity * effect->getFadeValue();
                     // TODO: This should be an interpolation rather than an addition.
-                    endColor += light->getEffectColor(effect->getUuid()) * effect->getFadeValue();
+                    endColor += light->getEffectColor(effect->getUuid()) * effetcIntensity * effect->getFadeValue();
                 }
             }
             //
