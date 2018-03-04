@@ -96,6 +96,10 @@ void ConfigManager::readEffects(std::vector<EffectRef> &effects, const std::vect
                 float fadeTime = effectNode.getChild("fadetime").getValue<float>();
                 newEffect->fadeTime = fadeTime;
             }
+            if (effectNode.hasChild("weight")) {
+                float weight = effectNode.getChild("weight").getValue<float>();
+                newEffect->weight = weight;
+            }
             if (effectNode.hasChild("isActive")) {
                 bool isActive = effectNode.getChild("isActive").getValue<bool>();
                 newEffect->isTurnedOn = isActive;
@@ -281,7 +285,10 @@ void ConfigManager::writeEffects(std::vector<EffectRef> &effects)
         XmlTree fadeTimeNode;
         fadeTimeNode.setTag("fadetime");
         fadeTimeNode.setValue(effect->fadeTime);
-        effectNode.push_back(fadeTimeNode);
+        XmlTree weightNode;
+        weightNode.setTag("weight");
+        weightNode.setValue(effect->weight);
+        effectNode.push_back(weightNode);
         XmlTree channelNode;
         XmlTree activeNode;
         activeNode.setTag("isActive");

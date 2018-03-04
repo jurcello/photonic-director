@@ -58,9 +58,10 @@ void WaveEffect::execute(double dt) {
         for (const auto light : mLights) {
             double distanceToWave = getDistanceToWave(currentWavePosition, light->getPosition());
             double intensity = getBellIntensity(distanceToWave, mParams[kInput_Width]->floatValue);
+            bool baseIsBlack = mParams[kInput_BaseColor]->colorValue.r < 0.05f && mParams[kInput_BaseColor]->colorValue.g < 0.05f && mParams[kInput_BaseColor]->colorValue.b < 0.05f;
             ColorA color = interPolateColors(mParams[kInput_BaseColor]->colorValue, mParams[kInput_EffectColor]->colorValue, intensity);
             light->setEffectColor(mUuid, color);
-            auto lightIntensity = (float) (light->isColorEnabled() ? 1.0f : intensity);
+            auto lightIntensity = (float) (light->isColorEnabled() && ! baseIsBlack ? 1.0f : intensity);
             light->setEffectIntensity(mUuid, lightIntensity);
         }
     }

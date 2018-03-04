@@ -127,7 +127,7 @@ EffectRef Effect::create(std::string type, std::string name, std::string uuid)
 }
 
 Effect::Effect(std::string name, std::string uuid)
-:mName(name), mUuid(uuid), mStatus(kStatus_Off), isTurnedOn(false), fadeTime(2.0f), mFadeValue(0.0)
+:mName(name), mUuid(uuid), mStatus(kStatus_Off), isTurnedOn(false), fadeTime(2.0f), mFadeValue(0.0), weight(1.0f)
 {
     if (uuid == "") {
         mUuid = generate_uuid();

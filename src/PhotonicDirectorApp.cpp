@@ -381,15 +381,23 @@ void PhotonicDirectorApp::update()
         } else {
             float endIntensity = 0.f;
             ColorA endColor(0.0f, 0.0f, 0.0f, 1.0f);
+            float highestWeight = 1.0f;
             for (const auto effect : mEffects) {
                 if (effect->hasOutput() && effect->hasLight(light)) {
                     const float effetcIntensity = light->getEffetcIntensity(effect->getUuid());
-                    endIntensity += effetcIntensity * effect->getFadeValue();
-                    // TODO: This should be an interpolation rather than an addition.
-                    endColor += light->getEffectColor(effect->getUuid()) * effetcIntensity * effect->getFadeValue();
+                    ////////////////////////////////////////////////////////
+                    // Calculate the weight of the effect. The weight should be more if the intensity is more.
+                    ////////////////////////////////////////////////////////
+                    float effectWeight = 1.0f + effetcIntensity * effect->weight;
+                    if (effectWeight > highestWeight) {
+                        highestWeight = effectWeight;
+                    }
+                    endIntensity += effetcIntensity * effect->getFadeValue() * effectWeight;
+                    endColor += light->getEffectColor(effect->getUuid()) * effetcIntensity * effect->getFadeValue() * effectWeight;
                 }
             }
-            //
+            endColor /= highestWeight;
+            endIntensity /= highestWeight;
             light->intensity = endIntensity;
             // Be sure that the alfa channel is always 1.0.
             endColor.a = 1.0f;
@@ -748,6 +756,7 @@ void PhotonicDirectorApp::drawEffectControls()
         }
         ui::Separator();
         ui::InputFloat("FadeTime", &effect->fadeTime);
+        ui::SliderFloat("Weight", &effect->weight, 0.0f, 100.0f);
         ui::Spacing();
         if (! ui::IsWindowCollapsed()) {
             ui::ListBoxHeader("Choose input channel", (int) mChannels.size());

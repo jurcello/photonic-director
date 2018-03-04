@@ -144,6 +144,7 @@ namespace photonic {
         // Public accessable variables. Part of the interface!
         float fadeTime;
         bool isTurnedOn;
+        float weight;
         
     protected:
         std::string mUuid;
