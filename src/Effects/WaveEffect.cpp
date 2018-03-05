@@ -12,41 +12,23 @@ WaveEffect::WaveEffect(std::string name, std::string uuid)
         :Effect(name, uuid), mPlaneNormal(vec3(1.f, 0.f, 0.f))
 {
     // Create the inputs.
-    Parameter* baseColor = new Parameter(Parameter::Type::kType_Color, "Base Color");
-    baseColor->colorValue = ColorA(Color::gray(0.5f));
-    mParams[kInput_BaseColor] = baseColor;
+    registerParam(Parameter::Type::kType_Color, kInput_BaseColor, ColorA(Color::gray(0.5f)), "Base Color");
 
-    Parameter* effectColor = new Parameter(Parameter::Type::kType_Color, "Effect Color");
-    effectColor->colorValue = ColorA(Color::gray(0.5f));
-    mParams[kInput_EffectColor] = effectColor;
+    registerParam(Parameter::Type::kType_Color, kInput_EffectColor, ColorA(Color::gray(0.5f)), "Effect Color");
 
-    Parameter* startPoint = new Parameter(Parameter::Type::kType_Vector3, "Start Point");
-    startPoint->vec3Value = vec3(-3.0f, 0.0f, 0.0f);
-    mParams[kInput_StartPoint] = startPoint;
+    registerParam(Parameter::Type::kType_Vector3, kInput_StartPoint, vec3(-3.0f, 0.0f, 0.0f), "Start Point");
 
-    Parameter* endPoint = new Parameter(Parameter::Type::kType_Vector3, "End Point");
-    endPoint->vec3Value = vec3(-3.0f, 0.0f, 0.0f);
-    mParams[kInput_EndPoint] = endPoint;
+    registerParam(Parameter::Type::kType_Vector3, kInput_EndPoint, vec3(-3.0f, 0.0f, 0.0f), "End Point");
 
-    Parameter* direction = new Parameter(Parameter::Type::kType_Vector3, "Plane Orientation (Normal)");
-    direction->vec3Value = vec3(1.0f, 0.0f, 0.0f);
-    mParams[kInput_Direction] = direction;
+    registerParam(Parameter::Type::kType_Vector3, kInput_Direction, vec3(1.0f, 0.0f, 0.0f), "Plane Orientation (Normal)");
 
-    Parameter* width = new Parameter(Parameter::Type::kType_Float, "Width");
-    width->floatValue = 0.5f;
-    mParams[kInput_Width] = width;
+    registerParam(Parameter::Type::kType_Float, kInput_Width, 0.5f, "Width");
 
-    Parameter* speed = new Parameter(Parameter::Type::kType_Float, "Speed");
-    speed->floatValue = 0.5f;
-    mParams[kInput_Speed] = speed;
+    registerParam(Parameter::Type::kType_Float, kInput_Speed, 0.5f, "Speed");
 
-    Parameter* noiseAmount = new Parameter(Parameter::Type::kType_Float, "Noise Amount");
-    noiseAmount->floatValue = 0.2f;
-    mParams[kInput_NoiseAmount] = noiseAmount;
+    registerParam(Parameter::Type::kType_Float, kInput_NoiseAmount, 0.2f, "Noise Amount");
 
-    Parameter* noiseSpeed = new Parameter(Parameter::Type::kType_Float, "Noice Speed");
-    noiseSpeed->floatValue = 1.0f;
-    mParams[kInput_NoiseSpeed] = noiseSpeed;
+    registerParam(Parameter::Type::kType_Float, kInput_NoiseSpeed, 1.0f, "Noise Speed");
 }
 
 void WaveEffect::init() {

@@ -100,6 +100,21 @@ Parameter::Parameter()
 {
 }
 
+void Parameter::setValue(float value) {
+    floatValue = value;
+}
+
+void Parameter::setValue(int value) {
+    intValue = value;
+}
+
+void Parameter::setValue(ColorA value) {
+    colorValue = value;
+}
+
+void Parameter::setValue(vec3 value) {
+    vec3Value = value;
+}
 //////////////////////////////////////////////////////////////////
 /// Start effects.
 //////////////////////////////////////////////////////////////////

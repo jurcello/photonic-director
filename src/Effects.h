@@ -26,7 +26,8 @@ public: \
         return EffectRef(new klass(name, uuid)); \
     } \
 }; \
-static klass##Factory global_##klass##Factory; \
+static klass##Factory global_##klass##Factory;
+
 
 namespace photonic {
     class InputChannel;
@@ -85,6 +86,11 @@ namespace photonic {
         vec3 vec3Value;
         InputChannelRef channelRef;
         std::string description;
+
+        void setValue(float value);
+        void setValue(int value);
+        void setValue(ColorA value);
+        void setValue(vec3 value);
     };
     
     class Effect;
@@ -131,6 +137,13 @@ namespace photonic {
         // Params section.
         Parameter* getParam(int index);
         std::map<int, Parameter*>& getParams();
+
+        template<typename ENUM_TYPE, typename PARAM_INDEX, typename DATA_TYPE>
+        void registerParam(ENUM_TYPE type, PARAM_INDEX index, DATA_TYPE initialValue, std::string description) {
+            Parameter* newParam = new Parameter(type, description);
+            newParam->setValue(initialValue);
+            mParams[index] = newParam;
+        };
         
         
         virtual std::string getTypeClassName() = 0;
