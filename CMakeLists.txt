@@ -23,6 +23,7 @@ set( SRC_FILES
 	${APP_PATH}/src/Effects/LocationFollow.cpp
 	${APP_PATH}/src/Effects/FlashLight.cpp
 	${APP_PATH}/src/Effects/VolumeLocation.cpp
+	${APP_PATH}/src/Effects/Ripples.cpp
 )
 
 ci_make_app(

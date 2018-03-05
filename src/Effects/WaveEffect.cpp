@@ -42,7 +42,7 @@ void WaveEffect::execute(double dt) {
     Effect::execute(dt);
     mPlaneNormal = glm::normalize(mParams[kInput_Direction]->vec3Value);
     // Update the current position of the wave.
-    float elapsedTime = (float) mTimer.getSeconds();
+    auto elapsedTime = (float) mTimer.getSeconds();
     vec3 currentWavePosition = getCurrentWavePosition(dt);
     if (isTurnedOn) {
         for (const auto &light : mLights) {
