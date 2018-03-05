@@ -6,6 +6,7 @@
 #define PHOTONICDIRECTOR_WAVEEFFECT_H
 
 #include "../Effects.h"
+#include "cinder/Perlin.h"
 
 namespace photonic {
     class WaveEffect : public Effect {
@@ -18,6 +19,8 @@ namespace photonic {
             kInput_Direction = 5,
             kInput_Width = 6,
             kInput_Speed = 7,
+            kInput_NoiseAmount = 8,
+            kInput_NoiseSpeed = 9,
         };
         WaveEffect(std::string name, std::string uuid = "");
 
@@ -30,6 +33,8 @@ namespace photonic {
 
         vec3 mPlaneNormal;
         vec3 mLastPosition;
+        Perlin mPerlin;
+        Timer mTimer;
         double getBellIntensity(double distance, double width);
         double getDistanceToWave(vec3 wavePosition, vec3 position);
         vec3 getCurrentWavePosition(double dt);

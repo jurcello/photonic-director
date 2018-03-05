@@ -3,9 +3,6 @@
 //
 
 #include "WaveEffect.h"
-#include "../Effects.h"
-#include "cinder/CinderMath.h"
-#include "cinder/gl/gl.h"
 
 using namespace cinder;
 using namespace photonic;
@@ -42,22 +39,36 @@ WaveEffect::WaveEffect(std::string name, std::string uuid)
     Parameter* speed = new Parameter(Parameter::Type::kType_Float, "Speed");
     speed->floatValue = 0.5f;
     mParams[kInput_Speed] = speed;
+
+    Parameter* noiseAmount = new Parameter(Parameter::Type::kType_Float, "Noise Amount");
+    noiseAmount->floatValue = 0.2f;
+    mParams[kInput_NoiseAmount] = noiseAmount;
+
+    Parameter* noiseSpeed = new Parameter(Parameter::Type::kType_Float, "Noice Speed");
+    noiseSpeed->floatValue = 1.0f;
+    mParams[kInput_NoiseSpeed] = noiseSpeed;
 }
 
 void WaveEffect::init() {
     Effect::init();
     mLastPosition = mParams[kInput_StartPoint]->vec3Value;
+    mPerlin.setSeed(clock());
+    mTimer.start();
 }
 
 void WaveEffect::execute(double dt) {
     Effect::execute(dt);
     mPlaneNormal = glm::normalize(mParams[kInput_Direction]->vec3Value);
     // Update the current position of the wave.
+    float elapsedTime = (float) mTimer.getSeconds();
     vec3 currentWavePosition = getCurrentWavePosition(dt);
     if (isTurnedOn) {
-        for (const auto light : mLights) {
+        for (const auto &light : mLights) {
             double distanceToWave = getDistanceToWave(currentWavePosition, light->getPosition());
             double intensity = getBellIntensity(distanceToWave, mParams[kInput_Width]->floatValue);
+            // Add some perlin noise to the wave to have a more wave like appearance.
+            float noise = mPerlin.noise(light->getPosition().x, light->getPosition().y, elapsedTime * mParams[kInput_NoiseSpeed]->floatValue / 10.f) * mParams[kInput_NoiseAmount]->floatValue;
+            intensity += noise;
             bool baseIsBlack = mParams[kInput_BaseColor]->colorValue.r < 0.05f && mParams[kInput_BaseColor]->colorValue.g < 0.05f && mParams[kInput_BaseColor]->colorValue.b < 0.05f;
             ColorA color = interPolateColors(mParams[kInput_BaseColor]->colorValue, mParams[kInput_EffectColor]->colorValue, intensity);
             light->setEffectColor(mUuid, color);
