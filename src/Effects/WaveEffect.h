@@ -21,6 +21,7 @@ namespace photonic {
             kInput_Speed = 7,
             kInput_NoiseAmount = 8,
             kInput_NoiseSpeed = 9,
+            kInput_SpeedExternal = 10,
         };
         WaveEffect(std::string name, std::string uuid = "");
 

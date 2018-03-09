@@ -813,6 +813,23 @@ void PhotonicDirectorApp::drawEffectControls()
                     ui::InputFloat3(param->description.c_str(), &param->vec3Value[0]);
                     break;
 
+                case photonic::Parameter::kType_Channel_MinMax:
+                    {
+                        ui::Text("Settings for %s", param->description.c_str());
+                        ImGui::Columns(4, NULL, false);
+                        ui::InputFloat("Min in", &param->minIn);
+                        ui::NextColumn();
+                        ui::InputFloat("Max in", &param->maxIn);
+                        ui::NextColumn();
+                        ui::InputFloat("Min", &param->min);
+                        ui::NextColumn();
+                        ui::InputFloat("Max", &param->max);
+                        ui::NextColumn();
+                        ui::Columns(1);
+                    }
+
+                    // Intentional fallthrough.
+
                 case photonic::Parameter::kType_Channel:
                     if (! ui::IsWindowCollapsed()) {
                         ui::ListBoxHeader(param->description.c_str(), (int) mChannels.size());

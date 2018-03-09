@@ -26,6 +26,8 @@ WaveEffect::WaveEffect(std::string name, std::string uuid)
 
     registerParam(Parameter::Type::kType_Float, kInput_Speed, 0.5f, "Speed");
 
+    registerParam(Parameter::Type::kType_Channel_MinMax, kInput_SpeedExternal, vec4(0.0f, 60.0f, 0.0f, 1.0f), "External speed");
+
     registerParam(Parameter::Type::kType_Float, kInput_NoiseAmount, 0.2f, "Noise Amount");
 
     registerParam(Parameter::Type::kType_Float, kInput_NoiseSpeed, 1.0f, "Noise Speed");
@@ -40,6 +42,11 @@ void WaveEffect::init() {
 
 void WaveEffect::execute(double dt) {
     Effect::execute(dt);
+    // If the speed is external, update the speed parameter to reflect the calculated speed.
+    if (mParams[kInput_SpeedExternal]->channelRef) {
+        mParams[kInput_Speed]->floatValue = mParams[kInput_SpeedExternal]->getMappedChannelValue();
+    }
+
     mPlaneNormal = glm::normalize(mParams[kInput_Direction]->vec3Value);
     // Update the current position of the wave.
     auto elapsedTime = (float) mTimer.getSeconds();
@@ -77,7 +84,8 @@ double WaveEffect::getDistanceToWave(vec3 wavePosition, vec3 position) {
 
 vec3 WaveEffect::getCurrentWavePosition(double dt) {
     // Plane movement calculations.
-    double distance = dt * mParams[kInput_Speed]->floatValue;
+    const float speed = mParams[kInput_SpeedExternal]->channelRef != nullptr ? mParams[kInput_SpeedExternal]->getMappedChannelValue() : mParams[kInput_Speed]->floatValue;
+    double distance = dt * speed;
     vec3 movePathVector = mParams[kInput_EndPoint]->vec3Value - mParams[kInput_StartPoint]->vec3Value;
     // Now add this distance to the lastPosition.
     vec3 moveDirectionNormal = glm::normalize(movePathVector);

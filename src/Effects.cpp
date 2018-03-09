@@ -115,6 +115,24 @@ void Parameter::setValue(ColorA value) {
 void Parameter::setValue(vec3 value) {
     vec3Value = value;
 }
+
+void Parameter::setValue(vec4 minMax) {
+    minIn = minMax.x;
+    maxIn = minMax.y;
+    min = minMax.z;
+    max = minMax.w;
+}
+
+float Parameter::getMappedChannelValue() {
+    float clampedVal = channelRef->getValue();
+    if (clampedVal < minIn) {
+        clampedVal = minIn;
+    }
+    else if (clampedVal > maxIn) {
+        clampedVal = maxIn;
+    }
+    return ((clampedVal - minIn) / (maxIn - minIn)) * (max - min) + min;
+}
 //////////////////////////////////////////////////////////////////
 /// Start effects.
 //////////////////////////////////////////////////////////////////

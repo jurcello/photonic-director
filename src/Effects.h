@@ -75,22 +75,28 @@ namespace photonic {
             kType_Color,
             kType_Vector3,
             kType_Channel,
+            kType_Channel_MinMax,
         };
         Parameter();
         Parameter(Type type, std::string description = "");
       
         Type type;
+        std::string description;
         float floatValue;
         int intValue;
         ColorA colorValue;
         vec3 vec3Value;
+        // Type channel and channel min max.
         InputChannelRef channelRef;
-        std::string description;
+        float minIn, min, maxIn, max;
 
         void setValue(float value);
         void setValue(int value);
         void setValue(ColorA value);
         void setValue(vec3 value);
+        void setValue(vec4 minMax);
+
+        float getMappedChannelValue();
     };
     
     class Effect;

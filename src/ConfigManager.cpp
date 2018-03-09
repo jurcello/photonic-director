@@ -167,6 +167,13 @@ void ConfigManager::readParam(std::unique_ptr<XmlTree> &paramNode, Parameter *pa
             break;
         }
 
+        case photonic::Parameter::kType_Channel_MinMax:
+            param->min = paramNode->getAttributeValue<float>("min");
+            param->max = paramNode->getAttributeValue<float>("max");
+            param->minIn = paramNode->getAttributeValue<float>("min_in");
+            param->maxIn = paramNode->getAttributeValue<float>("max_in");
+            // Intentional fallthrough.
+
         case photonic::Parameter::kType_Channel:
         {
             std::string channelUuid = paramNode->getValue();
@@ -177,8 +184,8 @@ void ConfigManager::readParam(std::unique_ptr<XmlTree> &paramNode, Parameter *pa
             if (it != channels.end()) {
                 param->channelRef = *it;
             }
-        }
             break;
+        }
 
         default:
             break;
@@ -347,6 +354,13 @@ void ConfigManager::writeParameter(cinder::XmlTree &paramsNode, photonic::Parame
             paramnode.setAttribute("y", param->vec3Value.y);
             paramnode.setAttribute("z", param->vec3Value.z);
             break;
+
+        case photonic::Parameter::kType_Channel_MinMax:
+            paramnode.setAttribute("min", param->min);
+            paramnode.setAttribute("max", param->max);
+            paramnode.setAttribute("min_in", param->minIn);
+            paramnode.setAttribute("max_in", param->maxIn);
+            // Intentional fallthrough.
 
         case photonic::Parameter::kType_Channel:
             if (param->channelRef != nullptr) {

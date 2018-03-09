@@ -191,6 +191,23 @@ LightFactory::LightFactory(DmxOutput *dmxOutput)
             ColorA(1.0f, 0, 0, 0))
     );
     mLightTypes.push_back(new LightType(
+            "LED Dimmer (4 channels)",
+            "led_dimmer_4",
+            1,
+            0,
+            4,
+            ColorA(1.0f, 0, 0.5f, 0))
+    );
+    mLightTypes.push_back(new LightType(
+            "LED Dimmer RBG (4 channels)",
+            "led_dimmer_4_rbg",
+            1,
+            0,
+            4,
+            ColorA(1.0f, 0, 0.5f, 0),
+            LightType::RgbType::RBG)
+    );
+    mLightTypes.push_back(new LightType(
             "Led Ball",
             "led_ball",
             1,
