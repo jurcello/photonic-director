@@ -815,7 +815,7 @@ void PhotonicDirectorApp::drawEffectControls()
 
                 case photonic::Parameter::kType_Channel_MinMax:
                     {
-                        ui::Text("Settings for %s", param->description.c_str());
+                        ui::Text("Settings for: %s, current value: %f", param->description.c_str(), param->getMappedChannelValue());
                         ImGui::Columns(4, NULL, false);
                         ui::InputFloat("Min in", &param->minIn);
                         ui::NextColumn();

@@ -187,6 +187,7 @@ namespace photonic {
         enum Inputs {
             kInput_BaseColor = 1,
             kInput_EffectColor = 2,
+            kInput_Volume = 3,
         };
         SimpleVolumeEffect(std::string name, std::string uuid = "");
 

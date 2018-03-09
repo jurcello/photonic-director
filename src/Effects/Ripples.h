@@ -17,6 +17,9 @@ namespace photonic {
             kInput_EffectVolume = 3,
             kInput_NoiseAmount = 4,
             kInput_NoiseSpeed = 5,
+            kInput_ExternalVolume = 6,
+            kInput_ExternalNoiseAmount = 7,
+            kInput_ExternalNoiseSpeed = 8,
         };
         Ripples(std::string name, std::string uuid = "");
 

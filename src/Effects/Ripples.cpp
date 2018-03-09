@@ -15,6 +15,9 @@ photonic::Ripples::Ripples(std::string name, std::string uuid) : Effect(name, uu
     registerParam(Parameter::Type::kType_Float, kInput_EffectVolume, 0.5f, "Volume");
     registerParam(Parameter::Type::kType_Float, kInput_NoiseAmount, 0.5f, "Noise amount");
     registerParam(Parameter::Type::kType_Float, kInput_NoiseSpeed, 1.0f, "Noise speed");
+    registerParam(Parameter::Type::kType_Channel_MinMax, kInput_ExternalVolume, vec4(0.0f, 60.0f, 0.0f, 1.0f), "External volume");
+    registerParam(Parameter::Type::kType_Channel_MinMax, kInput_ExternalNoiseAmount, vec4(0.0f, 60.0f, 0.0f, 1.0f), "External noise amount");
+    registerParam(Parameter::Type::kType_Channel_MinMax, kInput_ExternalNoiseSpeed, vec4(0.0f, 60.0f, 0.0f, 1.0f), "External noise speed");
 }
 
 void photonic::Ripples::init() {
@@ -26,6 +29,16 @@ void photonic::Ripples::init() {
 
 void photonic::Ripples::execute(double dt) {
     Effect::execute(dt);
+    // If there are external inputs, update the inner volumes.
+    if (mParams[kInput_ExternalVolume]->channelRef) {
+        mParams[kInput_EffectVolume]->floatValue = mParams[kInput_ExternalVolume]->getMappedChannelValue();
+    }
+    if (mParams[kInput_ExternalNoiseAmount]->channelRef) {
+        mParams[kInput_NoiseAmount]->floatValue = mParams[kInput_ExternalNoiseAmount]->getMappedChannelValue();
+    }
+    if (mParams[kInput_ExternalNoiseSpeed]->channelRef) {
+        mParams[kInput_NoiseSpeed]->floatValue = mParams[kInput_ExternalNoiseSpeed]->getMappedChannelValue();
+    }
     auto elapsedTime = (float) mTimer.getSeconds();
     if (isTurnedOn) {
         for (const auto &light : mLights) {

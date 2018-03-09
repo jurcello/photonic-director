@@ -345,12 +345,21 @@ SimpleVolumeEffect::SimpleVolumeEffect(std::string name, std::string uuid)
     Parameter* effectColor = new Parameter(Parameter::Type::kType_Color, "Effect Color");
     effectColor->colorValue = ColorA(Color::gray(0.5f));
     mParams[kInput_EffectColor] = effectColor;
+
+    registerParam(Parameter::Type::kType_Channel_MinMax, kInput_Volume, vec4(0.0f, 60.0f, 0.0f, 1.0f), "Volume");
 }
 
 void SimpleVolumeEffect::execute(double dt) {
     Effect::execute(dt);
+    // If the minMax channel is used, use that one.
+    if (mParams[kInput_Volume]->channelRef) {
+        mChannel = mParams[kInput_Volume]->channelRef;
+    }
     if (mChannel != nullptr) {
-        const float intensity = mChannel->getValue();
+        float intensity = mChannel->getValue();
+        if (mParams[kInput_Volume]->channelRef) {
+            intensity = mParams[kInput_Volume]->getMappedChannelValue();
+        }
         for (LightRef light: mLights) {
             if (mChannel) {
                 light->setEffectIntensity(mUuid, intensity);
