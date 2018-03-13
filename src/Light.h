@@ -65,6 +65,7 @@ public:
     int getCorrectedDmxValue();
 
     void injectDmxOutput(DmxOutput *dmxOutput);
+    void update();
     void updateDmx();
     bool isColorEnabled();
     

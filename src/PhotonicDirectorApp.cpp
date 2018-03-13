@@ -420,6 +420,7 @@ void PhotonicDirectorApp::update()
     // Light handling: updating DMX data.
     ///////////////////////////////////////////////////
     for (const auto light : mLights) {
+        light->update();
         light->updateDmx();
     }
     mDmxOut.update();

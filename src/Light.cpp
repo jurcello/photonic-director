@@ -124,6 +124,12 @@ bool Light::isColorEnabled() {
     return mType->colorChannelPosition > 0;
 }
 
+void Light::update() {
+    if (mType->machineName == "relais") {
+        intensity = intensity > 0.5f ? 1.0f : 0.0f;
+    }
+}
+
 void Light::updateDmx() {
     if (mDmxChannel > 0) {
         // NOTE THAT FOR ALL CHANNEL POSITIONS WE USE HUMAN READABLE NUMBERS.
@@ -144,14 +150,7 @@ void Light::updateDmx() {
         }
         else {
             // If there are no color channels, just set the proper DMX channel.
-            if (mType->machineName == "relais") {
-                // If the intensity is higher than 0.5, set it to max, otherwise to 0.
-                int lightIntensity = intensity > 0.5f ? 255 : 0;
-                mDmxOutput->setChannelValue(mDmxChannel, lightIntensity);
-            }
-            else {
-                mDmxOutput->setChannelValue(mDmxChannel, this->getCorrectedDmxValue());
-            }
+            mDmxOutput->setChannelValue(mDmxChannel, this->getCorrectedDmxValue());
         }
         // If there is an intensity channel, set that one to the max.
         if (getIntensityChannelPosition() > 0) {
