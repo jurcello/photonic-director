@@ -364,9 +364,21 @@ void PhotonicDirectorApp::update()
     /////////////////////////////////////////////
     // Effect handling.
     /////////////////////////////////////////////
+    // Main stage.
     for (auto effect : mEffects) {
-        effect->execute(dt);
+        if (effect->getStage() == Effect::Stage::kStage_Main)
+        {
+            effect->execute(dt);
+        }
     }
+    // After effects.
+    for (auto effect : mEffects) {
+        if (effect->getStage() == Effect::Stage::kStage_After)
+        {
+            effect->execute(dt);
+        }
+    }
+
     // Prepare DMX output.
     mDmxOut.reset();
     
@@ -816,7 +828,7 @@ void PhotonicDirectorApp::drawEffectControls()
                 case photonic::Parameter::kType_Channel_MinMax:
                     {
                         ui::Text("Settings for: %s, current value: %f", param->description.c_str(), param->getMappedChannelValue());
-                        ImGui::Columns(4, NULL, false);
+                        ImGui::Columns(6, NULL, false);
                         ui::InputFloat("Min in", &param->minIn);
                         ui::NextColumn();
                         ui::InputFloat("Max in", &param->maxIn);

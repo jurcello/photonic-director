@@ -144,7 +144,14 @@ void Light::updateDmx() {
         }
         else {
             // If there are no color channels, just set the proper DMX channel.
-            mDmxOutput->setChannelValue(mDmxChannel, this->getCorrectedDmxValue());
+            if (mType->machineName == "relais") {
+                // If the intensity is higher than 0.5, set it to max, otherwise to 0.
+                int lightIntensity = intensity > 0.5f ? 255 : 0;
+                mDmxOutput->setChannelValue(mDmxChannel, lightIntensity);
+            }
+            else {
+                mDmxOutput->setChannelValue(mDmxChannel, this->getCorrectedDmxValue());
+            }
         }
         // If there is an intensity channel, set that one to the max.
         if (getIntensityChannelPosition() > 0) {
@@ -181,6 +188,14 @@ LightFactory::LightFactory(DmxOutput *dmxOutput)
             0,
             1,
             ColorA(252.0f / 256.0f, 211.0f / 256.0f, 3.0f / 256.0f, 0))
+    );
+    mLightTypes.push_back(new LightType(
+            "Relais",
+            "relais",
+            0,
+            0,
+            1,
+            ColorA(1.0f, 1.0f, 1.0f, 0))
     );
     mLightTypes.push_back(new LightType(
             "Simple Color (3 channels)",

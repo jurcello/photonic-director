@@ -117,6 +117,11 @@ namespace photonic {
             kStatus_FadingOut,
             kStatus_FadingIn,
         };
+
+        enum Stage {
+            kStage_Main,
+            kStage_After,
+        };
         
         static void registerType(const std::string type, EffectFactory* factory);
         static EffectRef create(std::string type, std::string name);
@@ -156,6 +161,7 @@ namespace photonic {
         virtual std::string getTypeName() = 0;
         virtual void drawEditGui();
         virtual void execute(double dt);
+        virtual Stage getStage();
         bool hasOutput();
         virtual void init();
         virtual void visualize();

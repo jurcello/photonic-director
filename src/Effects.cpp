@@ -212,6 +212,8 @@ photonic::Effect::Status Effect::getStatus() {
     return mStatus;
 }
 
+
+
 double Effect::getFadeValue() {
     return mFadeValue;
 }
@@ -318,6 +320,10 @@ void Effect::execute(double dt) {
             mFadeValue = 1.0 - (getElapsedSeconds() - mStatusChangeTime) / fadeTime;
         }
     }
+}
+
+Effect::Stage Effect::getStage() {
+    return kStage_Main;
 }
 
 bool Effect::hasOutput() {
