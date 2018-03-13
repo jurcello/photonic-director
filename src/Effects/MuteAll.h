@@ -15,13 +15,20 @@ namespace photonic {
             kInput_Input = 1,
             kInput_ExportChannel = 2,
             kInput_OffTreshold = 3,
+            kInput_MuteSpeed = 4,
         };
-        MuteAll(std::string name, std::string uuid = "");
 
-        virtual void execute(double dt) override;
-        virtual std::string getTypeName() override;
-        virtual std::string getTypeClassName() override;
-        virtual Effect::Stage getStage() override;
+        explicit MuteAll(std::string name, std::string uuid = "");
+
+        void execute(double dt) override;
+        std::string getTypeName() override;
+        std::string getTypeClassName() override;
+        Effect::Stage getStage() override;
+    protected:
+        double mMuteChangeTime;
+        float mMuteFactor;
+        bool mMuted;
+        Timer mTimer;
 
     };
 }

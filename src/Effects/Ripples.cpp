@@ -24,7 +24,6 @@ void photonic::Ripples::init() {
     Effect::init();
     mPerlin.setSeed(clock());
     mTimer.start();
-
 }
 
 void photonic::Ripples::execute(double dt) {
