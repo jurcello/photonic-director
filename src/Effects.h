@@ -155,7 +155,14 @@ namespace photonic {
             newParam->setValue(initialValue);
             mParams[index] = newParam;
         };
-        
+
+        template<typename ENUM_TYPE, typename PARAM_INDEX>
+        void registerParam(ENUM_TYPE type, PARAM_INDEX index, std::string description) {
+            Parameter* newParam = new Parameter(type, description);
+            newParam->channelRef = nullptr;
+            mParams[index] = newParam;
+        };
+
         
         virtual std::string getTypeClassName() = 0;
         virtual std::string getTypeName() = 0;

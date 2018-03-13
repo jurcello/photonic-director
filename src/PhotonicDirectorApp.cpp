@@ -371,19 +371,11 @@ void PhotonicDirectorApp::update()
             effect->execute(dt);
         }
     }
-    // After effects.
-    for (auto effect : mEffects) {
-        if (effect->getStage() == Effect::Stage::kStage_After)
-        {
-            effect->execute(dt);
-        }
-    }
-
     // Prepare DMX output.
     mDmxOut.reset();
     
     /////////////////////////////////////////////
-    // Light handling.
+    // Light handling: Main stage.
     /////////////////////////////////////////////
     for (const auto light : mLights) {
         if (mLightCalibrator.isCalibrating()) {
@@ -415,6 +407,19 @@ void PhotonicDirectorApp::update()
             endColor.a = 1.0f;
             light->color = endColor;
         }
+    }
+    // After effects.
+    for (auto effect : mEffects) {
+        if (effect->getStage() == Effect::Stage::kStage_After)
+        {
+            effect->execute(dt);
+        }
+    }
+
+    ///////////////////////////////////////////////////
+    // Light handling: updating DMX data.
+    ///////////////////////////////////////////////////
+    for (const auto light : mLights) {
         light->updateDmx();
     }
     mDmxOut.update();

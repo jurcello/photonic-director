@@ -124,6 +124,9 @@ void Parameter::setValue(vec4 minMax) {
 }
 
 float Parameter::getMappedChannelValue() {
+    if (channelRef == nullptr) {
+        return min;
+    }
     float clampedVal = channelRef->getValue();
     if (clampedVal < minIn) {
         clampedVal = minIn;
