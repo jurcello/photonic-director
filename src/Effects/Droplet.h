@@ -14,14 +14,17 @@ namespace photonic {
     public:
         enum Inputs {
             kInput_InputChannel = 1,
-            kInput_Theshold = 2,
-            kInput_MinIntensity = 3,
-            kInput_MaxIntensity = 4,
-            kInput_DropInterval = 5,
-            kInput_DropIntervalRandomness = 6,
-            kInput_DecreaseSpeed = 7,
-            kInput_BaseColor = 8,
-            kInput_EffectColor = 9,
+            kInput_Volume = 2,
+            kInput_Theshold = 3,
+            kInput_MinIntensity = 4,
+            kInput_MaxIntensity = 5,
+            kInput_DropInterval = 6,
+            kInput_DropIntervalRandomness = 7,
+            kInput_DecreaseSpeed = 8,
+            kInput_BaseColor = 9,
+            kInput_EffectColor = 10,
+            kInput_VolumeChannel = 11,
+            kInput_DropIntervalChannel = 12,
         };
 
         explicit Droplet(std::string name, std::string uuid = "");

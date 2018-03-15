@@ -12,6 +12,7 @@ photonic::Droplet::Droplet(std::string name, std::string uuid)
 : Effect(name, uuid), mInactiveTime(0.0f)
 {
     registerParam(Parameter::Type::kType_Channel_MinMax, kInput_InputChannel, vec4(0.0f, 1.0f, 0.0f, 1.0f), "Input channel");
+    registerParam(Parameter::Type::kType_Float, kInput_Volume, 0.2f, "Volume");
     registerParam(Parameter::Type::kType_Float, kInput_Theshold, 0.2f, "Input threshold");
     registerParam(Parameter::Type::kType_Float, kInput_MinIntensity, 0.5f, "Minimal intensity");
     registerParam(Parameter::Type::kType_Float, kInput_MaxIntensity, 1.0f, "Maximal intensity");
@@ -20,12 +21,21 @@ photonic::Droplet::Droplet(std::string name, std::string uuid)
     registerParam(Parameter::Type::kType_Float, kInput_DecreaseSpeed, 1.0f, "Maximal duration of a drop");
     registerParam(Parameter::Type::kType_Color, kInput_BaseColor, ColorA(Color::gray(0.0f)), "Base Color");
     registerParam(Parameter::Type::kType_Color, kInput_EffectColor, ColorA(Color::gray(5.0f)), "Effect Color");
+    registerParam(Parameter::Type::kType_Channel_MinMax, kInput_VolumeChannel, vec4(0.0f, 1.0f, 0.0f, 1.0f), "Volume channel");
+    registerParam(Parameter::Type::kType_Channel_MinMax, kInput_DropIntervalChannel, vec4(0.0f, 1.0f, 0.0f, 1.0f), "DropInterval channel");
 }
 
 void photonic::Droplet::execute(double dt) {
     Effect::execute(dt);
 
     float stepSize = (float) dt / mParams[kInput_DecreaseSpeed]->floatValue;
+
+    if (mParams[kInput_VolumeChannel]->channelRef) {
+        mParams[kInput_Volume]->floatValue = mParams[kInput_VolumeChannel]->getMappedChannelValue();
+    }
+    if (mParams[kInput_DropIntervalChannel]->channelRef) {
+        mParams[kInput_DropInterval]->floatValue = mParams[kInput_DropIntervalChannel]->getMappedChannelValue();
+    }
 
     if (mParams[kInput_InputChannel]->channelRef) {
         if (mTimer.isStopped() && mParams[kInput_InputChannel]->getMappedChannelValue() > mParams[kInput_Theshold]->floatValue) {
@@ -36,7 +46,7 @@ void photonic::Droplet::execute(double dt) {
             mEndValues.insert(std::pair<LightRef, float>(targetLight, 0.0f));
             mCurrentValues.insert(std::pair<LightRef, float>(targetLight, startIntensity));
 
-            targetLight->setEffectIntensity(mUuid, startIntensity);
+            targetLight->setEffectIntensity(mUuid, mParams[kInput_Volume]->floatValue * startIntensity);
             auto startColor = interPolateColors(mParams[kInput_BaseColor]->colorValue, mParams[kInput_EffectColor]->colorValue, startIntensity);
             targetLight->setEffectColor(mUuid, startColor);
             // Start the timer.
@@ -63,7 +73,7 @@ void photonic::Droplet::execute(double dt) {
                     mEndValues.erase(light);
                 }
                 auto color = interPolateColors(mParams[kInput_BaseColor]->colorValue, mParams[kInput_EffectColor]->colorValue, currentValue);
-                light->setEffectIntensity(mUuid, currentValue);
+                light->setEffectIntensity(mUuid, mParams[kInput_Volume]->floatValue * currentValue);
                 light->setEffectColor(mUuid, color);
             }
         }
