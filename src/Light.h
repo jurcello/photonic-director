@@ -49,7 +49,10 @@ public:
 
     std::string mName;
     vec4 position;
-    
+
+    bool mSendOsc;
+    std::string mOscAdress;
+
     Light(vec3 cPosition, LightType *cType, std::string uuid = "");
     
     void setPosition(vec3 newPosition);

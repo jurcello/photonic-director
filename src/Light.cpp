@@ -22,7 +22,15 @@ LightType::LightType(const std::string &name, std::string machineName, int color
 
 
 Light::Light(vec3 cPosition, LightType *cType, std::string uuid)
-: position(vec4(cPosition, 1.0f)), mType(cType), color(Color::white()), intensity(0.0), mDmxChannel(0), mDmxOutput(nullptr), mDmxOffsetIntentsityValue(0)
+: position(vec4(cPosition, 1.0f)),
+  mType(cType),
+  color(Color::white()),
+  intensity(0.0),
+  mDmxChannel(0),
+  mDmxOutput(nullptr),
+  mDmxOffsetIntentsityValue(0),
+  mSendOsc(false),
+  mOscAdress("")
 {
     if (uuid.empty()) {
         mUuid = generate_uuid();

@@ -60,6 +60,13 @@ void ConfigManager::readLights(std::vector<LightRef> &lights, LightFactory* ligh
             std::string name = lightNode.getChild("name").getValue<std::string>();
             newLight->mName = name;
         }
+        if (lightNode.hasChild("osc")) {
+            const XmlTree &oscNode = lightNode.getChild("osc");
+            std::string oscAdress = oscNode.getValue<std::string>();
+            newLight->mOscAdress = oscAdress;
+            newLight->mSendOsc = oscNode.getAttributeValue<bool>("osc_enabled", false);
+        }
+
         lights.push_back(newLight);
     }
 }
@@ -247,6 +254,12 @@ void ConfigManager::writeLights(std::vector<LightRef> &lights)
         name.setTag("name");
         name.setValue(light->mName);
         lightNode.push_back(name);
+
+        XmlTree osc;
+        osc.setTag("osc");
+        osc.setAttribute("osc_enabled", light->mSendOsc);
+        osc.setValue(light->mOscAdress);
+        lightNode.push_back(osc);
         
         lightsNode.push_back(lightNode);
     }

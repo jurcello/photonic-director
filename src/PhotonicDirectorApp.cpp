@@ -89,6 +89,7 @@ protected:
     double mLastUpdate;
     
     void oscReceive(const osc::Message &message);
+    void handleLightOscSending();
     // Gui stuff.
     void drawGui();
     void drawChannelControls();
@@ -424,7 +425,29 @@ void PhotonicDirectorApp::update()
         light->updateDmx();
     }
     mDmxOut.update();
+    handleLightOscSending();
     mLastUpdate = now;
+}
+
+void PhotonicDirectorApp::handleLightOscSending() {
+    for (auto light : mLights) {
+        if (light->mSendOsc && light->mOscAdress[0] == '/') {
+            osc::Message message(light->mOscAdress + "/intensity");
+            message.append(light->intensity);
+            mOscSender->send(message);
+            if (light->isColorEnabled()) {
+                osc::Message messageR(light->mOscAdress + "/r");
+                messageR.append(light->color.r);
+                mOscSender->send(messageR);
+                osc::Message messageG(light->mOscAdress + "/g");
+                messageG.append(light->color.g);
+                mOscSender->send(messageG);
+                osc::Message messageB(light->mOscAdress + "/b");
+                messageB.append(light->color.b);
+                mOscSender->send(messageB);
+            }
+        }
+    }
 }
 
 void PhotonicDirectorApp::drawGui()
@@ -611,6 +634,10 @@ void PhotonicDirectorApp::drawLightControls()
             }
         }
         ui::InputInt("Dmx offset", &mGuiStatusData.lightToEdit->mDmxOffsetIntentsityValue, 0, 255);
+        ui::Checkbox("Send osc", &mGuiStatusData.lightToEdit->mSendOsc);
+        if (mGuiStatusData.lightToEdit->mSendOsc) {
+            ui::InputText("Osc address", &mGuiStatusData.lightToEdit->mOscAdress);
+        }
         if (ui::Button("Done")) {
             mGuiStatusData.lightToEdit = nullptr;
             mGuiStatusData.status = IDLE;
