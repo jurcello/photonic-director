@@ -8,7 +8,7 @@ using namespace cinder;
 using namespace photonic;
 using namespace ci;
 
-photonic::Ripples::Ripples(std::string name, std::string uuid) : Effect(name, uuid)
+photonic::Ripples::Ripples(std::string name, std::string uuid) : Effect(name, uuid), mNoiseDistance(0.0f)
 {
     registerParam(Parameter::Type::kType_Color, kInput_BaseColor, ColorA(Color::gray(0.5f)), "Base color");
     registerParam(Parameter::Type::kType_Color, kInput_EffectColor, ColorA(Color::gray(0.5f)), "Effect color");
@@ -28,6 +28,7 @@ void photonic::Ripples::init() {
 
 void photonic::Ripples::execute(double dt) {
     Effect::execute(dt);
+    mNoiseDistance += mParams[kInput_NoiseSpeed]->floatValue * dt / 10;
     // If there are external inputs, update the inner volumes.
     if (mParams[kInput_ExternalVolume]->channelRef) {
         mParams[kInput_EffectVolume]->floatValue = mParams[kInput_ExternalVolume]->getMappedChannelValue();
@@ -41,7 +42,7 @@ void photonic::Ripples::execute(double dt) {
     auto elapsedTime = (float) mTimer.getSeconds();
     if (isTurnedOn) {
         for (const auto &light : mLights) {
-            float noise = mPerlin.noise(light->getPosition().x, light->getPosition().y, elapsedTime * mParams[kInput_NoiseSpeed]->floatValue / 10.f) * mParams[kInput_NoiseAmount]->floatValue;
+            float noise = mPerlin.noise(light->getPosition().x, light->getPosition().y, mNoiseDistance) * mParams[kInput_NoiseAmount]->floatValue;
             float intensity = mParams[kInput_EffectVolume]->floatValue + noise;
 
             bool baseIsBlack = mParams[kInput_BaseColor]->colorValue.r < 0.05f && mParams[kInput_BaseColor]->colorValue.g < 0.05f && mParams[kInput_BaseColor]->colorValue.b < 0.05f;

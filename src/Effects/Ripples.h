@@ -31,6 +31,7 @@ namespace photonic {
     protected:
         Perlin mPerlin;
         Timer mTimer;
+        float mNoiseDistance;
     };
 }
 

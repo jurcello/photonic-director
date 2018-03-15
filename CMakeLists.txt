@@ -26,6 +26,7 @@ set( SRC_FILES
 	${APP_PATH}/src/Effects/Ripples.cpp
 	${APP_PATH}/src/Effects/MuteAll.cpp
 	${APP_PATH}/src/Effects/Desaturate.cpp
+	${APP_PATH}/src/Effects/Droplet.cpp
 )
 
 ci_make_app(
