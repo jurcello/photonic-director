@@ -18,6 +18,8 @@ photonic::Ripples::Ripples(std::string name, std::string uuid) : Effect(name, uu
     registerParam(Parameter::Type::kType_Channel_MinMax, kInput_ExternalVolume, vec4(0.0f, 60.0f, 0.0f, 1.0f), "External volume");
     registerParam(Parameter::Type::kType_Channel_MinMax, kInput_ExternalNoiseAmount, vec4(0.0f, 60.0f, 0.0f, 1.0f), "External noise amount");
     registerParam(Parameter::Type::kType_Channel_MinMax, kInput_ExternalNoiseSpeed, vec4(0.0f, 60.0f, 0.0f, 1.0f), "External noise speed");
+    registerParam(Parameter::Type::kType_Float, kInput_VolumeWhenColor, 1.0f, "Volume when color");
+    registerParam(Parameter::Type::kType_Channel_MinMax, kInput_ExternalVolumeWhenColor, vec4(0.0f, 1.0f, 0.0f, 1.0f), "External volume when color");
 }
 
 void photonic::Ripples::init() {
@@ -39,6 +41,9 @@ void photonic::Ripples::execute(double dt) {
     if (mParams[kInput_ExternalNoiseSpeed]->channelRef) {
         mParams[kInput_NoiseSpeed]->floatValue = mParams[kInput_ExternalNoiseSpeed]->getMappedChannelValue();
     }
+    if (mParams[kInput_ExternalVolumeWhenColor]->channelRef) {
+        mParams[kInput_VolumeWhenColor]->floatValue = mParams[kInput_ExternalNoiseSpeed]->getMappedChannelValue();
+    }
     auto elapsedTime = (float) mTimer.getSeconds();
     if (isTurnedOn) {
         for (const auto &light : mLights) {
@@ -48,7 +53,7 @@ void photonic::Ripples::execute(double dt) {
             bool baseIsBlack = mParams[kInput_BaseColor]->colorValue.r < 0.05f && mParams[kInput_BaseColor]->colorValue.g < 0.05f && mParams[kInput_BaseColor]->colorValue.b < 0.05f;
             ColorA color = interPolateColors(mParams[kInput_BaseColor]->colorValue, mParams[kInput_EffectColor]->colorValue, intensity);
             light->setEffectColor(mUuid, color);
-            auto lightIntensity = (float) (light->isColorEnabled() && ! baseIsBlack ? 1.0f : intensity);
+            auto lightIntensity = (float) (light->isColorEnabled() && ! baseIsBlack ? mParams[kInput_VolumeWhenColor]->floatValue : intensity);
             light->setEffectIntensity(mUuid, lightIntensity);
         }
     }

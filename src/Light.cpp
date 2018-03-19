@@ -152,6 +152,16 @@ void Light::updateDmx() {
                 greenChannel = redChannel + 2;
                 blueChannel = redChannel + 1;
             }
+            else if (mType->rgbType == LightType::RgbType::GRB) {
+                greenChannel = mDmxChannel + getColorChannelPosition() - 1;
+                redChannel = greenChannel + 1;
+                blueChannel = greenChannel + 2;
+            }
+            else if (mType->rgbType == LightType::RgbType::BRG) {
+                blueChannel = mDmxChannel + getColorChannelPosition() - 1;
+                redChannel = blueChannel + 1;
+                greenChannel = blueChannel + 2;
+            }
             mDmxOutput->setChannelValue(redChannel, color.r);
             mDmxOutput->setChannelValue(greenChannel, color.g);
             mDmxOutput->setChannelValue(blueChannel, color.b);
@@ -228,6 +238,24 @@ LightFactory::LightFactory(DmxOutput *dmxOutput)
             4,
             ColorA(1.0f, 0, 0.5f, 0),
             LightType::RgbType::RBG)
+    );
+    mLightTypes.push_back(new LightType(
+            "LED Dimmer GRB (4 channels)",
+            "led_dimmer_4_grb",
+            1,
+            0,
+            4,
+            ColorA(1.0f, 0, 0.5f, 0),
+            LightType::RgbType::GRB)
+    );
+    mLightTypes.push_back(new LightType(
+            "LED Dimmer BRG (4 channels)",
+            "led_dimmer_4_brg",
+            1,
+            0,
+            4,
+            ColorA(1.0f, 0, 0.5f, 0),
+            LightType::RgbType::BRG)
     );
     mLightTypes.push_back(new LightType(
             "Led Ball",

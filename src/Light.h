@@ -22,6 +22,8 @@ struct LightType {
     enum RgbType {
         RGB,
         RBG,
+        GRB,
+        BRG,
     };
     LightType(const std::string &name, std::string machineName, int colorChannelPosition, int intensityChannelPosition,
                   int numChannels, ColorA editColor, RgbType rgbType = RGB);

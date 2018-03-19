@@ -791,74 +791,75 @@ void PhotonicDirectorApp::drawEffectControls()
         }
     }
     if (effectSelection != nullptr) {
-        ImGui::ScopedWindow window("Effect inspector");
-
         EffectRef effect = *effectSelection;
-        static std::string name;
-        name = effect->getName();
-        if (ui::InputText("Name", &name)) {
-            effect->setName(name);
-        }
-        ui::Separator();
-        ui::InputFloat("FadeTime", &effect->fadeTime);
-        ui::SliderFloat("Weight", &effect->weight, 0.0f, 100.0f);
-        ui::Spacing();
-        if (! ui::IsWindowCollapsed()) {
-            ui::ListBoxHeader("Choose input channel", (int) mChannels.size());
-            for (const auto channel : mChannels) {
-                if (ui::Selectable(channel->getName().c_str(), channel == effect->getChannel())) {
-                    effect->setChannel(channel);
+        if (effect) {
+            ImGui::ScopedWindow window("Effect inspector");
+
+            static std::string name;
+            name = effect->getName();
+            if (ui::InputText("Name", &name)) {
+                effect->setName(name);
+            }
+            ui::Separator();
+            ui::InputFloat("FadeTime", &effect->fadeTime);
+            ui::SliderFloat("Weight", &effect->weight, 0.0f, 100.0f);
+            ui::Spacing();
+            if (! ui::IsWindowCollapsed()) {
+                ui::ListBoxHeader("Choose input channel", (int) mChannels.size());
+                for (const auto channel : mChannels) {
+                    if (ui::Selectable(channel->getName().c_str(), channel == effect->getChannel())) {
+                        effect->setChannel(channel);
+                    }
+                }
+                ui::ListBoxFooter();
+            }
+            std::string lightSelectText = mGuiStatusData.status == ADDING_LIGHT_TO_EFFECT ? "Done selecting lights" : "Select/Deselect lights";
+            if (ui::Button(lightSelectText.c_str())) {
+                // Toggle the state of the gui.
+                mGuiStatusData.status = (mGuiStatusData.status == IDLE) ? ADDING_LIGHT_TO_EFFECT : IDLE;
+                if (mGuiStatusData.status == ADDING_LIGHT_TO_EFFECT) {
+                    mGuiStatusData.pickLightEffect = *effectSelection;
+                    mVisualizer.enableEditingMode();
+                }
+                else {
+                    mGuiStatusData.pickLightEffect = nullptr;
+                    mVisualizer.disableEditingMode();
                 }
             }
-            ui::ListBoxFooter();
-        }
-        std::string lightSelectText = mGuiStatusData.status == ADDING_LIGHT_TO_EFFECT ? "Done selecting lights" : "Select/Deselect lights";
-        if (ui::Button(lightSelectText.c_str())) {
-            // Toggle the state of the gui.
-            mGuiStatusData.status = (mGuiStatusData.status == IDLE) ? ADDING_LIGHT_TO_EFFECT : IDLE;
-            if (mGuiStatusData.status == ADDING_LIGHT_TO_EFFECT) {
-                mGuiStatusData.pickLightEffect = *effectSelection;
-                mVisualizer.enableEditingMode();
-            }
-            else {
-                mGuiStatusData.pickLightEffect = nullptr;
-                mVisualizer.disableEditingMode();
-            }
-        }
-        
-        // Create list of lights.
-        if (! ui::IsWindowCollapsed()) {
-            ui::ListBoxHeader("Lights");
-            for (const auto light : effect->getLights()) {
-                ui::BulletText("%s", light->mName.c_str());
-            }
-            ui::ListBoxFooter();
-        }
-        ui::Separator();
-        // Draw the params.
-        std::map<int, Parameter*> params = effect->getParams();
-        int paramId = 100;
-        for (auto &item : params) {
-            ui::PushID(paramId);
-            Parameter* param = item.second;
-            switch (param->type) {
-                case photonic::Parameter::kType_Int:
-                    ui::InputInt(param->description.c_str(), &param->intValue);
-                    break;
-                    
-                case photonic::Parameter::kType_Float:
-                    ui::InputFloat(param->description.c_str(), &param->floatValue);
-                    break;
-                    
-                case photonic::Parameter::kType_Color:
-                    ui::ColorPicker4(param->description.c_str(), &param->colorValue[0]);
-                    break;
 
-                case photonic::Parameter::kType_Vector3:
-                    ui::InputFloat3(param->description.c_str(), &param->vec3Value[0]);
-                    break;
+            // Create list of lights.
+            if (! ui::IsWindowCollapsed()) {
+                ui::ListBoxHeader("Lights");
+                for (const auto light : effect->getLights()) {
+                    ui::BulletText("%s", light->mName.c_str());
+                }
+                ui::ListBoxFooter();
+            }
+            ui::Separator();
+            // Draw the params.
+            std::map<int, Parameter*> params = effect->getParams();
+            int paramId = 100;
+            for (auto &item : params) {
+                ui::PushID(paramId);
+                Parameter* param = item.second;
+                switch (param->type) {
+                    case photonic::Parameter::kType_Int:
+                        ui::InputInt(param->description.c_str(), &param->intValue);
+                        break;
 
-                case photonic::Parameter::kType_Channel_MinMax:
+                    case photonic::Parameter::kType_Float:
+                        ui::InputFloat(param->description.c_str(), &param->floatValue);
+                        break;
+
+                    case photonic::Parameter::kType_Color:
+                        ui::ColorPicker4(param->description.c_str(), &param->colorValue[0]);
+                        break;
+
+                    case photonic::Parameter::kType_Vector3:
+                        ui::InputFloat3(param->description.c_str(), &param->vec3Value[0]);
+                        break;
+
+                    case photonic::Parameter::kType_Channel_MinMax:
                     {
                         ui::Text("Settings for: %s, current value: %f", param->description.c_str(), param->getMappedChannelValue());
                         ImGui::Columns(6, NULL, false);
@@ -873,32 +874,33 @@ void PhotonicDirectorApp::drawEffectControls()
                         ui::Columns(1);
                     }
 
-                    // Intentional fallthrough.
+                        // Intentional fallthrough.
 
-                case photonic::Parameter::kType_Channel:
-                    if (! ui::IsWindowCollapsed()) {
-                        ui::ListBoxHeader(param->description.c_str(), (int) mChannels.size());
-                        for (const auto channel : mChannels) {
-                            if (ui::Selectable(channel->getName().c_str(), channel == param->channelRef)) {
-                                param->channelRef = channel;
+                    case photonic::Parameter::kType_Channel:
+                        if (! ui::IsWindowCollapsed()) {
+                            ui::ListBoxHeader(param->description.c_str(), (int) mChannels.size());
+                            for (const auto channel : mChannels) {
+                                if (ui::Selectable(channel->getName().c_str(), channel == param->channelRef)) {
+                                    param->channelRef = channel;
+                                }
                             }
+                            ui::ListBoxFooter();
                         }
-                        ui::ListBoxFooter();
-                    }
 
-                default:
-                    break;
+                    default:
+                        break;
+                }
+                ui::PopID();
+                paramId++;
             }
-            ui::PopID();
-            paramId++;
-        }
-        
-        effect->drawEditGui();
-        if (ui::Button("Done")) {
-            effectSelection = nullptr;
-            mGuiStatusData.pickLightEffect = nullptr;
-            mGuiStatusData.status = IDLE;
-            mVisualizer.disableEditingMode();
+
+            effect->drawEditGui();
+            if (ui::Button("Done")) {
+                effectSelection = nullptr;
+                mGuiStatusData.pickLightEffect = nullptr;
+                mGuiStatusData.status = IDLE;
+                mVisualizer.disableEditingMode();
+            }
         }
     }
     
