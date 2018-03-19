@@ -97,6 +97,7 @@ protected:
     void drawEffectControls();
     void drawDmxInspector();
     GuiStatusData mGuiStatusData;
+    bool mShowVisualizer;
 
     // Dmx output.
     DmxOutput mDmxOut;
@@ -109,7 +110,8 @@ PhotonicDirectorApp::PhotonicDirectorApp()
   mOscSocket(nullptr),
   mOscReceivePort(10000),
   mOscSendPort(10001),
-  mLightFactory(&mDmxOut)
+  mLightFactory(&mDmxOut),
+  mShowVisualizer(true)
 {
     mGuiStatusData.pickLightEffect = nullptr;
     mGuiStatusData.lightToEdit = nullptr;
@@ -317,6 +319,10 @@ void PhotonicDirectorApp::keyDown( KeyEvent event)
     if (event.getChar() == 'g') {
         mGuiStatusData.drawGui = !mGuiStatusData.drawGui;
     }
+    if (event.getChar() == 'v') {
+        mShowVisualizer = ! mShowVisualizer;
+    }
+
 }
 
 void PhotonicDirectorApp::save()
@@ -928,7 +934,9 @@ void PhotonicDirectorApp::draw()
 {
     
     gl::clear( Color( 0, 0, 0 ) );
-    mVisualizer.draw(mLights);
+    if (mShowVisualizer) {
+        mVisualizer.draw(mLights);
+    }
     
     // Delegate some gui drawing to the visualizer.
     if (mGuiStatusData.drawGui) {
