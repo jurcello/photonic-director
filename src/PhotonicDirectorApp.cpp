@@ -734,6 +734,13 @@ void PhotonicDirectorApp::drawEffectControls()
             ui::InputText("Name", &effectName);
             ui::Combo("Type", &effectType, Effect::getTypes());
             if (ui::Button("Done")) {
+                // In order to test if a strange exception occurs,
+                // close the effect editor for now.
+                effectSelection = nullptr;
+                mGuiStatusData.pickLightEffect = nullptr;
+                mGuiStatusData.status = IDLE;
+                mVisualizer.disableEditingMode();
+
                 std::string type = Effect::getTypes()[effectType];
                 console() << effectName << ", " << type << endl;
                 EffectRef newEffect = Effect::create(type, effectName);
