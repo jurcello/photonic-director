@@ -223,6 +223,14 @@ LightFactory::LightFactory(DmxOutput *dmxOutput)
             ColorA(1.0f, 0, 0, 0))
     );
     mLightTypes.push_back(new LightType(
+            "Color source (g channels)",
+            "color_source_5ch",
+            2,
+            1,
+            5,
+            ColorA(1.0f, 0.5f, 0, 0))
+    );
+    mLightTypes.push_back(new LightType(
             "LED Dimmer (4 channels)",
             "led_dimmer_4",
             1,
