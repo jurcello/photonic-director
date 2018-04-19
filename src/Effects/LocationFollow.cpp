@@ -33,7 +33,7 @@ void photonic::LocationFollow::execute(double dt) {
     float radius = mParams[kInput_Radius]->floatValue;
     Effect::execute(dt);
     if (mChannel) {
-        for (auto light: mLights) {
+        for (const auto light: mLights) {
             const ColorA &color = (mParams[kInput_Intensity]->floatValue > 0) ? mParams[kInput_EffectColor]->colorValue : ColorA::black();
             light->setEffectColor(mUuid, color);
             // Calculate the distance.

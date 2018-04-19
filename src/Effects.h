@@ -43,10 +43,13 @@ namespace photonic {
         static InputChannelRef create(std::string name, std::string address, std::string uuid = "");
         void setAdrress(std::string address);
         void setName(const std::string name);
+        void setValue(double value);
         void setValue(float value);
+        void setValue(int value);
         void setValue(vec2 value);
         void setValue(vec3 value);
         float getValue();
+        int getIntValue();
         vec2 getVec2Value();
         vec3 getVec3Value();
 
@@ -60,6 +63,7 @@ namespace photonic {
     protected:
         InputChannel(std::string name, std::string address, std::string uuid = "");
         float mValue;
+        int mIntValue;
         vec2 mVec2Value;
         vec3 mVec3Value;
         Type mType;

@@ -53,7 +53,7 @@ void photonic::MuteAll::execute(double dt) {
         }
         // Set the output channel to the amount that is muted.
         if (mParams[kInput_ExportChannel]->channelRef) {
-            mParams[kInput_ExportChannel]->channelRef->setValue(mMuteFactor * mFadeValue);
+            mParams[kInput_ExportChannel]->channelRef->setValue( mMuteFactor * mFadeValue);
         }
 
     }
