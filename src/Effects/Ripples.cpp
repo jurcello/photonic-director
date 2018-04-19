@@ -52,7 +52,7 @@ void photonic::Ripples::execute(double dt) {
 
             bool baseIsBlack = mParams[kInput_BaseColor]->colorValue.r < 0.05f && mParams[kInput_BaseColor]->colorValue.g < 0.05f && mParams[kInput_BaseColor]->colorValue.b < 0.05f;
             ColorA color = interPolateColors(mParams[kInput_BaseColor]->colorValue, mParams[kInput_EffectColor]->colorValue, intensity);
-            light->setEffectColor(mUuid, color);
+            light->setEffectColor(mUuid, color * mParams[kInput_VolumeWhenColor]->floatValue);
             auto lightIntensity = (float) (light->isColorEnabled() && ! baseIsBlack ? mParams[kInput_VolumeWhenColor]->floatValue : intensity);
             light->setEffectIntensity(mUuid, lightIntensity);
         }

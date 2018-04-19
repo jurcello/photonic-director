@@ -27,6 +27,7 @@ set( SRC_FILES
 	${APP_PATH}/src/Effects/MuteAll.cpp
 	${APP_PATH}/src/Effects/Desaturate.cpp
 	${APP_PATH}/src/Effects/Droplet.cpp
+	${APP_PATH}/src/Effects/OriginatingWave.cpp
 )
 
 ci_make_app(

@@ -399,7 +399,7 @@ void PhotonicDirectorApp::update()
                     ////////////////////////////////////////////////////////
                     // Calculate the weight of the effect. The weight should be more if the intensity is more.
                     ////////////////////////////////////////////////////////
-                    float effectWeight = 1.0f + effetcIntensity * effect->weight;
+                    float effectWeight = (1.0f + effetcIntensity * effect->weight) * effect->getFadeValue();
                     if (effectWeight > highestWeight) {
                         highestWeight = effectWeight;
                     }
