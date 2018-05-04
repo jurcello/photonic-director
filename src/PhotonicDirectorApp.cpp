@@ -396,7 +396,7 @@ void PhotonicDirectorApp::update()
     for (const auto light : mLights) {
         if (mLightCalibrator.isCalibrating()) {
             const float calibratedLightIntensity = static_cast<const float>(((sin(getElapsedSeconds()) + 1.0) / 4) + 0.5f);
-            light->intensity = (light == mLightCalibrator.getCurrentLight()) ? calibratedLightIntensity : 0.1f;
+            light->intensity = (light == mLightCalibrator.getCurrentLight()) ? calibratedLightIntensity : 0.0f;
             light->color = light->getLightType()->editColor;
         } else {
             float endIntensity = 0.f;

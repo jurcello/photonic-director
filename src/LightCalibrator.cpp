@@ -17,38 +17,40 @@ LightCalibrator::LightCalibrator()
 {}
 
 void LightCalibrator::receiveOscMessage(const osc::Message &message) {
-    bool send = false;
-    if (mCurrentLight != nullptr) {
-        if (message.getAddress() == "/lightCalib/xz") {
-            currentPosition.x = message.getArgFloat(0);
-            currentPosition.z = message.getArgFloat(1);
-            send = true;
+    if (mIsCalibrating) {
+        bool send = false;
+        if (mCurrentLight != nullptr) {
+            if (message.getAddress() == "/lightCalib/xz") {
+                currentPosition.x = message.getArgFloat(0);
+                currentPosition.z = message.getArgFloat(1);
+                send = true;
+            }
+            if (message.getAddress() == "/lightCalib/y") {
+                currentPosition.y = message.getArgFloat(0);
+                send = true;
+            }
+            if (message.getAddress() == "/cube") {
+                currentPosition.x = message.getArgFloat(0);
+                currentPosition.y = message.getArgFloat(1);
+                currentPosition.z = message.getArgFloat(2);
+            }
+            mCurrentLight->setPosition(currentPosition);
         }
-        if (message.getAddress() == "/lightCalib/y") {
-            currentPosition.y = message.getArgFloat(0);
-            send = true;
+        if ((message.getAddress() == "/pfffmaaktnietuitwat" || message.getAddress() == "/lightCalib/next") && message.getArgFloat(0) == 1) {
+            mCurrentLightIterator++;
+            if (mCurrentLightIterator == mLights->end()) {
+                mIsCalibrating = false;
+                mCurrentLight = nullptr;
+            }
+            else {
+                mCurrentLight = *mCurrentLightIterator;
+                currentPosition = mCurrentLight->getPosition();
+                send = true;
+            }
         }
-        if (message.getAddress() == "/cube") {
-            currentPosition.x = message.getArgFloat(0);
-            currentPosition.y = message.getArgFloat(1);
-            currentPosition.z = message.getArgFloat(2);
+        if (send) {
+            broadcastCurrentLight();
         }
-        mCurrentLight->setPosition(currentPosition);
-    }
-    if ((message.getAddress() == "/pfffmaaktnietuitwat" || message.getAddress() == "/lightCalib/next") && message.getArgFloat(0) == 1) {
-        mCurrentLightIterator++;
-        if (mCurrentLightIterator == mLights->end()) {
-            mIsCalibrating = false;
-            mCurrentLight = nullptr;
-        }
-        else {
-            mCurrentLight = *mCurrentLightIterator;
-            currentPosition = mCurrentLight->getPosition();
-            send = true;
-        }
-    }
-    if (send) {
-        broadcastCurrentLight();
     }
 }
 
