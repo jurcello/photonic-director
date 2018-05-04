@@ -29,6 +29,7 @@ set( SRC_FILES
 	${APP_PATH}/src/Effects/Droplet.cpp
 	${APP_PATH}/src/Effects/OriginatingWave.cpp
 	${APP_PATH}/src/Effects/ConditionalVolume.cpp
+	${APP_PATH}/src/Effects/CloseInLocation.cpp
 )
 
 ci_make_app(
