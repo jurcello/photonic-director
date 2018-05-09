@@ -339,6 +339,22 @@ void Effect::execute(double dt) {
     }
 }
 
+void Effect::listenToOsc(const osc::Message &message) {
+    for (auto &item : mParams) {
+        Parameter* param = item.second;
+        if (param->type == photonic::Parameter::kType_OscTrigger) {
+            if (message.getAddress() == param->oscAdress) {
+                if (message.getArgType(0) == osc::ArgType::INTEGER_32 && message.getArgInt32(0) == 1) {
+                    param->triggerValue = true;
+                }
+                else {
+                    param->triggerValue = false;
+                }
+            }
+        }
+    }
+}
+
 Effect::Stage Effect::getStage() {
     return kStage_Main;
 }

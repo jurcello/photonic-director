@@ -286,6 +286,10 @@ void PhotonicDirectorApp::oscReceive(const osc::Message &message)
         }
     }
     mLightCalibrator.receiveOscMessage(message);
+    for (auto effect : mEffects) {
+        effect->listenToOsc(message);
+    }
+
 }
 
 void PhotonicDirectorApp::mouseDown( MouseEvent event )
@@ -875,6 +879,16 @@ void PhotonicDirectorApp::drawEffectControls()
 
                     case photonic::Parameter::kType_Color:
                         ui::ColorPicker4(param->description.c_str(), &param->colorValue[0]);
+                        break;
+
+                    case photonic::Parameter::kType_OscTrigger:
+                        ui::Checkbox(param->description.c_str(), &param->triggerValue);
+                        ui::SameLine();
+                        static std::string triggerChannel;
+                        triggerChannel = param->oscAdress;
+                        if (ui::InputText("Osc address", &triggerChannel)) {
+                            param->oscAdress = triggerChannel;
+                        }
                         break;
 
                     case photonic::Parameter::kType_Vector3:

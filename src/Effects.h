@@ -12,6 +12,7 @@
 #include "cinder/app/App.h"
 #include <ctime>
 #include "Light.h"
+#include "Osc.h"
 
 #define REGISTER_TYPE(klass) \
 class klass##Factory : public EffectFactory { \
@@ -80,6 +81,7 @@ namespace photonic {
             kType_Vector3,
             kType_Channel,
             kType_Channel_MinMax,
+            kType_OscTrigger,
         };
         Parameter();
         Parameter(Type type, std::string description = "");
@@ -93,6 +95,10 @@ namespace photonic {
         // Type channel and channel min max.
         InputChannelRef channelRef;
         float minIn, min, maxIn, max;
+
+        // Osc Trigger related.
+        std::string oscAdress;
+        bool triggerValue;
 
         void setValue(float value);
         void setValue(int value);
@@ -172,6 +178,8 @@ namespace photonic {
         virtual std::string getTypeName() = 0;
         virtual void drawEditGui();
         virtual void execute(double dt);
+        // TODO: implement using listener pattern.
+        void listenToOsc(const osc::Message &message);
         virtual Stage getStage();
         bool hasOutput();
         virtual void init();

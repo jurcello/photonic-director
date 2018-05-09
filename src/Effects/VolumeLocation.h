@@ -17,6 +17,7 @@ namespace photonic {
             kInput_Intensity = 4,
             kInput_BaseColor = 5,
             kInput_EffectColor = 6,
+            kInput_TriggerChannel = 7,
         };
 
         VolumeLocation(std::string name, std::string uuid = "");
@@ -28,6 +29,7 @@ namespace photonic {
 
     protected:
         vec3 mLocation;
+        vec3 mStaticLocation;
 
     };
 }

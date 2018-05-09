@@ -154,6 +154,11 @@ void ConfigManager::readParam(std::unique_ptr<XmlTree> &paramNode, Parameter *pa
         case photonic::Parameter::kType_Int:
             param->intValue = paramNode->getValue<int>();
             break;
+
+        case photonic::Parameter::kType_OscTrigger:
+            param->oscAdress = paramNode->getValue<std::string>();
+            param->triggerValue = paramNode->getAttributeValue<bool>("trigger");
+            break;
             
         case photonic::Parameter::kType_Color:
         {
@@ -354,7 +359,11 @@ void ConfigManager::writeParameter(cinder::XmlTree &paramsNode, photonic::Parame
         case photonic::Parameter::kType_Int:
             paramnode.setValue(param->intValue);
             break;
-            
+
+        case photonic::Parameter::kType_OscTrigger:
+            paramnode.setValue(param->oscAdress);
+            paramnode.setAttribute("trigger", param->triggerValue);
+
         case photonic::Parameter::kType_Color:
             paramnode.setAttribute("r", param->colorValue.r);
             paramnode.setAttribute("g", param->colorValue.g);

@@ -9,7 +9,7 @@ using namespace photonic;
 using namespace ci;
 
 photonic::VolumeLocation::VolumeLocation(std::string name, std::string uuid)
-: Effect(name, uuid), mLocation(vec3(1.0f))
+: Effect(name, uuid), mLocation(vec3(1.0f)), mStaticLocation(vec3(1.0f))
 {
 
     Parameter* intensity = new Parameter(Parameter::Type::kType_Float, "Intensity");
@@ -36,6 +36,11 @@ photonic::VolumeLocation::VolumeLocation(std::string name, std::string uuid)
     effectColor->colorValue = ColorA(Color::gray(0.8f));
     mParams[kInput_EffectColor] = effectColor;
 
+    Parameter* triggerChannel = new Parameter(Parameter::Type::kType_OscTrigger, "Location fixed");
+    triggerChannel->triggerValue = false;
+    triggerChannel->oscAdress = "/trigger";
+    mParams[kInput_TriggerChannel] = triggerChannel;
+
 }
 
 void photonic::VolumeLocation::execute(double dt) {
@@ -48,6 +53,14 @@ void photonic::VolumeLocation::execute(double dt) {
         if (locationChannel->getType() == InputChannel::Type::kType_Dim2) {
             mLocation = vec3(locationChannel->getVec2Value().x, 1.0f, locationChannel->getVec2Value().y);
         }
+        // Update the static location.
+        if (mParams[kInput_TriggerChannel]->triggerValue) {
+            mLocation = mStaticLocation;
+        }
+        else {
+            mStaticLocation = mLocation;
+        }
+
         float dropOff = mParams[kInput_DropOff]->floatValue;
         float radius = mParams[kInput_Radius]->floatValue;
 
