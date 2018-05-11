@@ -189,6 +189,9 @@ namespace photonic {
         float fadeTime;
         bool isTurnedOn;
         float weight;
+
+        std::string oscAddressForOnOff;
+
         
     protected:
         std::string mUuid;

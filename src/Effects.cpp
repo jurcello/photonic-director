@@ -177,7 +177,7 @@ EffectRef Effect::create(std::string type, std::string name, std::string uuid)
 }
 
 Effect::Effect(std::string name, std::string uuid)
-:mName(name), mUuid(uuid), mStatus(kStatus_Off), isTurnedOn(false), fadeTime(2.0f), mFadeValue(0.0), weight(1.0f)
+:mName(name), mUuid(uuid), mStatus(kStatus_Off), isTurnedOn(false), fadeTime(2.0f), mFadeValue(0.0), weight(1.0f), oscAddressForOnOff("")
 {
     if (uuid == "") {
         mUuid = generate_uuid();
@@ -340,6 +340,15 @@ void Effect::execute(double dt) {
 }
 
 void Effect::listenToOsc(const osc::Message &message) {
+    // First handle on/off functionality.
+    if (message.getAddress() == oscAddressForOnOff) {
+        if ((message.getArgType(0) == osc::ArgType::INTEGER_32 && message.getArgInt32(0) == 1) || (message.getArgType(0) == osc::ArgType::FLOAT && message.getArgFloat(0) == 1.0f)) {
+            isTurnedOn = true;
+        }
+        else if ((message.getArgType(0) == osc::ArgType::INTEGER_32 && message.getArgInt32(0) == 0) || (message.getArgType(0) == osc::ArgType::FLOAT && message.getArgFloat(0) == 0.0f)) {
+            isTurnedOn = false;
+        }
+    }
     for (auto &item : mParams) {
         Parameter* param = item.second;
         if (param->type == photonic::Parameter::kType_OscTrigger) {

@@ -107,6 +107,10 @@ void ConfigManager::readEffects(std::vector<EffectRef> &effects, const std::vect
                 float weight = effectNode.getChild("weight").getValue<float>();
                 newEffect->weight = weight;
             }
+            if (effectNode.hasChild("oscAddress")) {
+                std::string oscAddress = effectNode.getChild("oscAddress").getValue();
+                newEffect->oscAddressForOnOff = oscAddress;
+            }
             if (effectNode.hasChild("isActive")) {
                 bool isActive = effectNode.getChild("isActive").getValue<bool>();
                 newEffect->isTurnedOn = isActive;
@@ -314,8 +318,13 @@ void ConfigManager::writeEffects(std::vector<EffectRef> &effects)
         weightNode.setTag("weight");
         weightNode.setValue(effect->weight);
         effectNode.push_back(weightNode);
-        XmlTree channelNode;
+        XmlTree oscNode;
+        oscNode.setTag("oscAddress");
+        oscNode.setValue(effect->oscAddressForOnOff);
+        effectNode.push_back(oscNode);
+
         XmlTree activeNode;
+        XmlTree channelNode;
         activeNode.setTag("isActive");
         activeNode.setValue(effect->isTurnedOn);
         effectNode.push_back(activeNode);
