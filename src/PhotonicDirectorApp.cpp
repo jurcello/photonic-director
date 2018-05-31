@@ -80,6 +80,7 @@ protected:
     osc::UdpSocketRef	mOscSocket;
     int mOscReceivePort;
     int mOscSendPort;
+    std::string mLastOscAddress;
 
     // Channel stuff.
     vector<InputChannelRef> mChannels;
@@ -111,7 +112,8 @@ PhotonicDirectorApp::PhotonicDirectorApp()
   mOscReceivePort(10000),
   mOscSendPort(10001),
   mLightFactory(&mDmxOut),
-  mShowVisualizer(true)
+  mShowVisualizer(true),
+  mLastOscAddress("")
 {
     mGuiStatusData.pickLightEffect = nullptr;
     mGuiStatusData.lightToEdit = nullptr;
@@ -252,6 +254,7 @@ void PhotonicDirectorApp::setupOsc(int receivePort, int sendPort)
 
 void PhotonicDirectorApp::oscReceive(const osc::Message &message)
 {
+    mLastOscAddress = message.getAddress();
     if (mChannels.size() > 0) {
         for (InputChannelRef channel : mChannels) {
             if (message.getAddress() == channel->getAddress()) {
@@ -286,6 +289,10 @@ void PhotonicDirectorApp::oscReceive(const osc::Message &message)
         }
     }
     mLightCalibrator.receiveOscMessage(message);
+    for (auto effect : mEffects) {
+        effect->listenToOsc(message);
+    }
+
 }
 
 void PhotonicDirectorApp::mouseDown( MouseEvent event )
@@ -823,6 +830,22 @@ void PhotonicDirectorApp::drawEffectControls()
                 effect->setName(name);
             }
             ui::Separator();
+            ////////////////////////////////////////////
+            // OSC input.
+            ////////////////////////////////////////////
+            static std::string oscAddress;
+            static bool oscLearn;
+            oscAddress = effect->oscAddressForOnOff;
+            if (oscLearn) {
+                effect->oscAddressForOnOff = mLastOscAddress;
+            }
+            if (ui::InputText("OSC address for on/off", &oscAddress)) {
+                effect->oscAddressForOnOff = oscAddress;
+            }
+            ui::SameLine();
+            ui::Checkbox("OSC learn", &oscLearn);
+            // End OSC input.
+            ui::Separator();
             ui::InputFloat("FadeTime", &effect->fadeTime);
             ui::SliderFloat("Weight", &effect->weight, 0.0f, 100.0f);
             ui::Spacing();
@@ -875,6 +898,16 @@ void PhotonicDirectorApp::drawEffectControls()
 
                     case photonic::Parameter::kType_Color:
                         ui::ColorPicker4(param->description.c_str(), &param->colorValue[0]);
+                        break;
+
+                    case photonic::Parameter::kType_OscTrigger:
+                        ui::Checkbox(param->description.c_str(), &param->triggerValue);
+                        ui::SameLine();
+                        static std::string triggerChannel;
+                        triggerChannel = param->oscAdress;
+                        if (ui::InputText("Osc address", &triggerChannel)) {
+                            param->oscAdress = triggerChannel;
+                        }
                         break;
 
                     case photonic::Parameter::kType_Vector3:

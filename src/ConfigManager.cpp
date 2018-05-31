@@ -107,6 +107,10 @@ void ConfigManager::readEffects(std::vector<EffectRef> &effects, const std::vect
                 float weight = effectNode.getChild("weight").getValue<float>();
                 newEffect->weight = weight;
             }
+            if (effectNode.hasChild("oscAddress")) {
+                std::string oscAddress = effectNode.getChild("oscAddress").getValue();
+                newEffect->oscAddressForOnOff = oscAddress;
+            }
             if (effectNode.hasChild("isActive")) {
                 bool isActive = effectNode.getChild("isActive").getValue<bool>();
                 newEffect->isTurnedOn = isActive;
@@ -153,6 +157,11 @@ void ConfigManager::readParam(std::unique_ptr<XmlTree> &paramNode, Parameter *pa
             
         case photonic::Parameter::kType_Int:
             param->intValue = paramNode->getValue<int>();
+            break;
+
+        case photonic::Parameter::kType_OscTrigger:
+            param->oscAdress = paramNode->getValue<std::string>();
+            param->triggerValue = paramNode->getAttributeValue<bool>("trigger");
             break;
             
         case photonic::Parameter::kType_Color:
@@ -309,8 +318,13 @@ void ConfigManager::writeEffects(std::vector<EffectRef> &effects)
         weightNode.setTag("weight");
         weightNode.setValue(effect->weight);
         effectNode.push_back(weightNode);
-        XmlTree channelNode;
+        XmlTree oscNode;
+        oscNode.setTag("oscAddress");
+        oscNode.setValue(effect->oscAddressForOnOff);
+        effectNode.push_back(oscNode);
+
         XmlTree activeNode;
+        XmlTree channelNode;
         activeNode.setTag("isActive");
         activeNode.setValue(effect->isTurnedOn);
         effectNode.push_back(activeNode);
@@ -354,7 +368,11 @@ void ConfigManager::writeParameter(cinder::XmlTree &paramsNode, photonic::Parame
         case photonic::Parameter::kType_Int:
             paramnode.setValue(param->intValue);
             break;
-            
+
+        case photonic::Parameter::kType_OscTrigger:
+            paramnode.setValue(param->oscAdress);
+            paramnode.setAttribute("trigger", param->triggerValue);
+
         case photonic::Parameter::kType_Color:
             paramnode.setAttribute("r", param->colorValue.r);
             paramnode.setAttribute("g", param->colorValue.g);
