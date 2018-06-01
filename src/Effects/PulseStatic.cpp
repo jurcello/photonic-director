@@ -9,10 +9,10 @@ using namespace photonic;
 using namespace ci;
 
 PulseStatic::PulseStatic(std::string name, std::string uuid)
-: Effect(name, uuid), currentValue(0.0f), targetValue(0.0f)
+: Effect(name, uuid), mCurrentValue(0.0f), mTargetValue(0.0f)
 {
 
-    Parameter* trigger = new Parameter(Parameter::Type::kType_OscTrigger, "Location fixed");
+    Parameter* trigger = new Parameter(Parameter::Type::kType_OscTrigger, "Trigger to start");
     trigger->triggerValue = false;
     trigger->oscAdress = "/trigger";
     mParams[kInput_Trigger] = trigger;
@@ -27,26 +27,30 @@ PulseStatic::PulseStatic(std::string name, std::string uuid)
 void PulseStatic::execute(double dt) {
     Effect::execute(dt);
     updateInnerState();
-
+    ColorA color = interPolateColors(mParams[kInput_BaseColor]->colorValue, mParams[kInput_EffectColor]->colorValue, mCurrentValue);
+    for (const auto light : mLights) {
+        light->setEffectIntensity(mUuid, mCurrentValue);
+        light->setEffectColor(mUuid, color);
+    }
 }
 
 void PulseStatic::updateInnerState() {
     float decreaseTime = mParams[kInput_DecreaseTime]->floatValue;
     if (mParams[kInput_Trigger]->triggerValue) {
         mTimer.start(0.0f);
-        currentValue = mParams[kInput_Volume]->floatValue;
+        mCurrentValue = mParams[kInput_Volume]->floatValue;
     }
     if (! mTimer.isStopped()) {
         float ratio = (decreaseTime - (float) mTimer.getSeconds()) / decreaseTime;
         if (ratio < 0) {
-            currentValue = 0.0f;
+            mCurrentValue = 0.0f;
         }
         else {
-            currentValue = mParams[kInput_Volume]->floatValue * ratio;
+            mCurrentValue = mParams[kInput_Volume]->floatValue * ratio;
         }
     }
     if (mTimer.getSeconds() > decreaseTime) {
-        currentValue = 0.0f;
+        mCurrentValue = 0.0f;
         mTimer.stop();
     }
 }

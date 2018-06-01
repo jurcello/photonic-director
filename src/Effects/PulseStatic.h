@@ -30,8 +30,8 @@ namespace photonic {
     protected:
         void updateInnerState();
 
-        float currentValue;
-        float targetValue;
+        float mCurrentValue;
+        float mTargetValue;
 
         Timer mTimer;
     };
