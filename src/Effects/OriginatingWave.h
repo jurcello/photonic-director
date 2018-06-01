@@ -32,6 +32,7 @@ namespace photonic {
             kInput_InputChannel = 3,
             kInput_Speed = 4,
             kInput_EffectColor = 5,
+            kInput_ValueDecreaseSpeed = 6,
         };
 
         OriginatingWave(std::string name, std::string uuid = "");
@@ -42,6 +43,10 @@ namespace photonic {
 
     protected:
         ValueBuffer mBuffer;
+        float mCurrentValue;
+        float mTargetValue;
+
+        void updateInteralState(double dt);
     };
 
 }

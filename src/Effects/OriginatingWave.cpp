@@ -11,23 +11,23 @@ using namespace photonic;
 using namespace ci;
 
 OriginatingWave::OriginatingWave(std::string name, std::string uuid)
-: Effect(name, uuid), mBuffer(1000)
+: Effect(name, uuid), mBuffer(1000), mCurrentValue(0.0f), mTargetValue(0.0f)
 {
     registerParam(Parameter::Type::kType_Vector3, kInput_Location, vec3(1.f), "Location");
-    registerParam(Parameter::Type::kType_Float, kInput_Decay, 1.0f, "Decay");
+    registerParam(Parameter::Type::kType_Float, kInput_Decay, 1.0f, "Decay distance");
     registerParam(Parameter::Type::kType_Channel_MinMax, kInput_InputChannel, vec4(0.0f, 1.0f, 0.0f, 1.0f), "Input");
     registerParam(Parameter::Type::kType_Float, kInput_Speed, 1.0f, "Speed");
     registerParam(Parameter::Type::kType_Color, kInput_EffectColor, ColorA(Color::gray(0.5f)), "Effect Color");
+    registerParam(Parameter::Type::kType_Float, kInput_ValueDecreaseSpeed, 100.0f, "Fadeout speed of input");
 }
 
 void OriginatingWave::execute(double dt) {
     Effect::execute(dt);
     float decay = mParams[kInput_Decay]->floatValue;
     if (mParams[kInput_InputChannel]->channelRef) {
-        mBuffer.setSpeed(mParams[kInput_Speed]->floatValue);
-        const float volume = mParams[kInput_InputChannel]->getMappedChannelValue();
-        // Store the volume in the ringbuffer.
-        mBuffer.pushValue(volume);
+        mTargetValue = mParams[kInput_InputChannel]->getMappedChannelValue();
+        updateInteralState(dt);
+
 
         for (auto light: mLights) {
             // Calculate the distance.
@@ -43,6 +43,22 @@ void OriginatingWave::execute(double dt) {
             light->setEffectIntensity(mUuid, lightVolume);
         }
     }
+}
+
+void OriginatingWave::updateInteralState(double dt) {
+    if (mTargetValue > mCurrentValue) {
+        mCurrentValue = mTargetValue;
+    }
+    else {
+        mCurrentValue -= mParams[kInput_ValueDecreaseSpeed]->floatValue * dt;
+        if (mCurrentValue < mTargetValue) {
+            mCurrentValue = mTargetValue;
+        }
+    }
+
+    mBuffer.setSpeed(mParams[kInput_Speed]->floatValue);
+    // Store the current value in the ringbuffer.
+    mBuffer.pushValue(mCurrentValue);
 }
 
 std::string OriginatingWave::getTypeName() {
