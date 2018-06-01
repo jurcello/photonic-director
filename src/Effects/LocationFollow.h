@@ -14,6 +14,7 @@ namespace photonic {
             kInput_EffectColor = 1,
             kInput_Radius = 2,
             kInput_Intensity = 3,
+            kInput_DropOff = 4,
         };
         LocationFollow(std::string name, std::string uuid = "");
 

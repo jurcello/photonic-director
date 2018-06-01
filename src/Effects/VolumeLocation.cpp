@@ -67,6 +67,7 @@ void photonic::VolumeLocation::execute(double dt) {
         for (const auto light : mLights) {
             float intensity = 0.f;
             float distance = glm::distance(light->getPosition(), mLocation);
+            // TODO: This code is used more than one. Reuse!
             if (distance < radius) {
                 intensity = mParams[kInput_Intensity]->floatValue * mChannel->getValue();
             }

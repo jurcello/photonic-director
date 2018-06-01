@@ -27,12 +27,18 @@ photonic::LocationFollow::LocationFollow(std::string name, std::string uuid)
     Parameter* intensity = new Parameter(Parameter::Type::kType_Float, "Intensity");
     intensity->floatValue = 1.0f;
     mParams[kInput_Intensity] = intensity;
+
+    Parameter* dropOff = new Parameter(Parameter::Type::kType_Float, "Drop Off");
+    dropOff->floatValue = 1.0f;
+    mParams[kInput_DropOff] = dropOff;
+
 }
 
 void photonic::LocationFollow::execute(double dt) {
     float radius = mParams[kInput_Radius]->floatValue;
     Effect::execute(dt);
     if (mChannel) {
+        float dropOff = mParams[kInput_DropOff]->floatValue;
         for (const auto light: mLights) {
             const ColorA &color = (mParams[kInput_Intensity]->floatValue > 0) ? mParams[kInput_EffectColor]->colorValue : ColorA::black();
             light->setEffectColor(mUuid, color);
@@ -41,12 +47,19 @@ void photonic::LocationFollow::execute(double dt) {
             if (mChannel->getType() == InputChannel::Type::kType_Dim2) {
                 distance = glm::distance(mChannel->getVec2Value(), vec2(light->position.x, light->position.z));
             }
-            if (mChannel->getType() == InputChannel::Type::kType_Dim3) {
-                distance = glm::distance(mChannel->getVec3Value(), vec3(light->position.x, light->position.y, light->position.z));
+            else if (mChannel->getType() == InputChannel::Type::kType_Dim3) {
+                vec3 location = mChannel->getVec3Value();
+                distance = glm::distance(location, vec3(light->position.x, light->position.y, light->position.z));
             }
-            float power = math<float>::pow(distance, radius);
-            if (power < 1) power = 1;
-            float intensity = mParams[kInput_Intensity]->floatValue / power;
+            // TODO: This code is used more than one. Reuse!
+            float intensity = 0.f;
+            if (distance < radius) {
+                intensity = mParams[kInput_Intensity]->floatValue;
+            }
+            else {
+                float distanceFromRadius = distance - radius;
+                intensity = mParams[kInput_Intensity]->floatValue / math<float>::pow(1 + distanceFromRadius, dropOff);
+            }
             light->setEffectIntensity(mUuid, intensity);
         }
     }
