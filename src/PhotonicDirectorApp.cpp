@@ -940,6 +940,9 @@ void PhotonicDirectorApp::drawEffectControls()
                                 }
                             }
                             ui::ListBoxFooter();
+                            if (ui::Button("Reset channel")) {
+                                param->channelRef = nullptr;
+                            }
                         }
 
                     default:

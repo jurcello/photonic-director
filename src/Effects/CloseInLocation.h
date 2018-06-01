@@ -19,6 +19,8 @@ namespace photonic {
             kInput_Radius = 6,
             kInput_RadiusChannel = 7,
             kInput_EffectColor = 8,
+            kInput_ForwardSpeed = 9,
+            kInput_RetreatSpeed = 10,
         };
 
         CloseInLocation(std::string name, std::string uuid = "");
@@ -30,7 +32,10 @@ namespace photonic {
 
     protected:
         vec3 mLocation;
+        float mCurrentRadius;
+        float mTargetRadius;
 
+        void updateRadius(double dt);
     };
 }
 
