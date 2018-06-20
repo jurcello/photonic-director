@@ -387,7 +387,7 @@ void Effect::visualize() {
 //////////////////////////////////////////////////////////////////
 
 SimpleVolumeEffect::SimpleVolumeEffect(std::string name, std::string uuid)
-:Effect(name, uuid)
+:Effect(name, uuid), mActualVolume(0.0f), mTargetVolume(0.0f)
 {
     Parameter* baseColor = new Parameter(Parameter::Type::kType_Color, "Base Color");
     baseColor->colorValue = ColorA(Color::gray(0.5f));
@@ -398,6 +398,7 @@ SimpleVolumeEffect::SimpleVolumeEffect(std::string name, std::string uuid)
     mParams[kInput_EffectColor] = effectColor;
 
     registerParam(Parameter::Type::kType_Channel_MinMax, kInput_Volume, vec4(0.0f, 60.0f, 0.0f, 1.0f), "Volume");
+    registerParam(Parameter::Type::kType_Float, kInput_DecaySpeed, 0.0f, "Decay speed");
 }
 
 void SimpleVolumeEffect::execute(double dt) {
@@ -411,12 +412,26 @@ void SimpleVolumeEffect::execute(double dt) {
         if (mParams[kInput_Volume]->channelRef) {
             intensity = mParams[kInput_Volume]->getMappedChannelValue();
         }
+        updateVolumes(intensity, dt);
         for (LightRef light: mLights) {
             if (mChannel) {
-                light->setEffectIntensity(mUuid, intensity);
-                ColorA endColor = interPolateColors(mParams[kInput_BaseColor]->colorValue, mParams[kInput_EffectColor]->colorValue, intensity);
+                light->setEffectIntensity(mUuid, mActualVolume);
+                ColorA endColor = interPolateColors(mParams[kInput_BaseColor]->colorValue, mParams[kInput_EffectColor]->colorValue, mActualVolume);
                 light->setEffectColor(mUuid, endColor);
             }
+        }
+    }
+}
+
+void SimpleVolumeEffect::updateVolumes(float input, double dt) {
+    if (input > mActualVolume) {
+        mActualVolume = input;
+    }
+    mTargetVolume = input;
+    if (mTargetVolume < mActualVolume && mParams[kInput_DecaySpeed]->floatValue > 0) {
+        mActualVolume -= (1 / mParams[kInput_DecaySpeed]->floatValue) * dt;
+        if (mActualVolume < mTargetVolume) {
+            mActualVolume = mTargetVolume;
         }
     }
 }

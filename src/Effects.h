@@ -216,12 +216,19 @@ namespace photonic {
             kInput_BaseColor = 1,
             kInput_EffectColor = 2,
             kInput_Volume = 3,
+            kInput_DecaySpeed = 4,
         };
         SimpleVolumeEffect(std::string name, std::string uuid = "");
 
         virtual void execute(double dt);
         virtual std::string getTypeName();
         virtual std::string getTypeClassName();
+
+    protected:
+        void updateVolumes(float input, double dt);
+
+        float mActualVolume;
+        float mTargetVolume;
     };
     
     class StaticValueEffect : public Effect {

@@ -223,7 +223,7 @@ LightFactory::LightFactory(DmxOutput *dmxOutput)
             ColorA(1.0f, 0, 0, 0))
     );
     mLightTypes.push_back(new LightType(
-            "Color source (g channels)",
+            "Color source (5 channels)",
             "color_source_5ch",
             2,
             1,
@@ -282,6 +282,24 @@ LightFactory::LightFactory(DmxOutput *dmxOutput)
             6,
             ColorA(1.0f, 0, 1.0f, 0)
     ));
+
+    mLightTypes.push_back(new LightType(
+            "Showtec 1W RGB LED PAR 64",
+            "showtec_1w_rgb_led_par_64",
+            1,
+            7,
+            7,
+            ColorA(0.5f, 0, 1.0f, 0.2f)
+    ));
+    mLightTypes.push_back(new LightType(
+            "Showtec Powerspot 9 Q5 (5 channel)",
+            "showtec_powershot_9_q5_5ch",
+            1,
+            0,
+            5,
+            ColorA(0.5f, 0, 0.7f, 0.4f)
+    ));
+
 }
 
 
