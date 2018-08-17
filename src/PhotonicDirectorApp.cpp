@@ -906,10 +906,42 @@ void PhotonicDirectorApp::drawEffectControls()
             // Create list of lights.
             if (! ui::IsWindowCollapsed()) {
                 ui::ListBoxHeader("Lights");
+                int lightEditId = 0;
                 for (const auto light : effect->getLights()) {
+                    ui::PushID(lightEditId);
                     ui::BulletText("%s", light->mName.c_str());
+                    ui::SameLine();
+                    if (ui::Button("Remove")) {
+                        effect->removeLight(light);
+                        ui::PopID();
+                        continue;
+                    }
+                    lightEditId++;
+                    ui::PopID();
                 }
                 ui::ListBoxFooter();
+                if (mGuiStatusData.status == ADDING_LIGHT_TO_EFFECT) {
+                    ui::ListBoxHeader("Lights available");
+                    int addingEditId = 0;
+                    for (const auto light : mLights) {
+                        std::string uuid = light->getUuid();
+                        if (! effect->hasLight(light)) {
+                            ui::PushID(addingEditId);
+                            ui::BulletText("%s", light->mName.c_str());
+                            ui::SameLine();
+                            if (ui::Button("Add")) {
+                                effect->addLight(light);
+                                ui::PopID();
+                                continue;
+                            }
+                            addingEditId++;
+                            ui::PopID();
+                        }
+
+
+                    }
+                    ui::ListBoxFooter();
+                }
             }
             ui::Separator();
             // Draw the params.

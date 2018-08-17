@@ -248,11 +248,12 @@ void Effect::addLight(LightRef light)
         mLights.push_back(light);
 }
 
-void Effect::removeLight(LightRef light)
+std::vector<LightRef>::iterator Effect::removeLight(LightRef light)
 {
     auto it = std::find(mLights.begin(), mLights.end(), light);
     if (it != mLights.end())
-        mLights.erase(it);
+        it = mLights.erase(it);
+    return it;
 }
 
 void Effect::toggleLight(LightRef light)

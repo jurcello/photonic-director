@@ -149,7 +149,7 @@ namespace photonic {
         
         void setName(std::string name);
         void addLight(LightRef light);
-        void removeLight(LightRef light);
+        std::vector<LightRef>::iterator removeLight(LightRef light);
         void toggleLight(LightRef light);
         bool hasLight(LightRef light);
         std::vector<LightRef> getLights();
