@@ -9,6 +9,7 @@
 #include "LightCalibrator.h"
 #include "Effects.h"
 #include "ConfigManager.h"
+#include "UnityConnector.h"
 #include "Visualizer.h"
 #include "Osc.h"
 
@@ -86,6 +87,7 @@ protected:
     // Unity related stuff.
     std::string mUnityAddress;
     int mUnityPort;
+    UnityConnector mUnityConnector;
 
     // Channel stuff.
     vector<InputChannelRef> mChannels;
@@ -545,23 +547,8 @@ void PhotonicDirectorApp::drawGui()
     ui::InputInt("Port", &mUnityPort);
     if (ui::Button("Sync lights with unity")) {
         try {
-            app::console() << "Starting to sync lights" << std::endl;
-
-            std::string fullUrl = "http://" + mUnityAddress + ":" + std::to_string(mUnityPort);
-            Url url(fullUrl, true);
-            UrlOptions options;
-            options.setTimeout(1.0f);
-            options.setIgnoreCache(true);
-            auto content = loadUrl(url, options);
-            JsonTree lightsResults;
-            // Load the url.
-            lightsResults = JsonTree(content);
-            App::console() << "Number of items" << lightsResults.hasChildren() << std::endl;
-            JsonTree lights;
-            lights = lightsResults.getChild("lights");
-            for (auto light: lights) {
-                App::console() << "found light" << light.getChild("uuid").getValue() << std::endl;
-            }
+            mUnityConnector.initialize(mUnityAddress, mUnityPort, &mLights, &mLightFactory);
+            mUnityConnector.sync();
         }
         catch (ci::Exception &exception) {
             CI_LOG_W( "exception caught, what: " << exception.what() );

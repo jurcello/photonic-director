@@ -12,6 +12,7 @@ include( "${CINDER_PATH}/proj/cmake/modules/cinderMakeApp.cmake" )
 
 set( SRC_FILES
 	${APP_PATH}/src/ConfigManager.cpp
+	${APP_PATH}/src/UnityConnector.cpp
 	${APP_PATH}/src/Effects.cpp
 	${APP_PATH}/src/Light.cpp
 	${APP_PATH}/src/LightCalibrator.cpp
@@ -19,7 +20,6 @@ set( SRC_FILES
 	${APP_PATH}/src/PhotonicDirectorApp.cpp
 	${APP_PATH}/src/Visualizer.cpp
 	${APP_PATH}/src/Utils.h
-	${APP_PATH}/src/UnityConnector.h
 	${APP_PATH}/src/Effects/WaveEffect.cpp
 	${APP_PATH}/src/Effects/LocationFollow.cpp
 	${APP_PATH}/src/Effects/FlashLight.cpp

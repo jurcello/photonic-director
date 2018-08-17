@@ -5,8 +5,29 @@
 #ifndef PHOTONICDIRECTOR_UNITYCONNECTOR_H
 #define PHOTONICDIRECTOR_UNITYCONNECTOR_H
 
+#include <stdio.h>
+#include "cinder/app/App.h"
+#include "cinder/Json.h"
+#include "Light.h"
+
+using namespace std;
 
 class UnityConnector {
+public:
+    UnityConnector();
+
+    void initialize(std::string address, int port, vector<LightRef>* lights, LightFactory* lightFactory);
+    void sync();
+    void updateCreateLight(JsonTree lightNode);
+    void cleanLights();
+
+
+protected:
+    vector<LightRef>* mLights;
+    vector<string> mSyncedUuids;
+    string mAddress;
+    int mPort;
+    LightFactory* mLightFactory;
 
 };
 
