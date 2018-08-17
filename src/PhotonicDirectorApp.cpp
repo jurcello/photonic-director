@@ -4,6 +4,7 @@
 #include "cinder/params/Params.h"
 #include "cinder/Log.h"
 #include "CinderImGui.h"
+#include "cinder/Json.h"
 #include "Light.h"
 #include "LightCalibrator.h"
 #include "Effects.h"
@@ -82,6 +83,10 @@ protected:
     int mOscSendPort;
     std::string mLastOscAddress;
 
+    // Unity related stuff.
+    std::string mUnityAddress;
+    int mUnityPort;
+
     // Channel stuff.
     vector<InputChannelRef> mChannels;
     
@@ -113,7 +118,9 @@ PhotonicDirectorApp::PhotonicDirectorApp()
   mOscSendPort(10001),
   mLightFactory(&mDmxOut),
   mShowVisualizer(true),
-  mLastOscAddress("")
+  mLastOscAddress(""),
+  mUnityAddress("192.168.1.8"),
+  mUnityPort(8089)
 {
     mGuiStatusData.pickLightEffect = nullptr;
     mGuiStatusData.lightToEdit = nullptr;
@@ -531,6 +538,43 @@ void PhotonicDirectorApp::drawGui()
     ui::Checkbox("Show channel editor", &showChannelEditor);
     ui::Checkbox("Show effect editor", &showEffectEditor);
     ui::Checkbox("Show DMX inspector", &showDmxInspector);
+    ui::Separator();
+    ui::Text("Unity connection");
+    ui::InputText("Address", &mUnityAddress);
+    ui::SameLine();
+    ui::InputInt("Port", &mUnityPort);
+    if (ui::Button("Sync lights with unity")) {
+        try {
+            app::console() << "Starting to sync lights" << std::endl;
+
+            std::string fullUrl = "http://" + mUnityAddress + ":" + std::to_string(mUnityPort);
+            Url url(fullUrl, true);
+            UrlOptions options;
+            options.setTimeout(1.0f);
+            options.setIgnoreCache(true);
+            auto content = loadUrl(url, options);
+            JsonTree lightsResults;
+            // Load the url.
+            lightsResults = JsonTree(content);
+            App::console() << "Number of items" << lightsResults.hasChildren() << std::endl;
+            JsonTree lights;
+            lights = lightsResults.getChild("lights");
+            for (auto light: lights) {
+                App::console() << "found light" << light.getChild("uuid").getValue() << std::endl;
+            }
+        }
+        catch (ci::Exception &exception) {
+            CI_LOG_W( "exception caught, what: " << exception.what() );
+            ui::OpenPopup("Error syncing to unity");
+        }
+    }
+    if (ui::BeginPopupModal("Error syncing to unity")) {
+        ui::Text("There was an error syncing the lights. Please check address and port.");
+        if (ui::Button("Close")) {
+            ui::CloseCurrentPopup();
+        }
+        ui::EndPopup();
+    }
     ui::Separator();
     ui::Text("File");
     ui::Spacing();

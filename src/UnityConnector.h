@@ -1,0 +1,14 @@
+//
+// Created by Jur de Vries on 17/08/2018.
+//
+
+#ifndef PHOTONICDIRECTOR_UNITYCONNECTOR_H
+#define PHOTONICDIRECTOR_UNITYCONNECTOR_H
+
+
+class UnityConnector {
+
+};
+
+
+#endif //PHOTONICDIRECTOR_UNITYCONNECTOR_H
