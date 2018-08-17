@@ -548,7 +548,14 @@ void PhotonicDirectorApp::drawGui()
     if (ui::Button("Sync lights with unity")) {
         try {
             mUnityConnector.initialize(mUnityAddress, mUnityPort, &mLights, &mLightFactory);
-            mUnityConnector.sync();
+            // TODO: Use a better way. Some sort of event listener system for light removal,
+            auto& mEffectsAlias = mEffects;
+            std::function<void(const LightRef)> cleanFunction = [mEffectsAlias](const LightRef light){
+                for (auto effect : mEffectsAlias) {
+                    effect->removeLight(light);
+                }
+            };
+            mUnityConnector.sync(cleanFunction);
         }
         catch (ci::Exception &exception) {
             CI_LOG_W( "exception caught, what: " << exception.what() );

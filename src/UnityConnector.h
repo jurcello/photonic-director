@@ -17,9 +17,9 @@ public:
     UnityConnector();
 
     void initialize(std::string address, int port, vector<LightRef>* lights, LightFactory* lightFactory);
-    void sync();
+    void sync(std::function<void(const LightRef)> cleanFunction);
     void updateCreateLight(JsonTree lightNode);
-    void cleanLights();
+    void cleanLights(std::function<void(const LightRef)> cleanFunction);
 
 
 protected:

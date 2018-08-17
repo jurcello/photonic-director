@@ -19,7 +19,8 @@ void UnityConnector::initialize(std::string address, int port, vector<LightRef>*
     mLightFactory = lightFactory;
 }
 
-void UnityConnector::sync() {
+// TODO: This is a rather ugly architecture. We need another way to remove the lights from the effects.
+void UnityConnector::sync(std::function<void(const LightRef)> cleanFunction) {
     // Empty the synced uuid vector.
     mSyncedUuids.clear();
 
@@ -38,7 +39,7 @@ void UnityConnector::sync() {
     for (auto light: lights) {
         updateCreateLight(light);
     }
-    cleanLights();
+    cleanLights(cleanFunction);
 }
 
 void UnityConnector::updateCreateLight(JsonTree lightNode) {
@@ -79,10 +80,11 @@ void UnityConnector::updateCreateLight(JsonTree lightNode) {
     }
 }
 
-void UnityConnector::cleanLights() {
+void UnityConnector::cleanLights(std::function<void(const LightRef)> cleanFunction) {
     for (auto it = mLights->begin(); it != mLights->end(); ) {
         std::string uuid = (*it)->getUuid();
         if (std::find(mSyncedUuids.begin(), mSyncedUuids.end(), uuid) == mSyncedUuids.end()) {
+            cleanFunction(*it);
             it = mLights->erase(it);
             continue;
         }
