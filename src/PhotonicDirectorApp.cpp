@@ -461,11 +461,13 @@ void PhotonicDirectorApp::update()
 }
 
 void PhotonicDirectorApp::handleLightOscSending() {
+    // Create an osc bundle ot send the messages for better speed.
+    osc::Bundle bundle;
     for (auto light : mLights) {
         if (light->mSendOsc && light->mOscAdress[0] == '/') {
             osc::Message message(light->mOscAdress + "/intensity");
             message.append(light->intensity);
-            mOscSender->send(message);
+            bundle.append(message);
             if (light->isColorEnabled()) {
                 osc::Message messageR(light->mOscAdress + "/r");
                 messageR.append(light->color.r);
@@ -475,10 +477,11 @@ void PhotonicDirectorApp::handleLightOscSending() {
                 mOscSender->send(messageG);
                 osc::Message messageB(light->mOscAdress + "/b");
                 messageB.append(light->color.b);
-                mOscSender->send(messageB);
+                bundle.append(message);
             }
         }
     }
+    mOscSender->send(bundle);
 }
 
 void PhotonicDirectorApp::drawGui()
