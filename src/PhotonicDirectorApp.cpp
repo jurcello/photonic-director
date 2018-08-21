@@ -80,6 +80,8 @@ protected:
     osc::ReceiverUdp* mOscReceiver;
     osc::SenderUdp*	mOscSender;
     osc::UdpSocketRef	mOscSocket;
+    bool mOscUnicast;
+    std::string mOscSendAddress;
     int mOscReceivePort;
     int mOscSendPort;
     std::string mLastOscAddress;
@@ -118,6 +120,8 @@ PhotonicDirectorApp::PhotonicDirectorApp()
   mOscSocket(nullptr),
   mOscReceivePort(10000),
   mOscSendPort(10001),
+  mOscUnicast(false),
+  mOscSendAddress("192.168.1.11"),
   mLightFactory(&mDmxOut),
   mShowVisualizer(true),
   mLastOscAddress(""),
@@ -226,6 +230,7 @@ void PhotonicDirectorApp::setupOsc(int receivePort, int sendPort)
 
     }
     if (mOscSocket) {
+        mOscSocket->close();
         mOscSocket = nullptr;
     }
     mOscReceiver = new osc::ReceiverUdp(receivePort);
@@ -254,9 +259,16 @@ void PhotonicDirectorApp::setupOsc(int receivePort, int sendPort)
     // Setup sender.
     //////////////////////////
     // Us a local port of 31,000 because that one most probably is not used.
-    mOscSocket = osc::UdpSocketRef(new protocol::socket(App::get()->io_service(), protocol::endpoint( protocol::v4(), 31000 ) ));
-    mOscSocket->set_option( asio::socket_base::broadcast(true) );
-    mOscSender = new osc::SenderUdp( mOscSocket, protocol::endpoint( asio::ip::address_v4::broadcast(), sendPort ) );
+    const int localPort = 31000;
+    mOscSocket = osc::UdpSocketRef(new protocol::socket(App::get()->io_service(), protocol::endpoint(protocol::v4(), localPort) ));
+    asio::ip::address_v4 address = asio::ip::address_v4::broadcast();
+    if (mOscUnicast) {
+        address = asio::ip::address_v4::from_string(mOscSendAddress);
+    }
+    else {
+        mOscSocket->set_option( asio::socket_base::broadcast(true) );
+    }
+    mOscSender = new osc::SenderUdp(mOscSocket, protocol::endpoint(address, sendPort ) );
     mLightCalibrator.setOscSender(mOscSender);
 
 }
@@ -508,6 +520,20 @@ void PhotonicDirectorApp::drawGui()
     }
     if  (ui::InputInt("Osc Send Port", &mOscSendPort)) {
         setupOsc(mOscReceivePort, mOscSendPort);
+    }
+    if (ui::Checkbox("Use udp unicast", &mOscUnicast)) {
+        setupOsc(mOscReceivePort, mOscSendPort);
+    }
+    if (mOscUnicast) {
+        if (ui::InputText("Osc send address", &mOscSendAddress)) {
+            try {
+                asio::ip::address_v4::from_string(mOscSendAddress);
+                setupOsc(mOscReceivePort, mOscSendPort);
+            }
+            catch(std::exception e) {
+                // Catch nothing.
+            }
+        }
     }
 
     ui::Separator();
