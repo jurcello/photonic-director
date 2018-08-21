@@ -359,7 +359,8 @@ void PhotonicDirectorApp::save()
         config.writeLights(mLights);
         config.writeChannels(mChannels);
         config.writeEffects(mEffects);
-        config.writeInt("oscPort", mOscReceivePort);
+        config.writeInt("oscReceivePort", mOscReceivePort);
+        config.writeInt("oscSendPort", mOscSendPort);
         config.writeToFile(savePath);
     }
 }
@@ -370,11 +371,15 @@ void PhotonicDirectorApp::load()
     fs::path loadPath = getOpenFilePath(fs::path(), extensions);
     if (! loadPath.empty()) {
         config.readFromFile(loadPath);
-        int oscPort = config.readInt("oscPort");
-        if (oscPort > 0) {
-            mOscReceivePort = oscPort;
-            setupOsc(mOscReceivePort, 0);
+        int oscReceivePort = config.readInt("oscReceivePort");
+        int oscSendPort = config.readInt("oscSendPort");
+        if (oscReceivePort > 0) {
+            mOscReceivePort = oscReceivePort;
         }
+        if (oscSendPort > 0) {
+            mOscSendPort = oscSendPort;
+        }
+        setupOsc(mOscReceivePort, mOscSendPort);
         // Reset the channelRegistry of the dmx out.
         mDmxOut.clearRegistry();
         config.readLights(mLights, &mLightFactory);
@@ -437,7 +442,9 @@ void PhotonicDirectorApp::update()
             light->intensity = endIntensity;
             // Be sure that the alfa channel is always 1.0.
             endColor.a = 1.0f;
-            light->color = endColor;
+            if (light->isColorEnabled()) {
+                light->color = endColor;
+            }
         }
     }
     // After effects.
