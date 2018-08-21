@@ -9,7 +9,9 @@
 #define Utils_h
 
 #include <uuid/uuid.h>
+#include "cinder/CinderMath.h"
 
+using namespace cinder;
 
 // I know that this is not system indepedent, but this can easily be fixed once needed.
 namespace photonic {
@@ -20,7 +22,11 @@ namespace photonic {
         char s[37];
         uuid_unparse(uuid, s);
         return s;
-    }    
+    }
+
+    inline double getBellIntensity(double distance, double width) {
+        return math<double>::exp(-(distance)/(2*(math<double>::pow(width, 2))));
+    }
 }
 
 #endif /* Utils_h */
