@@ -49,7 +49,7 @@ void StoryTeller::execute(double dt) {
 
 
     for (const auto light: mLights) {
-        float angle = angleBetween(vec3(light->position), up);
+        float angle = angleBetween(vec3(light->position) - mCenter, up);
         float intensity = 0.0f;
         if (mHasRotationLeft) {
             intensity += getBellIntensity((double) calculateAngleDistance(angle, mCurrentRotationLeft), (double) mParams[kInput_Width]->floatValue);
@@ -67,13 +67,34 @@ float StoryTeller::calculateAngleDistance(float angle1, float angle2) {
 }
 
 float StoryTeller::angleBetween(vec3 vector1, vec3 vector2) {
-    glm::vec3 directionVector1 = glm::normalize(vector1 - mCenter);
-    glm::vec3 directionVector2 = glm::normalize(vector2 - mCenter);
-    return 180 + (glm::acos(glm::dot(directionVector1, directionVector2)) * 180) / glm::pi<float>();
+    glm::vec3 directionVector1 = glm::normalize(vector1);
+    glm::vec3 directionVector2 = glm::normalize(vector2);
+    const float dotProduct = glm::dot(directionVector1, directionVector2);
+    const vec3 crossProduct = glm::cross(directionVector1, directionVector2);
+    const float sign = glm::dot(crossProduct, mDirectionReference);
+    float radians = glm::acos(dotProduct);
+    if (sign > 0) {
+        radians = -radians;
+    }
+
+    return ((radians * 180.0f) / glm::pi<float>()) + 180.0f;
 }
 
 void StoryTeller::init() {
     Effect::init();
+}
+
+void StoryTeller::drawEditGui() {
+    ui::InputFloat3("Center: ", &mCenter[0]);
+}
+
+void StoryTeller::visualize() {
+    auto colorShader = gl::ShaderDef().color();
+    auto shader = gl::getStockShader( colorShader );
+    shader->bind();
+    gl::ScopedLineWidth width(1.0f);
+    gl::ScopedColor color(1.0f, 1.0f, 0.0f, 0.5f);
+    gl::drawSphere(mCenter, 0.05f);
 }
 
 void StoryTeller::updateState() {
@@ -133,6 +154,8 @@ void StoryTeller::calculateCenter() {
     }
     position /= mLights.size();
     mCenter = position;
+    // Also create a direction vector from the first light.
+    mDirectionReference = glm::cross(mCenter, vec3(mLights.front()->position) - mCenter);
     mCenterCalculated = true;
 
 }

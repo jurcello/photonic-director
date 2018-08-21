@@ -7,6 +7,8 @@
 
 #include "../Effects.h"
 #include "../Utils.h"
+#include "CinderImGui.h"
+#include "cinder/gl/gl.h"
 
 namespace photonic {
 
@@ -25,7 +27,9 @@ namespace photonic {
         StoryTeller(std::string name, std::string uuid = "");
 
         void execute(double dt) override;
-        void init() override ;
+        void init() override;
+        void drawEditGui() override;
+        void visualize() override;
         std::string getTypeName() override;
         std::string getTypeClassName() override;
 
@@ -35,6 +39,7 @@ namespace photonic {
         bool mHasRotationLeft, mHasRotationRight;
         float mCurrentIntensity;
         vec3 mCenter;
+        vec3 mDirectionReference;
         bool mCenterCalculated;
 
         void updateState();
