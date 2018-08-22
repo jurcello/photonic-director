@@ -63,7 +63,9 @@ void StoryTeller::execute(double dt) {
 }
 
 float StoryTeller::calculateAngleDistance(float angle1, float angle2) {
-    return glm::min(glm::abs(angle1 - angle2), glm::abs(angle1 + 360.0f - angle2));
+    float const rightMinAngle = glm::min(glm::abs(angle1 - angle2), glm::abs(angle1 + 360.0f - angle2));
+    float const leftMinAngle = glm::min(glm::abs(angle1 - angle2), glm::abs(angle1 - 360.0f - angle2));
+    return glm::min(rightMinAngle, leftMinAngle);
 }
 
 float StoryTeller::angleBetween(vec3 vector1, vec3 vector2) {
@@ -86,6 +88,17 @@ void StoryTeller::init() {
 
 void StoryTeller::drawEditGui() {
     ui::InputFloat3("Center: ", &mCenter[0]);
+    ui::Separator();
+    std::string currentRotationText = "Current rotation: " + std::to_string(mCurrentRotationLeft);
+    ui::Text("%s", currentRotationText.c_str());
+    vec3 up(0.0f, 1.0f, 0.0f);
+    for (auto light: mLights) {
+        float angle = angleBetween(vec3(light->position) - mCenter, up);
+        const float angleDistance = calculateAngleDistance(angle, mCurrentRotationLeft);
+        float intensity = getBellIntensity((double) angleDistance, (double) mParams[kInput_Width]->floatValue);
+        std::string text = light->mName + ": " + std::to_string(angle) + ", angle distance: " + std::to_string(angleDistance) + ", intensity: " + std::to_string(intensity);
+        ui::Text("%s", text.c_str());
+    }
 }
 
 void StoryTeller::visualize() {
