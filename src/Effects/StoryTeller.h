@@ -19,9 +19,7 @@ namespace photonic {
             kInput_RotationChannelRight = 1,
             kInput_RotationChannelLeft = 2,
             kInput_Intensity = 3,
-            kInput_IntensityChannel = 4,
-            kInput_Width = 5,
-            kInput_RotationComponent = 6,
+            kInput_Width = 4,
         };
 
         StoryTeller(std::string name, std::string uuid = "");
@@ -37,13 +35,13 @@ namespace photonic {
         float mCurrentRotationLeft;
         float mCurrentRotationRight;
         bool mHasRotationLeft, mHasRotationRight;
-        float mCurrentIntensity;
+        float mCurrentIntensityLeft, mCurrentIntensityRight;
         vec3 mCenter;
         vec3 mDirectionReference;
         bool mCenterCalculated;
 
         void updateState();
-        void updateCurrentRotations();
+        void updateCurrentRotationsAndVolumes();
         void calculateCenter();
         float calculateAngleDistance(float angle1, float angle2);
         float angleBetween(vec3 vector1, vec3 vector2);

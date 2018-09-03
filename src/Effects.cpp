@@ -429,9 +429,14 @@ void SimpleVolumeEffect::updateVolumes(float input, double dt) {
         mActualVolume = input;
     }
     mTargetVolume = input;
-    if (mTargetVolume < mActualVolume && mParams[kInput_DecaySpeed]->floatValue > 0) {
-        mActualVolume -= (1 / mParams[kInput_DecaySpeed]->floatValue) * dt;
-        if (mActualVolume < mTargetVolume) {
+    if (mTargetVolume < mActualVolume) {
+        if (mParams[kInput_DecaySpeed]->floatValue > 0) {
+            mActualVolume -= (1 / mParams[kInput_DecaySpeed]->floatValue) * dt;
+            if (mActualVolume < mTargetVolume) {
+                mActualVolume = mTargetVolume;
+            }
+        }
+        else {
             mActualVolume = mTargetVolume;
         }
     }

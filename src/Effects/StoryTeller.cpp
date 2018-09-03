@@ -12,36 +12,30 @@ StoryTeller::StoryTeller(std::string name, std::string uuid)
 : Effect(name, uuid),
 mCurrentRotationLeft(0.0f),
 mCurrentRotationRight(0.0f),
-mCurrentIntensity(1.0f),
+mCurrentIntensityLeft(0.0f),
+mCurrentIntensityRight(0.0f),
 mCenter(vec3(0.0f)),
 mCenterCalculated(false),
 mHasRotationLeft(false),
 mHasRotationRight(false)
 {
-    Parameter* rotationRight = new Parameter(Parameter::Type::kType_Channel, "Rotation right channel");
+    Parameter* rotationRight = new Parameter(Parameter::Type::kType_Channel, "Rotation/volume right channel");
     rotationRight->channelRef = nullptr;
     mParams[kInput_RotationChannelRight] = rotationRight;
 
-    Parameter* rotationLeft = new Parameter(Parameter::Type::kType_Channel, "Rotation left channel");
+    Parameter* rotationLeft = new Parameter(Parameter::Type::kType_Channel, "Rotation/volume left channel");
     rotationLeft->channelRef = nullptr;
     mParams[kInput_RotationChannelLeft] = rotationLeft;
 
     registerParam(Parameter::Type::kType_Float, kInput_Intensity, 1.0f, "Intensity");
-
-    Parameter* intensityChannel = new Parameter(Parameter::Type::kType_Channel, "Intensity channel");
-    intensityChannel->channelRef = nullptr;
-    mParams[kInput_IntensityChannel] = intensityChannel;
-
     registerParam(Parameter::Type::kType_Float, kInput_Width, 0.5f, "Width");
-    registerParam(Parameter::Type::kType_Int, kInput_RotationComponent, 1, "Rotation component (1 = x, 2 = y, 3 = z");
-
 }
 
 void StoryTeller::execute(double dt) {
     Effect::execute(dt);
     updateState();
     calculateCenter();
-    updateCurrentRotations();
+    updateCurrentRotationsAndVolumes();
     if (mLights.empty()) {
         return;
     }
@@ -52,10 +46,10 @@ void StoryTeller::execute(double dt) {
         float angle = angleBetween(vec3(light->position) - mCenter, up);
         float intensity = 0.0f;
         if (mHasRotationLeft) {
-            intensity += getBellIntensity((double) calculateAngleDistance(angle, mCurrentRotationLeft), (double) mParams[kInput_Width]->floatValue);
+            intensity += mCurrentIntensityLeft * getBellIntensity((double) calculateAngleDistance(angle, mCurrentRotationLeft), (double) mParams[kInput_Width]->floatValue);
         }
         if (mHasRotationRight) {
-            intensity += getBellIntensity((double) calculateAngleDistance(angle, mCurrentRotationRight), (double) mParams[kInput_Width]->floatValue);
+            intensity += mCurrentIntensityRight * getBellIntensity((double) calculateAngleDistance(angle, mCurrentRotationRight), (double) mParams[kInput_Width]->floatValue);
         }
         light->setEffectIntensity(mUuid, intensity * mParams[kInput_Intensity]->floatValue);
     }
@@ -116,41 +110,23 @@ void StoryTeller::updateState() {
     if (! isTurnedOn && mCenterCalculated) {
         mCenterCalculated = false;
     }
-    if (mParams[kInput_IntensityChannel]->channelRef) {
-        mParams[kInput_Intensity]->floatValue = mParams[kInput_IntensityChannel]->channelRef->getValue();
-    }
 }
 
-void StoryTeller::updateCurrentRotations() {
-    vec3 currentRotationLeft(0.0f);
-    vec3 currentRotationRight(0.0f);
+void StoryTeller::updateCurrentRotationsAndVolumes() {
     mHasRotationLeft = false;
     mHasRotationRight = false;
     if (mParams[kInput_RotationChannelLeft]->channelRef) {
-        currentRotationLeft = mParams[kInput_RotationChannelLeft]->channelRef->getVec3Value();
+        vec2 values = mParams[kInput_RotationChannelLeft]->channelRef->getVec2Value();
+        mCurrentRotationLeft = values.x;
+        mCurrentIntensityLeft = values.y;
         mHasRotationLeft = true;
     }
     if (mParams[kInput_RotationChannelRight]->channelRef) {
-        currentRotationRight = mParams[kInput_RotationChannelRight]->channelRef->getVec3Value();
+        vec2 values = mParams[kInput_RotationChannelRight]->channelRef->getVec2Value();
+        mCurrentRotationRight = values.x;
+        mCurrentIntensityRight = values.y;
         mHasRotationRight = true;
     }
-    switch (mParams[kInput_RotationComponent]->intValue) {
-        case 2:
-            mCurrentRotationLeft = currentRotationLeft.y;
-            mCurrentRotationRight = currentRotationRight.y;
-            break;
-
-        case 3:
-            mCurrentRotationLeft = currentRotationLeft.y;
-            mCurrentRotationRight = currentRotationRight.y;
-            break;
-
-        default:
-            mCurrentRotationLeft = currentRotationLeft.x;
-            mCurrentRotationRight = currentRotationRight.x;
-            break;
-    }
-
 }
 
 void StoryTeller::calculateCenter() {

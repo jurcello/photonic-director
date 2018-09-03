@@ -63,16 +63,18 @@ void FlashLight::execute(double dt) {
         if (isTurnedOn) {
             for (const auto light : mLights) {
                 float intensity = 0;
-                float distanceToLine = calculateDistanceToLine(light->getPosition(), mEyeLocation, mViewDirection);
-                float distanceToEye = calculateDistanceToEye(light->getPosition(), mEyeLocation, mViewDirection);
+                if (glm::dot(light->getPosition() - mEyeLocation, mViewDirection) > 0) {
+                    float distanceToLine = calculateDistanceToLine(light->getPosition(), mEyeLocation, mViewDirection);
+                    float distanceToEye = calculateDistanceToEye(light->getPosition(), mEyeLocation, mViewDirection);
 
-                float radiusForLight = distanceToEye * radius;
-                if (distanceToLine < radiusForLight) {
-                    intensity = mParams[kInput_Intensity]->floatValue;
-                }
-                else {
-                    float distanceFromRadius = distanceToLine - radiusForLight;
-                    intensity = mParams[kInput_Intensity]->floatValue / math<float>::pow(1 + distanceFromRadius, dropOff);
+                    float radiusForLight = distanceToEye * radius;
+                    if (distanceToLine < radiusForLight) {
+                        intensity = mParams[kInput_Intensity]->floatValue;
+                    }
+                    else {
+                        float distanceFromRadius = distanceToLine - radiusForLight;
+                        intensity = mParams[kInput_Intensity]->floatValue / math<float>::pow(1 + distanceFromRadius, dropOff);
+                    }
                 }
 
                 light->setEffectIntensity(mUuid, intensity);
