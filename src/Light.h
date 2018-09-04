@@ -12,6 +12,7 @@
 #include "cinder/gl/gl.h"
 #include "Output.h"
 #include "CinderImGui.h"
+#include "cinder/Xml.h"
 
 using namespace cinder;
 
@@ -111,6 +112,8 @@ public:
 protected:
     DmxOutput* mDmxOut;
     std::vector<LightType*> mLightTypes;
+
+    void readFixtures();
 
 };
 

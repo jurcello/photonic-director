@@ -196,113 +196,38 @@ LightBufferData::LightBufferData(LightRef light)
 LightFactory::LightFactory(DmxOutput *dmxOutput)
 : mDmxOut(dmxOutput)
 {
-    // Create some types.
-    // TODO: create them form a file later on.
-    mLightTypes.push_back(new LightType(
-            "Single Channel (dimmer)",
-            "single_channel",
-            0,
-            0,
-            1,
-            ColorA(252.0f / 256.0f, 211.0f / 256.0f, 3.0f / 256.0f, 0))
-    );
-    mLightTypes.push_back(new LightType(
-            "Relais",
-            "relais",
-            0,
-            0,
-            1,
-            ColorA(1.0f, 1.0f, 1.0f, 0))
-    );
-    mLightTypes.push_back(new LightType(
-            "Simple Color (3 channels)",
-            "simple_color",
-            1,
-            0,
-            3,
-            ColorA(1.0f, 0, 0, 0))
-    );
-    mLightTypes.push_back(new LightType(
-            "Color source (5 channels)",
-            "color_source_5ch",
-            2,
-            1,
-            5,
-            ColorA(1.0f, 0.5f, 0, 0))
-    );
-    mLightTypes.push_back(new LightType(
-            "LED Dimmer (4 channels)",
-            "led_dimmer_4",
-            1,
-            0,
-            4,
-            ColorA(1.0f, 0, 0.5f, 0))
-    );
-    mLightTypes.push_back(new LightType(
-            "LED Dimmer RBG (4 channels)",
-            "led_dimmer_4_rbg",
-            1,
-            0,
-            4,
-            ColorA(1.0f, 0, 0.5f, 0),
-            LightType::RgbType::RBG)
-    );
-    mLightTypes.push_back(new LightType(
-            "LED Dimmer GRB (4 channels)",
-            "led_dimmer_4_grb",
-            1,
-            0,
-            4,
-            ColorA(1.0f, 0, 0.5f, 0),
-            LightType::RgbType::GRB)
-    );
-    mLightTypes.push_back(new LightType(
-            "LED Dimmer BRG (4 channels)",
-            "led_dimmer_4_brg",
-            1,
-            0,
-            4,
-            ColorA(1.0f, 0, 0.5f, 0),
-            LightType::RgbType::BRG)
-    );
-    mLightTypes.push_back(new LightType(
-            "Led Ball",
-            "led_ball",
-            1,
-            4,
-            4,
-            cinder::ColorA(1.0f, 0.5f, 0, 0),
-            LightType::RgbType::RBG)
-    );
-    mLightTypes.push_back(new LightType(
-            "Advanced Color (6 channels)",
-            "advanced_color",
-            1,
-            4,
-            6,
-            ColorA(1.0f, 0, 1.0f, 0)
-    ));
-
-    mLightTypes.push_back(new LightType(
-            "Showtec 1W RGB LED PAR 64",
-            "showtec_1w_rgb_led_par_64",
-            1,
-            7,
-            7,
-            ColorA(0.5f, 0, 1.0f, 0.2f)
-    ));
-    mLightTypes.push_back(new LightType(
-            "Showtec Powerspot 9 Q5 (5 channel)",
-            "showtec_powershot_9_q5_5ch",
-            1,
-            0,
-            5,
-            ColorA(0.5f, 0, 0.7f, 0.4f)
-    ));
-
+   readFixtures();
 }
 
-
+void LightFactory::readFixtures() {
+    // Scan the fixtures folder in the assets path.
+    fs::path fixturesDir = getAssetPath("fixtures");
+    if (fs::is_directory(fixturesDir)) {
+        for (fs::directory_entry file: fs::directory_iterator(fixturesDir)) {
+            if (file.path().extension().string() == ".xml") {
+                auto definition = XmlTree(loadFile(file.path()));
+                XmlTree definitionInfo = definition.getChild("fixtureDefinition");
+                std::string name = definitionInfo.getChild("name").getValue<std::string>();
+                std::string id = definitionInfo.getChild("id").getValue<std::string>();
+                int colorChannelPosition = definitionInfo.getChild("colorChannelPosition").getAttributeValue<int>("value");
+                int intensityChannelPostion = definitionInfo.getChild("intensityChannelPostion").getAttributeValue<int>("value");
+                int channelAmount = definitionInfo.getChild("channelAmount").getAttributeValue<int>("value");
+                ColorA color(1.0f, 1.0f, 1.0f, 0.0f);
+                color.r = definitionInfo.getChild("editColor").getAttributeValue<float>("r");
+                color.g = definitionInfo.getChild("editColor").getAttributeValue<float>("g");
+                color.b = definitionInfo.getChild("editColor").getAttributeValue<float>("b");
+                mLightTypes.push_back(new LightType(
+                        name,
+                        id,
+                        colorChannelPosition,
+                        intensityChannelPostion,
+                        channelAmount,
+                        color
+                ));
+            }
+        }
+    }
+}
 
 LightRef LightFactory::create(vec3 position, LightType *type, std::string uuid)
 {
