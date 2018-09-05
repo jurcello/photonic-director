@@ -13,6 +13,7 @@
 #include "Output.h"
 #include "CinderImGui.h"
 #include "cinder/Xml.h"
+#include "LightComponent.h"
 
 using namespace cinder;
 
@@ -36,6 +37,7 @@ struct LightType {
     int intensityChannelPosition;
     ColorA editColor;
     RgbType rgbType;
+    std::vector<LightComponentDefintion> componentDefitions;
 };
 
 class Light
@@ -74,6 +76,12 @@ public:
     void update();
     void updateDmx();
     bool isColorEnabled();
+
+    void addComponent(LightComponentRef component);
+
+    template <class T>
+    std::shared_ptr<T> getComponent();
+
     
     // Effect setters and getters.
     void setEffectIntensity(std::string effectId, float targetIntensity);
@@ -86,6 +94,8 @@ public:
 protected:
     std::map<std::string, float> effectIntensities;
     std::map<std::string, ColorA> effectColors;
+
+    std::vector<LightComponentRef> mComponents;
 
     std::string mUuid;
     LightType* mType;

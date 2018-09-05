@@ -69,6 +69,9 @@ bool Light::setDmxChannel(int dmxChannel)
         mDmxOutput->releaseChannels(mUuid);
         for (int i = dmxChannel; i < dmxChannel + mType->numChannels; i++) {
             mDmxOutput->registerChannel(i, mUuid);
+            for (auto component : mComponents) {
+                component->setFixtureChannel(dmxChannel);
+            }
         }
     }
     mDmxChannel = dmxChannel;
@@ -132,6 +135,21 @@ bool Light::isColorEnabled() {
     return mType->colorChannelPosition > 0;
 }
 
+
+void Light::addComponent(LightComponentRef component) {
+    mComponents.push_back(component);
+}
+
+template<class T>
+std::shared_ptr<T> Light::getComponent() {
+    for (const auto &component : mComponents) {
+        if (typeid(*component) == typeid(T)) {
+            return std::static_pointer_cast<T>(component);
+        }
+    }
+    return nullptr;
+}
+
 void Light::update() {
     if (mType->machineName == "relais") {
         intensity = intensity > 0.5f ? 1.0f : 0.0f;
@@ -176,6 +194,11 @@ void Light::updateDmx() {
             int lightIntensity = intensity * 255;
             mDmxOutput->setChannelValue(channel, lightIntensity);
         }
+
+        // Let the components do their work.
+        for (auto component : mComponents) {
+            component->updateDmx(mDmxOutput);
+        }
     }
 
 }
@@ -216,14 +239,23 @@ void LightFactory::readFixtures() {
                 color.r = definitionInfo.getChild("editColor").getAttributeValue<float>("r");
                 color.g = definitionInfo.getChild("editColor").getAttributeValue<float>("g");
                 color.b = definitionInfo.getChild("editColor").getAttributeValue<float>("b");
-                mLightTypes.push_back(new LightType(
-                        name,
-                        id,
-                        colorChannelPosition,
-                        intensityChannelPostion,
-                        channelAmount,
-                        color
-                ));
+                LightType *lightType = new LightType(
+                                        name,
+                                        id,
+                                        colorChannelPosition,
+                                        intensityChannelPostion,
+                                        channelAmount,
+                                        color
+                                );
+                if (definitionInfo.hasChild("components")) {
+                    for (auto componentInfo : definitionInfo.getChild("components")) {
+                        LightComponentDefintion componentDefinition;
+                        componentDefinition.componentChannel = componentInfo.getAttributeValue<int>("channel");
+                        componentDefinition.type = componentInfo.getAttributeValue<std::string>("type");
+                        lightType->componentDefitions.push_back(componentDefinition);
+                    }
+                }
+                mLightTypes.push_back(lightType);
             }
         }
     }
@@ -235,6 +267,9 @@ LightRef LightFactory::create(vec3 position, LightType *type, std::string uuid)
         type = getDefaultType();
     }
     LightRef light = LightRef(new Light(position, type, uuid));
+    for (auto componentDefinition : light->getLightType()->componentDefitions) {
+        light->addComponent(LightComponent::create(componentDefinition, 0));
+    }
     light->injectDmxOutput(mDmxOut);
     return light;
 }
@@ -248,9 +283,7 @@ LightRef LightFactory::create(vec3 position, std::string type, std::string uuid)
             break;
         }
     }
-    LightRef light = LightRef(new Light(position, newType, uuid));
-    light->injectDmxOutput(mDmxOut);
-    return light;
+    return LightFactory::create(position, newType, uuid);
 }
 
 std::vector<std::string> LightFactory::getAvailableTypeNames() {

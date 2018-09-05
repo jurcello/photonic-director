@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fixtureDefinition>
+    <name>Martin mac 500</name>
+    <id>martin_mac_500</id>
+    <colorChannelPosition value="1" />
+    <intensityChannelPostion value="0" />
+    <channelAmount value="16" />
+    <editColor r="1" g="0.5" b="0.1"/>
+    <components>
+        <component type="pan" channel="6"/>
+        <component type="tilt" channel="8"/>
+    </components>
+</fixtureDefinition>
