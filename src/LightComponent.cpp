@@ -102,19 +102,24 @@ void CommandComponent::updateDmx(DmxOutput *dmxOutput) {
     dmxOutput->setChannelValue(getChannel(), mCurrentValue);
 }
 
-void CommandComponent::command(std::string command) {
-    mCurrentCommand = command;
-    mCurrentValue = mCommands.at(command);
+void CommandComponent::execute(std::string command) {
+    mCurrentCommand = mCommands.at(command);
+    this->execute(command, mCurrentCommand.min);
+}
+
+void CommandComponent::execute(std::string command, int value) {
+    mCurrentCommand = mCommands.at(command);
+    mCurrentValue = value;
     mCurrentCommandIndex = 0;
     for (auto command : mAvailableCommands) {
-        if (command == mCurrentCommand) {
+        if (command == mCurrentCommand.name) {
             break;
         }
         mCurrentCommandIndex++;
     }
 }
 
-std::string CommandComponent::getCurrentCommand() {
+Command CommandComponent::getCurrentCommand() {
     return mCurrentCommand;
 }
 
@@ -174,13 +179,22 @@ void TiltComponentGui::draw(int id) {
 void CommandComponentGui::draw(int id) {
     LightComponentGui::draw(id);
     CommandComponent& component = (CommandComponent&) mComponent;
-    static int currentCommand;
-    currentCommand = component.getCurrentCommandIndex();
+    static int currentCommandIndex;
+    currentCommandIndex = component.getCurrentCommandIndex();
     std::vector<std::string> availableCommands = component.getAvailableCommands();
     ui::PushID(id);
-    if (ui::Combo("Command", &currentCommand, availableCommands)) {
-        component.command(availableCommands[currentCommand]);
+    if (ui::Combo("Command", &currentCommandIndex, availableCommands)) {
+        component.execute(availableCommands[currentCommandIndex]);
     }
+    Command currentCommand = component.getCurrentCommand();
+    if (currentCommand.min != currentCommand.max) {
+        static int currentValue;
+        currentValue = component.getCurrentValue();
+        if (ui::SliderInt("Value", &currentValue, currentCommand.min, currentCommand.max)) {
+            component.execute(availableCommands[currentCommandIndex], currentValue);
+        }
+    }
+
     ui::PopID();
 }
 

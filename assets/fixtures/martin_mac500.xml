@@ -13,7 +13,7 @@
             <commands>
                 <command name="Shutter closed" value="0"/>
                 <command name="Shutter open" value="20"/>
-                <command name="Strobe, fast -> slow" value="50"/>
+                <command name="Strobe, fast -> slow" min="50" max="72"/>
                 <command name="Random strobe fast" value="128"/>
             </commands>
         </component>

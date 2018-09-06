@@ -14,6 +14,8 @@
 class LightComponent;
 typedef std::shared_ptr<LightComponent> LightComponentRef;
 
+struct Command;
+
 struct LightComponentDefintion;
 
 class LightComponentGui;
@@ -41,7 +43,7 @@ struct LightComponentDefintion
     int componentChannel;
     std::string type;
     std::string name;
-    std::map<std::string, int> commands;
+    std::map<std::string, Command> commands;
 };
 
 class PanComponent: public LightComponent {
@@ -68,24 +70,32 @@ protected:
     float mTilt = 0;
 };
 
+struct Command {
+    std::string name;
+    int min;
+    int max;
+};
+
 class CommandComponent: public LightComponent {
 public:
     CommandComponent(LightComponentDefintion definition, int fixtureChannel);
     void updateDmx(DmxOutput *dmxOutput) override;
-    void command(std::string command);
-    std::string getCurrentCommand();
+    void execute(std::string command, int value);
+    void execute(std::string command);
+    Command getCurrentCommand();
     int getCurrentCommandIndex();
     int getCurrentValue();
     std::vector<std::string> getAvailableCommands();
     LightComponentGuiRef getGui() override;
 
 protected:
-    std::map<std::string, int> mCommands;
+    std::map<std::string, Command> mCommands;
     std::vector<std::string> mAvailableCommands;
-    std::string mCurrentCommand;
+    Command mCurrentCommand;
     int mCurrentCommandIndex;
     int mCurrentValue;
 };
+
 
 //////////////////////////////////////////////////
 // Gui

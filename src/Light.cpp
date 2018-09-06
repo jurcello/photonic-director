@@ -260,8 +260,24 @@ void LightFactory::readFixtures() {
                         if (componentInfo.hasChild("commands")) {
                             for (auto commandInfo : componentInfo.getChild("commands")) {
                                 std::string name = commandInfo.getAttributeValue<std::string>("name");
-                                int value = commandInfo.getAttributeValue<int>("value");
-                                componentDefinition.commands.insert(std::pair<std::string, int>(name, value));
+                                int value = 0;
+                                if (commandInfo.hasAttribute("value")) {
+                                    value = commandInfo.getAttributeValue<int>("value");
+                                }
+                                else if (commandInfo.hasAttribute("min")) {
+                                    value = commandInfo.getAttributeValue<int>("min");
+                                }
+                                Command command;
+                                command.min = value;
+                                command.name = name;
+                                if (commandInfo.hasAttribute("max")) {
+                                    command.max = commandInfo.getAttributeValue<int>("max");
+                                }
+                                else {
+                                    command.max = value;
+                                }
+
+                                componentDefinition.commands.insert(std::pair<std::string, Command>(name, command));
                             }
                         }
                         lightType->componentDefitions.push_back(componentDefinition);
