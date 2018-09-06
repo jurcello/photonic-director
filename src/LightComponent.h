@@ -25,7 +25,7 @@ public:
     virtual void updateDmx(DmxOutput *dmxOutput);
     virtual LightComponentGuiRef getGui();
 
-    LightComponent(int componentChannel, int fixtureChannel);
+    LightComponent(LightComponentDefintion definition, int fixtureChannel);
     void setFixtureChannel(int channel);
 
 protected:

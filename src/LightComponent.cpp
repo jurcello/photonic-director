@@ -6,10 +6,10 @@
 
 LightComponentRef LightComponent::create(LightComponentDefintion definition, int fixtureChannel) {
     if (definition.type == "tilt") {
-        return LightComponentRef(new TiltComponent(definition.componentChannel, fixtureChannel));
+        return LightComponentRef(new TiltComponent(definition, fixtureChannel));
     }
     else if  (definition.type == "pan") {
-        return LightComponentRef(new PanComponent(definition.componentChannel, fixtureChannel));
+        return LightComponentRef(new PanComponent(definition, fixtureChannel));
     }
     return LightComponentRef();
 }
@@ -26,15 +26,15 @@ LightComponentGuiRef LightComponent::getGui() {
     return LightComponentGuiRef(new LightComponentGui(*this));
 }
 
-LightComponent::LightComponent(int componentChannel, int fixtureChannel)
-: mComponentChannel(componentChannel), mFixtureChannel(fixtureChannel)
+LightComponent::LightComponent(LightComponentDefintion definition, int fixtureChannel)
+: mComponentChannel(definition.componentChannel), mFixtureChannel(fixtureChannel)
 {
 }
 
 void PanComponent::updateDmx(DmxOutput *dmxOutput) {
     int courseChannel = mFixtureChannel + mComponentChannel - 1;
     int fineChannel = courseChannel + 1;
-    float course = (mPanning / 360) * 256;
+    float course = (mPanning / 440) * 256;
     float fine = (course - cinder::math<float>::floor(course)) * 256;
     dmxOutput->setChannelValue(courseChannel, (int) std::floor(course));
     dmxOutput->setChannelValue(fineChannel, (int) std::floor(fine));
@@ -53,6 +53,13 @@ float PanComponent::getPanning() {
 }
 
 void TiltComponent::updateDmx(DmxOutput *dmxOutput) {
+    int courseChannel = mFixtureChannel + mComponentChannel - 1;
+    int fineChannel = courseChannel + 1;
+    float course = (mTilt / 306) * 256;
+    float fine = (course - cinder::math<float>::floor(course)) * 256;
+    dmxOutput->setChannelValue(courseChannel, (int) std::floor(course));
+    dmxOutput->setChannelValue(fineChannel, (int) std::floor(fine));
+
 }
 
 void TiltComponent::setTilt(float tilt) {
@@ -85,17 +92,17 @@ void PanComponentGui::draw() {
     ui::Text("This is the pan component gui.");
     static float panning;
     panning = component.getPanning();
-    if (ui::SliderFloat("Pan (Degrees)", &panning, 0.0f, 360.0f)) {
+    if (ui::SliderFloat("Pan (Degrees)", &panning, 0.0f, 440.0f)) {
         component.setPanning(panning);
     }
 }
 
 void TiltComponentGui::draw() {
-    auto component = (TiltComponent&) mComponent;
+    TiltComponent& component = (TiltComponent&) mComponent;
     ui::Text("This is the tilt component gui.");
     static float tilt;
     tilt = component.getTilt();
-    if (ui::InputFloat("Tilt (Degrees)", &tilt)) {
+    if (ui::SliderFloat("Tilt (Degrees)", &tilt, 0.0f, 306.0f)) {
         component.setTilt(tilt);
     }
 }
