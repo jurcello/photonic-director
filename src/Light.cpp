@@ -150,6 +150,10 @@ std::shared_ptr<T> Light::getComponent() {
     return nullptr;
 }
 
+std::vector<LightComponentRef> Light::getComponents() {
+    return mComponents;
+}
+
 void Light::update() {
     if (mType->machineName == "relais") {
         intensity = intensity > 0.5f ? 1.0f : 0.0f;

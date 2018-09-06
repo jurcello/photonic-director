@@ -742,6 +742,17 @@ void PhotonicDirectorApp::drawLightControls()
         if (mGuiStatusData.lightToEdit->mSendOsc) {
             ui::InputText("Osc address", &mGuiStatusData.lightToEdit->mOscAdress);
         }
+        ui::Spacing();
+        // Get the components and draw their ui's.
+        auto components = mGuiStatusData.lightToEdit->getComponents();
+        if (components.size() > 0) {
+            if (ui::CollapsingHeader("Components")) {
+                for (auto component: components) {
+                    component->getGui()->draw();
+                }
+            }
+
+        }
         if (ui::Button("Done")) {
             mGuiStatusData.lightToEdit = nullptr;
             mGuiStatusData.status = IDLE;

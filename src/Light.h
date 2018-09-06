@@ -81,6 +81,7 @@ public:
 
     template <class T>
     std::shared_ptr<T> getComponent();
+    std::vector<LightComponentRef> getComponents();
 
     
     // Effect setters and getters.
