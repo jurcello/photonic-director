@@ -256,6 +256,14 @@ void LightFactory::readFixtures() {
                         LightComponentDefintion componentDefinition;
                         componentDefinition.componentChannel = componentInfo.getAttributeValue<int>("channel");
                         componentDefinition.type = componentInfo.getAttributeValue<std::string>("type");
+                        componentDefinition.name = componentInfo.getAttributeValue<std::string>("name");
+                        if (componentInfo.hasChild("commands")) {
+                            for (auto commandInfo : componentInfo.getChild("commands")) {
+                                std::string name = commandInfo.getAttributeValue<std::string>("name");
+                                int value = commandInfo.getAttributeValue<int>("value");
+                                componentDefinition.commands.insert(std::pair<std::string, int>(name, value));
+                            }
+                        }
                         lightType->componentDefitions.push_back(componentDefinition);
                     }
                 }

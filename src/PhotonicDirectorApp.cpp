@@ -747,8 +747,10 @@ void PhotonicDirectorApp::drawLightControls()
         auto components = mGuiStatusData.lightToEdit->getComponents();
         if (components.size() > 0) {
             if (ui::CollapsingHeader("Components")) {
+                int componentId = 0;
                 for (auto component: components) {
-                    component->getGui()->draw();
+                    component->getGui()->draw(componentId);
+                    componentId++;
                 }
             }
 

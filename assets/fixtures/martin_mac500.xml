@@ -2,12 +2,28 @@
 <fixtureDefinition>
     <name>Martin mac 500</name>
     <id>martin_mac_500</id>
-    <colorChannelPosition value="1" />
-    <intensityChannelPostion value="0" />
+    <colorChannelPosition value="0" />
+    <intensityChannelPostion value="2" />
     <channelAmount value="16" />
     <editColor r="1" g="0.5" b="0.1"/>
     <components>
-        <component type="pan" channel="6"/>
-        <component type="tilt" channel="8"/>
+        <component type="pan" channel="11" name="Pan"/>
+        <component type="tilt" channel="13" name="Tilt" />
+        <component type="command" channel="1" name="Shutter, strobe, reset">
+            <commands>
+                <command name="Shutter closed" value="0"/>
+                <command name="Shutter open" value="20"/>
+                <command name="Strobe, fast -> slow" value="50"/>
+                <command name="Random strobe fast" value="128"/>
+            </commands>
+        </component>
+        <component type="command" channel="3" name="Color 1">
+            <commands>
+                <command name="Cyan 401" value="145"/>
+                <command name="Pink 312" value="149"/>
+                <command name="Blue 101" value="153"/>
+                <command name="White" value="181"/>
+            </commands>
+        </component>
     </components>
 </fixtureDefinition>

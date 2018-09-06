@@ -27,16 +27,21 @@ public:
 
     LightComponent(LightComponentDefintion definition, int fixtureChannel);
     void setFixtureChannel(int channel);
+    int getChannel();
+    std::string getName();
 
 protected:
     int mFixtureChannel;
     int mComponentChannel;
+    std::string mName;
 };
 
 struct LightComponentDefintion
 {
     int componentChannel;
     std::string type;
+    std::string name;
+    std::map<std::string, int> commands;
 };
 
 class PanComponent: public LightComponent {
@@ -63,6 +68,24 @@ protected:
     float mTilt = 0;
 };
 
+class CommandComponent: public LightComponent {
+public:
+    CommandComponent(LightComponentDefintion definition, int fixtureChannel);
+    void updateDmx(DmxOutput *dmxOutput) override;
+    void command(std::string command);
+    std::string getCurrentCommand();
+    int getCurrentCommandIndex();
+    int getCurrentValue();
+    std::vector<std::string> getAvailableCommands();
+    LightComponentGuiRef getGui() override;
+
+protected:
+    std::map<std::string, int> mCommands;
+    std::vector<std::string> mAvailableCommands;
+    std::string mCurrentCommand;
+    int mCurrentCommandIndex;
+    int mCurrentValue;
+};
 
 //////////////////////////////////////////////////
 // Gui
@@ -70,7 +93,7 @@ protected:
 class LightComponentGui {
 public:
     explicit LightComponentGui(LightComponent& component);
-    virtual void draw();
+    virtual void draw(int id);
 
 protected:
     LightComponent& mComponent;
@@ -79,15 +102,20 @@ protected:
 class PanComponentGui: public LightComponentGui {
 public:
     using LightComponentGui::LightComponentGui;
-    void draw() override;
+    void draw(int id) override;
 };
 
 class TiltComponentGui: public LightComponentGui {
 public:
     using LightComponentGui::LightComponentGui;
-    void draw() override;
+    void draw(int id) override;
 };
 
+class CommandComponentGui: public LightComponentGui {
+public:
+    using LightComponentGui::LightComponentGui;
+    void draw(int id) override;
+};
 
 //////////////////////////////////////////////////
 // End Gui
