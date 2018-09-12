@@ -94,8 +94,21 @@ protected:
     Command mCurrentCommand;
     int mCurrentCommandIndex;
     int mCurrentValue;
+
+    void updateCurrentCommandIndex();
 };
 
+class ChannelComponent: public LightComponent {
+public:
+    using LightComponent::LightComponent;
+    void updateDmx(DmxOutput *dmxOutput) override;
+    void setValue(int value);
+    int getValue();
+    LightComponentGuiRef getGui() override;
+
+protected:
+    int mValue = 0;
+};
 
 //////////////////////////////////////////////////
 // Gui
@@ -122,6 +135,12 @@ public:
 };
 
 class CommandComponentGui: public LightComponentGui {
+public:
+    using LightComponentGui::LightComponentGui;
+    void draw(int id) override;
+};
+
+class ChannelComponentGui: public LightComponentGui {
 public:
     using LightComponentGui::LightComponentGui;
     void draw(int id) override;

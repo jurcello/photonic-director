@@ -19,11 +19,13 @@
         </component>
         <component type="command" channel="3" name="Color 1">
             <commands>
+                <command name="White -> Blue 111" min="0" max="16"/>
                 <command name="Cyan 401" value="145"/>
                 <command name="Pink 312" value="149"/>
                 <command name="Blue 101" value="153"/>
                 <command name="White" value="181"/>
             </commands>
         </component>
+        <component type="channel" channel="8" name="Focus" />
     </components>
 </fixtureDefinition>

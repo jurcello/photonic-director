@@ -14,6 +14,9 @@ LightComponentRef LightComponent::create(LightComponentDefintion definition, int
     else if  (definition.type == "command") {
         return LightComponentRef(new CommandComponent(definition, fixtureChannel));
     }
+    else if  (definition.type == "channel") {
+        return LightComponentRef(new ChannelComponent(definition, fixtureChannel));
+    }
     return LightComponentRef();
 }
 
@@ -95,7 +98,11 @@ CommandComponent::CommandComponent(LightComponentDefintion definition, int fixtu
     mCommands = definition.commands;
     for (auto command : mCommands) {
         mAvailableCommands.push_back(command.first);
+        if (command.second.min == 0) {
+            mCurrentCommand = mCommands.at(command.first);
+        }
     }
+    updateCurrentCommandIndex();
 }
 
 void CommandComponent::updateDmx(DmxOutput *dmxOutput) {
@@ -110,6 +117,10 @@ void CommandComponent::execute(std::string command) {
 void CommandComponent::execute(std::string command, int value) {
     mCurrentCommand = mCommands.at(command);
     mCurrentValue = value;
+    updateCurrentCommandIndex();
+}
+
+void CommandComponent::updateCurrentCommandIndex() {
     mCurrentCommandIndex = 0;
     for (auto command : mAvailableCommands) {
         if (command == mCurrentCommand.name) {
@@ -137,6 +148,23 @@ std::vector<std::string> CommandComponent::getAvailableCommands() {
 
 LightComponentGuiRef CommandComponent::getGui() {
     return LightComponentGuiRef(new CommandComponentGui(*this));
+}
+
+
+void ChannelComponent::updateDmx(DmxOutput *dmxOutput) {
+    dmxOutput->setChannelValue(getChannel(), mValue);
+}
+
+void ChannelComponent::setValue(int value) {
+    mValue = value;
+}
+
+int ChannelComponent::getValue() {
+    return mValue;
+}
+
+LightComponentGuiRef ChannelComponent::getGui() {
+    return LightComponentGuiRef(new ChannelComponentGui(*this));
 }
 
 //////////////////////////////////////////////////
@@ -198,6 +226,15 @@ void CommandComponentGui::draw(int id) {
     ui::PopID();
 }
 
+void ChannelComponentGui::draw(int id) {
+    LightComponentGui::draw(id);
+    ChannelComponent& component = (ChannelComponent&) mComponent;
+    static int value;
+    value = component.getValue();
+    if (ui::SliderInt("Value", &value, 0, 255)) {
+        component.setValue(value);
+    }
+}
 
 //////////////////////////////////////////////////
 // End Gui
