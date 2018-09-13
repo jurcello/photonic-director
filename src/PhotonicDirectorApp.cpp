@@ -379,6 +379,7 @@ void PhotonicDirectorApp::save()
 
 void PhotonicDirectorApp::load()
 {
+    mGuiStatusData.lightToEdit = nullptr;
     std::vector<string> extensions {"xml"};
     fs::path loadPath = getOpenFilePath(fs::path(), extensions);
     if (! loadPath.empty()) {
@@ -407,7 +408,16 @@ void PhotonicDirectorApp::update()
     if (mGuiStatusData.drawGui) {
         drawGui();
     }
-    
+
+    for (const auto light : mLights) {
+        auto components = light->getComponents();
+        if (components.size() > 0) {
+            for (const auto component: components) {
+                component->controlledBy = "";
+            }
+        }
+    }
+
     double now = getElapsedSeconds();
     double dt = now - mLastUpdate;
     /////////////////////////////////////////////
@@ -742,6 +752,19 @@ void PhotonicDirectorApp::drawLightControls()
         if (mGuiStatusData.lightToEdit->mSendOsc) {
             ui::InputText("Osc address", &mGuiStatusData.lightToEdit->mOscAdress);
         }
+        ui::Spacing();
+        // Get the components and draw their ui's.
+        auto components = mGuiStatusData.lightToEdit->getComponents();
+        if (components.size() > 0) {
+            if (ui::CollapsingHeader("Components")) {
+                int componentId = 0;
+                for (auto component: components) {
+                    component->getGui()->draw(componentId);
+                    componentId++;
+                }
+            }
+
+        }
         if (ui::Button("Done")) {
             mGuiStatusData.lightToEdit = nullptr;
             mGuiStatusData.status = IDLE;
@@ -976,7 +999,7 @@ void PhotonicDirectorApp::drawEffectControls()
                     int addingEditId = 0;
                     for (const auto light : mLights) {
                         std::string uuid = light->getUuid();
-                        if (! effect->hasLight(light)) {
+                        if (! effect->hasLight(light) && effect->supportsLight(light)) {
                             ui::PushID(addingEditId);
                             ui::BulletText("%s", light->mName.c_str());
                             ui::SameLine();

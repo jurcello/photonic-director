@@ -176,6 +176,7 @@ namespace photonic {
         
         virtual std::string getTypeClassName() = 0;
         virtual std::string getTypeName() = 0;
+        virtual bool supportsLight(LightRef light);
         virtual void drawEditGui();
         virtual void execute(double dt);
         // TODO: implement using listener pattern.

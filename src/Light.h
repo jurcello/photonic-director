@@ -12,6 +12,8 @@
 #include "cinder/gl/gl.h"
 #include "Output.h"
 #include "CinderImGui.h"
+#include "cinder/Xml.h"
+#include "LightComponent.h"
 
 using namespace cinder;
 
@@ -35,6 +37,7 @@ struct LightType {
     int intensityChannelPosition;
     ColorA editColor;
     RgbType rgbType;
+    std::vector<LightComponentDefintion> componentDefitions;
 };
 
 class Light
@@ -73,7 +76,32 @@ public:
     void update();
     void updateDmx();
     bool isColorEnabled();
-    
+
+    void addComponent(LightComponentRef component);
+
+    LightComponentRef getComponentById(std::string id);
+    std::vector<LightComponentRef> getComponents();
+
+    template<class T>
+    std::shared_ptr<T> getComponent() {
+        for (const auto &component : mComponents) {
+            if (typeid(*component) == typeid(T)) {
+                return std::static_pointer_cast<T>(component);
+            }
+        }
+        return nullptr;
+    }
+
+    template<class T>
+    std::shared_ptr<T> getComponentById(std::string id) {
+        for (const auto &component : mComponents) {
+            if (typeid(*component) == typeid(T) && component->id == id) {
+                return std::static_pointer_cast<T>(component);
+            }
+        }
+        return nullptr;
+    }
+
     // Effect setters and getters.
     void setEffectIntensity(std::string effectId, float targetIntensity);
     float getEffetcIntensity(std::string effectId);
@@ -85,6 +113,8 @@ public:
 protected:
     std::map<std::string, float> effectIntensities;
     std::map<std::string, ColorA> effectColors;
+
+    std::vector<LightComponentRef> mComponents;
 
     std::string mUuid;
     LightType* mType;
@@ -111,6 +141,8 @@ public:
 protected:
     DmxOutput* mDmxOut;
     std::vector<LightType*> mLightTypes;
+
+    void readFixtures();
 
 };
 

@@ -69,6 +69,9 @@ bool Light::setDmxChannel(int dmxChannel)
         mDmxOutput->releaseChannels(mUuid);
         for (int i = dmxChannel; i < dmxChannel + mType->numChannels; i++) {
             mDmxOutput->registerChannel(i, mUuid);
+            for (auto component : mComponents) {
+                component->setFixtureChannel(dmxChannel);
+            }
         }
     }
     mDmxChannel = dmxChannel;
@@ -132,6 +135,24 @@ bool Light::isColorEnabled() {
     return mType->colorChannelPosition > 0;
 }
 
+
+void Light::addComponent(LightComponentRef component) {
+    mComponents.push_back(component);
+}
+
+LightComponentRef Light::getComponentById(std::string id) {
+    for (const auto &component : mComponents) {
+        if (component->id == id) {
+            return component;
+        }
+    }
+    return nullptr;
+}
+
+std::vector<LightComponentRef> Light::getComponents() {
+    return mComponents;
+}
+
 void Light::update() {
     if (mType->machineName == "relais") {
         intensity = intensity > 0.5f ? 1.0f : 0.0f;
@@ -176,6 +197,11 @@ void Light::updateDmx() {
             int lightIntensity = intensity * 255;
             mDmxOutput->setChannelValue(channel, lightIntensity);
         }
+
+        // Let the components do their work.
+        for (const auto component : mComponents) {
+            component->updateDmx(mDmxOutput);
+        }
     }
 
 }
@@ -196,113 +222,72 @@ LightBufferData::LightBufferData(LightRef light)
 LightFactory::LightFactory(DmxOutput *dmxOutput)
 : mDmxOut(dmxOutput)
 {
-    // Create some types.
-    // TODO: create them form a file later on.
-    mLightTypes.push_back(new LightType(
-            "Single Channel (dimmer)",
-            "single_channel",
-            0,
-            0,
-            1,
-            ColorA(252.0f / 256.0f, 211.0f / 256.0f, 3.0f / 256.0f, 0))
-    );
-    mLightTypes.push_back(new LightType(
-            "Relais",
-            "relais",
-            0,
-            0,
-            1,
-            ColorA(1.0f, 1.0f, 1.0f, 0))
-    );
-    mLightTypes.push_back(new LightType(
-            "Simple Color (3 channels)",
-            "simple_color",
-            1,
-            0,
-            3,
-            ColorA(1.0f, 0, 0, 0))
-    );
-    mLightTypes.push_back(new LightType(
-            "Color source (5 channels)",
-            "color_source_5ch",
-            2,
-            1,
-            5,
-            ColorA(1.0f, 0.5f, 0, 0))
-    );
-    mLightTypes.push_back(new LightType(
-            "LED Dimmer (4 channels)",
-            "led_dimmer_4",
-            1,
-            0,
-            4,
-            ColorA(1.0f, 0, 0.5f, 0))
-    );
-    mLightTypes.push_back(new LightType(
-            "LED Dimmer RBG (4 channels)",
-            "led_dimmer_4_rbg",
-            1,
-            0,
-            4,
-            ColorA(1.0f, 0, 0.5f, 0),
-            LightType::RgbType::RBG)
-    );
-    mLightTypes.push_back(new LightType(
-            "LED Dimmer GRB (4 channels)",
-            "led_dimmer_4_grb",
-            1,
-            0,
-            4,
-            ColorA(1.0f, 0, 0.5f, 0),
-            LightType::RgbType::GRB)
-    );
-    mLightTypes.push_back(new LightType(
-            "LED Dimmer BRG (4 channels)",
-            "led_dimmer_4_brg",
-            1,
-            0,
-            4,
-            ColorA(1.0f, 0, 0.5f, 0),
-            LightType::RgbType::BRG)
-    );
-    mLightTypes.push_back(new LightType(
-            "Led Ball",
-            "led_ball",
-            1,
-            4,
-            4,
-            cinder::ColorA(1.0f, 0.5f, 0, 0),
-            LightType::RgbType::RBG)
-    );
-    mLightTypes.push_back(new LightType(
-            "Advanced Color (6 channels)",
-            "advanced_color",
-            1,
-            4,
-            6,
-            ColorA(1.0f, 0, 1.0f, 0)
-    ));
-
-    mLightTypes.push_back(new LightType(
-            "Showtec 1W RGB LED PAR 64",
-            "showtec_1w_rgb_led_par_64",
-            1,
-            7,
-            7,
-            ColorA(0.5f, 0, 1.0f, 0.2f)
-    ));
-    mLightTypes.push_back(new LightType(
-            "Showtec Powerspot 9 Q5 (5 channel)",
-            "showtec_powershot_9_q5_5ch",
-            1,
-            0,
-            5,
-            ColorA(0.5f, 0, 0.7f, 0.4f)
-    ));
-
+   readFixtures();
 }
 
+void LightFactory::readFixtures() {
+    // Scan the fixtures folder in the assets path.
+    fs::path fixturesDir = getAssetPath("fixtures");
+    if (fs::is_directory(fixturesDir)) {
+        for (fs::directory_entry file: fs::directory_iterator(fixturesDir)) {
+            if (file.path().extension().string() == ".xml") {
+                auto definition = XmlTree(loadFile(file.path()));
+                XmlTree definitionInfo = definition.getChild("fixtureDefinition");
+                std::string name = definitionInfo.getChild("name").getValue<std::string>();
+                std::string id = definitionInfo.getChild("id").getValue<std::string>();
+                int colorChannelPosition = definitionInfo.getChild("colorChannelPosition").getAttributeValue<int>("value");
+                int intensityChannelPostion = definitionInfo.getChild("intensityChannelPostion").getAttributeValue<int>("value");
+                int channelAmount = definitionInfo.getChild("channelAmount").getAttributeValue<int>("value");
+                ColorA color(1.0f, 1.0f, 1.0f, 0.0f);
+                color.r = definitionInfo.getChild("editColor").getAttributeValue<float>("r");
+                color.g = definitionInfo.getChild("editColor").getAttributeValue<float>("g");
+                color.b = definitionInfo.getChild("editColor").getAttributeValue<float>("b");
+                LightType *lightType = new LightType(
+                                        name,
+                                        id,
+                                        colorChannelPosition,
+                                        intensityChannelPostion,
+                                        channelAmount,
+                                        color
+                                );
+                if (definitionInfo.hasChild("components")) {
+                    for (auto componentInfo : definitionInfo.getChild("components")) {
+                        LightComponentDefintion componentDefinition;
+                        componentDefinition.componentChannel = componentInfo.getAttributeValue<int>("channel");
+                        componentDefinition.type = componentInfo.getAttributeValue<std::string>("type");
+                        componentDefinition.name = componentInfo.getAttributeValue<std::string>("name");
+                        componentDefinition.id = componentInfo.getAttributeValue<std::string>("id");
+                        if (componentInfo.hasChild("commands")) {
+                            for (auto commandInfo : componentInfo.getChild("commands")) {
+                                std::string name = commandInfo.getAttributeValue<std::string>("name");
+                                int value = 0;
+                                if (commandInfo.hasAttribute("value")) {
+                                    value = commandInfo.getAttributeValue<int>("value");
+                                }
+                                else if (commandInfo.hasAttribute("min")) {
+                                    value = commandInfo.getAttributeValue<int>("min");
+                                }
+                                Command command;
+                                command.min = value;
+                                command.name = name;
+                                if (commandInfo.hasAttribute("max")) {
+                                    command.max = commandInfo.getAttributeValue<int>("max");
+                                }
+                                else {
+                                    command.max = value;
+                                }
 
+                                componentDefinition.commands.insert(std::pair<std::string, Command>(name, command));
+                            }
+                        }
+                        lightType->componentDefitions.push_back(componentDefinition);
+                    }
+                }
+                mLightTypes.push_back(lightType);
+            }
+        }
+    }
+}
 
 LightRef LightFactory::create(vec3 position, LightType *type, std::string uuid)
 {
@@ -310,6 +295,9 @@ LightRef LightFactory::create(vec3 position, LightType *type, std::string uuid)
         type = getDefaultType();
     }
     LightRef light = LightRef(new Light(position, type, uuid));
+    for (auto componentDefinition : light->getLightType()->componentDefitions) {
+        light->addComponent(LightComponent::create(componentDefinition, 0));
+    }
     light->injectDmxOutput(mDmxOut);
     return light;
 }
@@ -323,9 +311,7 @@ LightRef LightFactory::create(vec3 position, std::string type, std::string uuid)
             break;
         }
     }
-    LightRef light = LightRef(new Light(position, newType, uuid));
-    light->injectDmxOutput(mDmxOut);
-    return light;
+    return LightFactory::create(position, newType, uuid);
 }
 
 std::vector<std::string> LightFactory::getAvailableTypeNames() {
