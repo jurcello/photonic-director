@@ -32,6 +32,11 @@ public:
     int getChannel();
     std::string getName();
 
+    virtual float getStoreValue();
+    virtual void restoreFromStoreValue(float value);
+
+    std::string id;
+
 protected:
     int mFixtureChannel;
     int mComponentChannel;
@@ -43,6 +48,7 @@ struct LightComponentDefintion
     int componentChannel;
     std::string type;
     std::string name;
+    std::string id;
     std::map<std::string, Command> commands;
 };
 
@@ -53,6 +59,9 @@ public:
     void setPanning(float panning);
     float getPanning();
     LightComponentGuiRef getGui() override;
+
+    float getStoreValue() override;
+    void restoreFromStoreValue(float value) override;
 
 protected:
     float mPanning = 0;
@@ -65,6 +74,10 @@ public:
     void setTilt(float tilt);
     float getTilt();
     LightComponentGuiRef getGui() override;
+
+    float getStoreValue() override;
+    void restoreFromStoreValue(float value) override;
+
 
 protected:
     float mTilt = 0;
@@ -88,6 +101,9 @@ public:
     std::vector<std::string> getAvailableCommands();
     LightComponentGuiRef getGui() override;
 
+    float getStoreValue() override;
+    void restoreFromStoreValue(float value) override;
+
 protected:
     std::map<std::string, Command> mCommands;
     std::vector<std::string> mAvailableCommands;
@@ -105,6 +121,10 @@ public:
     void setValue(int value);
     int getValue();
     LightComponentGuiRef getGui() override;
+
+    float getStoreValue() override;
+    void restoreFromStoreValue(float value) override;
+
 
 protected:
     int mValue = 0;

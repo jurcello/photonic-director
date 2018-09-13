@@ -150,6 +150,15 @@ std::shared_ptr<T> Light::getComponent() {
     return nullptr;
 }
 
+LightComponentRef Light::getComponentById(std::string id) {
+    for (const auto &component : mComponents) {
+        if (component->id == id) {
+            return component;
+        }
+    }
+    return nullptr;
+}
+
 std::vector<LightComponentRef> Light::getComponents() {
     return mComponents;
 }
@@ -200,7 +209,7 @@ void Light::updateDmx() {
         }
 
         // Let the components do their work.
-        for (auto component : mComponents) {
+        for (const auto component : mComponents) {
             component->updateDmx(mDmxOutput);
         }
     }
@@ -257,6 +266,7 @@ void LightFactory::readFixtures() {
                         componentDefinition.componentChannel = componentInfo.getAttributeValue<int>("channel");
                         componentDefinition.type = componentInfo.getAttributeValue<std::string>("type");
                         componentDefinition.name = componentInfo.getAttributeValue<std::string>("name");
+                        componentDefinition.id = componentInfo.getAttributeValue<std::string>("id");
                         if (componentInfo.hasChild("commands")) {
                             for (auto commandInfo : componentInfo.getChild("commands")) {
                                 std::string name = commandInfo.getAttributeValue<std::string>("name");

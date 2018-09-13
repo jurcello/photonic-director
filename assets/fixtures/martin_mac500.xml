@@ -7,9 +7,9 @@
     <channelAmount value="16" />
     <editColor r="1" g="0.5" b="0.1"/>
     <components>
-        <component type="pan" channel="11" name="Pan"/>
-        <component type="tilt" channel="13" name="Tilt" />
-        <component type="command" channel="1" name="Shutter, strobe, reset">
+        <component type="pan" channel="11" name="Pan" id="pan" />
+        <component type="tilt" channel="13" name="Tilt" id="tilt" />
+        <component type="command" channel="1" name="Shutter, strobe, reset" id="shutter_strobe_reset">
             <commands>
                 <command name="Shutter closed" value="0"/>
                 <command name="Shutter open" value="20"/>
@@ -17,7 +17,7 @@
                 <command name="Random strobe fast" value="128"/>
             </commands>
         </component>
-        <component type="command" channel="3" name="Color 1">
+        <component type="command" channel="3" name="Color 1" id="color_1">
             <commands>
                 <command name="White -> Blue 111" min="0" max="16"/>
                 <command name="Cyan 401" value="145"/>
@@ -26,6 +26,6 @@
                 <command name="White" value="181"/>
             </commands>
         </component>
-        <component type="channel" channel="8" name="Focus" />
+        <component type="channel" channel="8" name="Focus" id="focus"/>
     </components>
 </fixtureDefinition>

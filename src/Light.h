@@ -81,6 +81,7 @@ public:
 
     template <class T>
     std::shared_ptr<T> getComponent();
+    LightComponentRef getComponentById(std::string id);
     std::vector<LightComponentRef> getComponents();
 
     

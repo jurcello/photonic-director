@@ -66,6 +66,16 @@ void ConfigManager::readLights(std::vector<LightRef> &lights, LightFactory* ligh
             newLight->mOscAdress = oscAdress;
             newLight->mSendOsc = oscNode.getAttributeValue<bool>("osc_enabled", false);
         }
+        if (lightNode.hasChild("components")) {
+            for (auto componentNode: lightNode.getChild("components")) {
+                std::string id = componentNode.getAttributeValue<std::string>("id");
+                float value = componentNode.getValue<float>();
+                LightComponentRef component = newLight->getComponentById(id);
+                if (component != nullptr) {
+                    component->restoreFromStoreValue(value);
+                }
+            }
+        }
 
         lights.push_back(newLight);
     }
@@ -269,6 +279,21 @@ void ConfigManager::writeLights(std::vector<LightRef> &lights)
         osc.setAttribute("osc_enabled", light->mSendOsc);
         osc.setValue(light->mOscAdress);
         lightNode.push_back(osc);
+
+        // Write the components.
+        auto components = light->getComponents();
+        if (! components.empty()) {
+            XmlTree componentsTree;
+            componentsTree.setTag("components");
+            for (const auto component: components) {
+                XmlTree componentTree;
+                componentTree.setTag("component");
+                componentTree.setAttribute("id", component->id);
+                componentTree.setValue(component->getStoreValue());
+                componentsTree.push_back(componentTree);
+            }
+            lightNode.push_back(componentsTree);
+        }
         
         lightsNode.push_back(lightNode);
     }

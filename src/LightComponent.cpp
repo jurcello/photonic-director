@@ -32,6 +32,12 @@ std::string LightComponent::getName() {
     return mName;
 }
 
+float LightComponent::getStoreValue() {
+    return 0;
+}
+
+void LightComponent::restoreFromStoreValue(float value) {}
+
 void LightComponent::updateDmx(DmxOutput *dmxOutput) {
 
 }
@@ -41,7 +47,7 @@ LightComponentGuiRef LightComponent::getGui() {
 }
 
 LightComponent::LightComponent(LightComponentDefintion definition, int fixtureChannel)
-: mComponentChannel(definition.componentChannel), mFixtureChannel(fixtureChannel), mName(definition.name)
+: mComponentChannel(definition.componentChannel), mFixtureChannel(fixtureChannel), mName(definition.name), id(definition.id)
 {
 }
 
@@ -68,6 +74,14 @@ float PanComponent::getPanning() {
     return mPanning;
 }
 
+float PanComponent::getStoreValue() {
+    return mPanning;
+}
+
+void PanComponent::restoreFromStoreValue(float value) {
+    mPanning = value;
+}
+
 //////////// Tilt ////////////
 void TiltComponent::updateDmx(DmxOutput *dmxOutput) {
     int courseChannel = getChannel();
@@ -89,6 +103,14 @@ float TiltComponent::getTilt() {
 
 LightComponentGuiRef TiltComponent::getGui() {
     return LightComponentGuiRef(new TiltComponentGui(*this));
+}
+
+float TiltComponent::getStoreValue() {
+    return mTilt;
+}
+
+void TiltComponent::restoreFromStoreValue(float value) {
+    mTilt = value;
 }
 
 //////////// Command ////////////
@@ -151,6 +173,23 @@ LightComponentGuiRef CommandComponent::getGui() {
 }
 
 
+float CommandComponent::getStoreValue() {
+    return (float) mCurrentValue;
+}
+
+void CommandComponent::restoreFromStoreValue(float value) {
+    int intValue = (int) value;
+    mCurrentValue = intValue;
+    for (const auto item: mAvailableCommands) {
+      Command command = mCommands.at(item);
+      if (intValue >= command.min && intValue <= command.max) {
+          mCurrentCommand = command;
+          break;
+      }
+    }
+    updateCurrentCommandIndex();
+}
+
 void ChannelComponent::updateDmx(DmxOutput *dmxOutput) {
     dmxOutput->setChannelValue(getChannel(), mValue);
 }
@@ -167,12 +206,21 @@ LightComponentGuiRef ChannelComponent::getGui() {
     return LightComponentGuiRef(new ChannelComponentGui(*this));
 }
 
+
 //////////////////////////////////////////////////
 // Gui
 //////////////////////////////////////////////////
 LightComponentGui::LightComponentGui(LightComponent& component)
 : mComponent(component)
 {
+}
+
+float ChannelComponent::getStoreValue() {
+    return mValue;
+}
+
+void ChannelComponent::restoreFromStoreValue(float value) {
+    mValue = value;
 }
 
 void LightComponentGui::draw(int id) {

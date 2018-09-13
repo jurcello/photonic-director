@@ -379,6 +379,7 @@ void PhotonicDirectorApp::save()
 
 void PhotonicDirectorApp::load()
 {
+    mGuiStatusData.lightToEdit = nullptr;
     std::vector<string> extensions {"xml"};
     fs::path loadPath = getOpenFilePath(fs::path(), extensions);
     if (! loadPath.empty()) {
