@@ -79,12 +79,29 @@ public:
 
     void addComponent(LightComponentRef component);
 
-    template <class T>
-    std::shared_ptr<T> getComponent();
     LightComponentRef getComponentById(std::string id);
     std::vector<LightComponentRef> getComponents();
 
-    
+    template<class T>
+    std::shared_ptr<T> getComponent() {
+        for (const auto &component : mComponents) {
+            if (typeid(*component) == typeid(T)) {
+                return std::static_pointer_cast<T>(component);
+            }
+        }
+        return nullptr;
+    }
+
+    template<class T>
+    std::shared_ptr<T> getComponentById(std::string id) {
+        for (const auto &component : mComponents) {
+            if (typeid(*component) == typeid(T) && component->id == id) {
+                return std::static_pointer_cast<T>(component);
+            }
+        }
+        return nullptr;
+    }
+
     // Effect setters and getters.
     void setEffectIntensity(std::string effectId, float targetIntensity);
     float getEffetcIntensity(std::string effectId);

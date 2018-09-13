@@ -140,16 +140,6 @@ void Light::addComponent(LightComponentRef component) {
     mComponents.push_back(component);
 }
 
-template<class T>
-std::shared_ptr<T> Light::getComponent() {
-    for (const auto &component : mComponents) {
-        if (typeid(*component) == typeid(T)) {
-            return std::static_pointer_cast<T>(component);
-        }
-    }
-    return nullptr;
-}
-
 LightComponentRef Light::getComponentById(std::string id) {
     for (const auto &component : mComponents) {
         if (component->id == id) {

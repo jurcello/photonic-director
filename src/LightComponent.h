@@ -36,6 +36,7 @@ public:
     virtual void restoreFromStoreValue(float value);
 
     std::string id;
+    std::string controlledBy;
 
 protected:
     int mFixtureChannel;

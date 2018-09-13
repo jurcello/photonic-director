@@ -4,6 +4,7 @@
 
 #include "LightComponent.h"
 
+
 LightComponentRef LightComponent::create(LightComponentDefintion definition, int fixtureChannel) {
     if (definition.type == "tilt") {
         return LightComponentRef(new TiltComponent(definition, fixtureChannel));
@@ -225,6 +226,11 @@ void ChannelComponent::restoreFromStoreValue(float value) {
 
 void LightComponentGui::draw(int id) {
     ui::Text("%s", mComponent.getName().c_str());
+    if (mComponent.controlledBy != "") {
+        ui::SameLine();
+        ui::Text(" (Controlled by %s effect)", mComponent.controlledBy.c_str());
+    }
+
 }
 
 

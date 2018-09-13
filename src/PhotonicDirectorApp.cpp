@@ -408,7 +408,16 @@ void PhotonicDirectorApp::update()
     if (mGuiStatusData.drawGui) {
         drawGui();
     }
-    
+
+    for (const auto light : mLights) {
+        auto components = light->getComponents();
+        if (components.size() > 0) {
+            for (const auto component: components) {
+                component->controlledBy = "";
+            }
+        }
+    }
+
     double now = getElapsedSeconds();
     double dt = now - mLastUpdate;
     /////////////////////////////////////////////
@@ -990,7 +999,7 @@ void PhotonicDirectorApp::drawEffectControls()
                     int addingEditId = 0;
                     for (const auto light : mLights) {
                         std::string uuid = light->getUuid();
-                        if (! effect->hasLight(light)) {
+                        if (! effect->hasLight(light) && effect->supportsLight(light)) {
                             ui::PushID(addingEditId);
                             ui::BulletText("%s", light->mName.c_str());
                             ui::SameLine();

@@ -453,6 +453,10 @@ std::string SimpleVolumeEffect::getTypeName() {
     return "Simple volume";
 }
 
+bool Effect::supportsLight(LightRef light) {
+    return true;
+}
+
 std::string SimpleVolumeEffect::getTypeClassName() {
     return "SimpleVolumeEffect";
 }
