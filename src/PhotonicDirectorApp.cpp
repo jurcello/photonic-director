@@ -100,6 +100,7 @@ protected:
     
     void oscReceive(const osc::Message &message);
     void handleLightOscSending();
+    void handleCalibrationSending();
     // Gui stuff.
     void drawGui();
     void drawChannelControls();
@@ -486,6 +487,7 @@ void PhotonicDirectorApp::update()
     }
     mDmxOut.update();
     handleLightOscSending();
+    handleCalibrationSending();
     mLastUpdate = now;
 }
 
@@ -519,6 +521,14 @@ void PhotonicDirectorApp::handleLightOscSending() {
         }
     }
     mOscSender->send(bundle);
+}
+
+void PhotonicDirectorApp::handleCalibrationSending() {
+    if (mLightCalibrator.isCalibrating()) {
+        osc::Message message("/calibrating");
+        message.append(mLightCalibrator.getCurrentLight()->getUuid());
+        mOscSender->send(message);
+    }
 }
 
 void PhotonicDirectorApp::drawGui()
