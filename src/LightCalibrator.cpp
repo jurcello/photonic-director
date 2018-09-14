@@ -29,7 +29,7 @@ void LightCalibrator::receiveOscMessage(const osc::Message &message) {
                 currentPosition.y = message.getArgFloat(0);
                 send = true;
             }
-            if (message.getAddress() == "/cube") {
+            if (message.getAddress() == "/lightCalib") {
                 currentPosition.x = message.getArgFloat(0);
                 currentPosition.y = message.getArgFloat(1);
                 currentPosition.z = message.getArgFloat(2);
@@ -38,6 +38,10 @@ void LightCalibrator::receiveOscMessage(const osc::Message &message) {
         }
         if ((message.getAddress() == "/pfffmaaktnietuitwat" || message.getAddress() == "/lightCalib/next") && message.getArgFloat(0) == 1) {
             mCurrentLightIterator++;
+            // Skip the lights without DMX channel.
+            while (mCurrentLightIterator != mLights->end() && (*mCurrentLightIterator)->getDmxChannel() == 0) {
+                mCurrentLightIterator++;
+            }
             if (mCurrentLightIterator == mLights->end()) {
                 mIsCalibrating = false;
                 mCurrentLight = nullptr;
