@@ -250,6 +250,12 @@ void LightFactory::readFixtures() {
                                         channelAmount,
                                         color
                                 );
+                if (definitionInfo.hasChild("colorType")) {
+                    std::string colorType = definitionInfo.getChild("colorType").getValue<std::string>();
+                    if (colorType == "RBG") {
+                        lightType->rgbType = LightType::RgbType::RBG;
+                    }
+                }
                 if (definitionInfo.hasChild("components")) {
                     for (auto componentInfo : definitionInfo.getChild("components")) {
                         LightComponentDefintion componentDefinition;

@@ -13,7 +13,7 @@ void LightCalibrator::setOscSender(osc::SenderUdp *OscSender) {
 }
 
 LightCalibrator::LightCalibrator()
-: mIsCalibrating(false), currentPosition(vec3(0.0f))
+: mIsCalibrating(false), currentPosition(vec3(0.0f)), mCurrentIntensity(0)
 {}
 
 void LightCalibrator::receiveOscMessage(const osc::Message &message) {
@@ -37,6 +37,8 @@ void LightCalibrator::receiveOscMessage(const osc::Message &message) {
             mCurrentLight->setPosition(currentPosition);
         }
         if ((message.getAddress() == "/pfffmaaktnietuitwat" || message.getAddress() == "/lightCalib/next") && message.getArgFloat(0) == 1) {
+            mTimer.stop();
+            mTimer.start(0.0f);
             mCurrentLightIterator++;
             // Skip the lights without DMX channel.
             while (mCurrentLightIterator != mLights->end() && (*mCurrentLightIterator)->getDmxChannel() == 0) {
@@ -45,6 +47,7 @@ void LightCalibrator::receiveOscMessage(const osc::Message &message) {
             if (mCurrentLightIterator == mLights->end()) {
                 mIsCalibrating = false;
                 mCurrentLight = nullptr;
+                mTimer.stop();
             }
             else {
                 mCurrentLight = *mCurrentLightIterator;
@@ -64,6 +67,7 @@ void LightCalibrator::start() {
     mCurrentLight = *mCurrentLightIterator;
     currentPosition = mCurrentLight->getPosition();
     broadcastCurrentLight();
+    mTimer.start(0.0f);
 }
 
 void LightCalibrator::broadcastCurrentLight() {
@@ -89,4 +93,12 @@ bool LightCalibrator::isCalibrating() {
 
 LightRef LightCalibrator::getCurrentLight() {
     return mCurrentLight;
+}
+
+float LightCalibrator::getCurrentIntensity() {
+    mCurrentIntensity = mTimer.getSeconds() / 2.0f;
+    if (mCurrentIntensity > 1) {
+        mCurrentIntensity = 1.0f;
+    }
+    return mCurrentIntensity;
 }

@@ -18,6 +18,7 @@ public:
     void start();
     void broadcastCurrentLight();
     bool isCalibrating();
+    float getCurrentIntensity();
     LightRef getCurrentLight();
 
     vec3 currentPosition;
@@ -28,6 +29,9 @@ protected:
     osc::SenderUdp* mSender;
     std::vector<LightRef>* mLights;
     bool mIsCalibrating;
+
+    float mCurrentIntensity;
+    Timer mTimer;
 
 };
 
