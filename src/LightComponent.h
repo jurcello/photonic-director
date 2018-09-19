@@ -82,6 +82,7 @@ public:
 
 protected:
     float mTilt = 0;
+    float mLimit = 27.0f;
 };
 
 struct Command {

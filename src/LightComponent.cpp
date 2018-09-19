@@ -87,7 +87,7 @@ void PanComponent::restoreFromStoreValue(float value) {
 void TiltComponent::updateDmx(DmxOutput *dmxOutput) {
     int courseChannel = getChannel();
     int fineChannel = courseChannel + 1;
-    float course = (mTilt / 306) * 256;
+    float course = ((mTilt - mLimit) / 306) * 256;
     float fine = (course - cinder::math<float>::floor(course)) * 256;
     dmxOutput->setChannelValue(courseChannel, (int) std::floor(course));
     dmxOutput->setChannelValue(fineChannel, (int) std::floor(fine));
@@ -95,6 +95,14 @@ void TiltComponent::updateDmx(DmxOutput *dmxOutput) {
 }
 
 void TiltComponent::setTilt(float tilt) {
+    if (tilt < mLimit) {
+        mTilt = mLimit;
+        return;
+    }
+    if (tilt > 360.0f - mLimit) {
+        mTilt = 360.f - mLimit;
+        return;
+    }
     mTilt = tilt;
 }
 
@@ -252,7 +260,7 @@ void TiltComponentGui::draw(int id) {
     static float tilt;
     tilt = component.getTilt();
     ui::PushID(id);
-    if (ui::SliderFloat("Tilt (Degrees)", &tilt, 0.0f, 306.0f)) {
+    if (ui::SliderFloat("Tilt (Degrees)", &tilt, 27.0f, 333.0f)) {
         component.setTilt(tilt);
     }
     ui::PopID();
