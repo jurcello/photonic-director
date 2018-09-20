@@ -139,7 +139,7 @@ PhotonicDirectorApp::PhotonicDirectorApp()
 }
 
 void PhotonicDirectorApp::setTheme(ImGui::Options &options) {
-    options.childWindowRounding(3.f);
+//    options.childWindowRounding(3.f);
     options.grabRounding(0.f);
     options.windowRounding(0.f);
     options.scrollbarRounding(3.f);
@@ -165,7 +165,7 @@ void PhotonicDirectorApp::setTheme(ImGui::Options &options) {
     options.color(ImGuiCol_ScrollbarGrab,         ImVec4(0.36f, 0.36f, 0.36f, 1.00f));
     options.color(ImGuiCol_ScrollbarGrabHovered,  ImVec4(0.36f, 0.36f, 0.36f, 1.00f));
     options.color(ImGuiCol_ScrollbarGrabActive,   ImVec4(0.36f, 0.36f, 0.36f, 1.00f));
-    options.color(ImGuiCol_ComboBg,               ImVec4(0.32f, 0.32f, 0.32f, 1.00f));
+//    options.color(ImGuiCol_ComboBg,               ImVec4(0.32f, 0.32f, 0.32f, 1.00f));
     options.color(ImGuiCol_CheckMark,             ImVec4(0.78f, 0.78f, 0.78f, 1.00f));
     options.color(ImGuiCol_SliderGrab,            ImVec4(0.74f, 0.74f, 0.74f, 1.00f));
     options.color(ImGuiCol_SliderGrabActive,      ImVec4(0.74f, 0.74f, 0.74f, 1.00f));
@@ -372,8 +372,12 @@ void PhotonicDirectorApp::save()
         config.writeLights(mLights);
         config.writeChannels(mChannels);
         config.writeEffects(mEffects);
-        config.writeInt("oscReceivePort", mOscReceivePort);
-        config.writeInt("oscSendPort", mOscSendPort);
+        config.writeValue<int>("oscReceivePort", mOscReceivePort);
+        config.writeValue<int>("oscSendPort", mOscSendPort);
+        config.writeValue<int>("unityPort", mUnityPort);
+        config.writeValue<bool>("oscUnicast", mOscUnicast);
+        config.writeValue<std::string>("oscSendAddress", mOscSendAddress);
+        config.writeValue<std::string>("unityAddress", mUnityAddress);
         config.writeToFile(savePath);
     }
 }
@@ -385,14 +389,12 @@ void PhotonicDirectorApp::load()
     fs::path loadPath = getOpenFilePath(fs::path(), extensions);
     if (! loadPath.empty()) {
         config.readFromFile(loadPath);
-        int oscReceivePort = config.readInt("oscReceivePort");
-        int oscSendPort = config.readInt("oscSendPort");
-        if (oscReceivePort > 0) {
-            mOscReceivePort = oscReceivePort;
-        }
-        if (oscSendPort > 0) {
-            mOscSendPort = oscSendPort;
-        }
+        mOscReceivePort = config.readValue<int>("oscReceivePort", mOscReceivePort);
+        mOscSendPort = config.readValue<int>("oscSendPort", mOscSendPort);
+        mUnityPort = config.readValue<int>("unityPort", mUnityPort);
+        mOscUnicast = config.readValue<bool>("oscUnicast", mOscUnicast);
+        mOscSendAddress = config.readValue<std::string>("oscSendAddress", mOscSendAddress);
+        mUnityAddress = config.readValue<std::string>("unityAddress", mUnityAddress);
         setupOsc(mOscReceivePort, mOscSendPort);
         // Reset the channelRegistry of the dmx out.
         mDmxOut.clearRegistry();
@@ -538,7 +540,9 @@ void PhotonicDirectorApp::drawGui()
     static bool showEffectEditor = true;
     static bool showDmxInspector = false;
     // Draw the general ui.
-    ImGui::ScopedWindow window("Controls");
+    ImGuiWindowFlags windowFlags = 0;
+    windowFlags |= ImGuiWindowFlags_NoMove;
+    ImGui::ScopedWindow window("Controls", windowFlags);
     
     ui::Separator();
     ui::Text("Osc settings");
@@ -675,9 +679,23 @@ void PhotonicDirectorApp::drawLightControls()
     if (ui::BeginPopupModal("Create Light")) {
         static std::string lightName;
         static int lightType = 0;
+//        static std::string lightType;
         static vec3 lightPosition;
         ui::InputText("Name", &lightName);
-        ui::Combo("Type", &lightType, mLightFactory.getAvailableTypeNames());
+//        ui::Combo("Type", &lightType, mLightFactory.getAvailableTypeNames());
+        auto availableTypeNames = mLightFactory.getAvailableTypeNames();
+        if (ui::BeginCombo("Type", availableTypeNames[lightType].c_str())) {
+            for (int i=0; i < availableTypeNames.size(); i++) {
+                bool isSelected = (lightType == i);
+                if (ui::Selectable(availableTypeNames[i].c_str(), isSelected)) {
+                    lightType = i;
+                }
+                if (isSelected) {
+                    ui::SetItemDefaultFocus();
+                }
+            }
+            ui::EndCombo();
+        }
         ui::InputFloat3("Position", &lightPosition[0]);
 
         if (ui::Button("Done")) {
@@ -715,7 +733,7 @@ void PhotonicDirectorApp::drawLightControls()
         }
     }
     if (! ui::IsWindowCollapsed()) {
-        ui::ListBoxHeader("Edit lights");
+        ui::ListBoxHeader("Edit lights", mLights.size(), 20);
         for (LightRef light: mLights) {
             if (ui::Selectable(light->mName.c_str(), mGuiStatusData.lightToEdit == light)) {
                 mGuiStatusData.lightToEdit = light;
@@ -814,7 +832,7 @@ void PhotonicDirectorApp::drawChannelControls()
             }
         }
         if (! ui::IsWindowCollapsed()) {
-            ui::ListBoxHeader("Edit channels");
+            ui::ListBoxHeader("Edit channels", mChannels.size(), 20);
             for (const InputChannelRef& channel : mChannels) {
                 if (ui::Selectable(channel->getName().c_str(), channelSelection == &channel)) {
                     channelSelection = &channel;
@@ -868,7 +886,20 @@ void PhotonicDirectorApp::drawEffectControls()
             static std::string effectName;
             static int effectType = 0;
             ui::InputText("Name", &effectName);
-            ui::Combo("Type", &effectType, Effect::getTypes());
+//            ui::Combo("Type", &effectType, Effect::getTypes());
+            auto effectTypes = Effect::getTypes();
+            if (ui::BeginCombo("Type", effectTypes[effectType].c_str())) {
+                for (int i=0; i < effectTypes.size(); i++) {
+                    bool isSelected = (effectType == i);
+                    if (ui::Selectable(effectTypes.at(i).c_str(), isSelected)) {
+                        effectType = i;
+                    }
+                    if (isSelected) {
+                        ui::SetItemDefaultFocus();
+                    }
+                }
+                ui::EndCombo();
+            }
             if (ui::Button("Done")) {
                 // In order to test if a strange exception occurs,
                 // close the effect editor for now.
@@ -1049,7 +1080,7 @@ void PhotonicDirectorApp::drawEffectControls()
                         break;
 
                     case photonic::Parameter::kType_Color:
-                        ui::ColorPicker4(param->description.c_str(), &param->colorValue[0]);
+                        ui::ColorEdit4(param->description.c_str(), &param->colorValue[0]);
                         break;
 
                     case photonic::Parameter::kType_OscTrigger:

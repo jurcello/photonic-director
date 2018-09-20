@@ -24,14 +24,27 @@ public:
     void readLights(std::vector<LightRef> &lights, LightFactory* lightFactory);
     void readChannels(std::vector<InputChannelRef> &channels);
     void readEffects(std::vector<EffectRef> &effects, const std::vector<LightRef> &lights, std::vector<InputChannelRef> &channels);
-    int readInt(std::string name);
+    template <class T>
+    T readValue(std::string name, T defaultValue) {
+        if (mDoc.hasChild(name)) {
+            XmlTree node = mDoc.getChild(name);
+            return node.getValue<T>();
+        }
+        return defaultValue;
+    }
     void readParam(std::unique_ptr<XmlTree> &paramNode, Parameter *param, std::vector<InputChannelRef> &channels);
     
     void startNewDoc();
     void writeLights(std::vector<LightRef> &lights);
     void writeChannels(std::vector<InputChannelRef> &channels);
     void writeEffects(std::vector<EffectRef> &effects);
-    void writeInt(std::string name, int value);
+    template <class T>
+    void writeValue(std::string name, T value) {
+        XmlTree valueNode;
+        valueNode.setTag(name);
+        valueNode.setValue(value);
+        mDoc.push_back(valueNode);
+    };
     void writeToFile(fs::path path);
     
     void writeParameter(XmlTree &paramsNode, Parameter* paramm, int index);

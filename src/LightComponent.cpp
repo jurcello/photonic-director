@@ -273,8 +273,20 @@ void CommandComponentGui::draw(int id) {
     currentCommandIndex = component.getCurrentCommandIndex();
     std::vector<std::string> availableCommands = component.getAvailableCommands();
     ui::PushID(id);
-    if (ui::Combo("Command", &currentCommandIndex, availableCommands)) {
-        component.execute(availableCommands[currentCommandIndex]);
+//    if (ui::Combo("Command", &currentCommandIndex, availableCommands)) {
+//        component.execute(availableCommands[currentCommandIndex]);
+//    }
+    if (ui::BeginCombo("Command", availableCommands.at(currentCommandIndex).c_str())) {
+        for (int index = 0; index < availableCommands.size(); index++) {
+            bool is_selected = (currentCommandIndex == index);
+            if (ui::Selectable(availableCommands[index].c_str(), is_selected)) {
+                component.execute(availableCommands[currentCommandIndex]);
+            }
+            if (is_selected) {
+                ui::SetItemDefaultFocus();
+            }
+        }
+        ui::EndCombo();
     }
     Command currentCommand = component.getCurrentCommand();
     if (currentCommand.min != currentCommand.max) {
