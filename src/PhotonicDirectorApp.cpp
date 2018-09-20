@@ -841,6 +841,11 @@ void PhotonicDirectorApp::drawChannelControls()
         if (ui::InputText("Address", &address)) {
             channel->setAdrress(address);
         }
+        static int smoothing;
+        smoothing = channel->getSmoothing();
+        if (ui::InputInt("Smoothing (high is more)", &smoothing)) {
+            channel->setSmoothing(smoothing);
+        }
         if (ui::Button("Done")) {
             channelSelection = nullptr;
         }

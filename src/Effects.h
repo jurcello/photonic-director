@@ -49,10 +49,12 @@ namespace photonic {
         void setValue(int value);
         void setValue(vec2 value);
         void setValue(vec3 value);
+        void setSmoothing(int smoothing);
         float getValue();
         int getIntValue();
         vec2 getVec2Value();
         vec3 getVec3Value();
+        int getSmoothing();
 
         void setType(Type type);
         Type getType();
@@ -71,6 +73,11 @@ namespace photonic {
         std::string mUuid;
         std::string mAddress;
         std::string mName;
+
+        int mSmoothing;
+        int mCurrentSmoothing;
+
+        void updateCurrentSmooting();
     };
     
     struct Parameter {

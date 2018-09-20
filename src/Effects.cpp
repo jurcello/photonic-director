@@ -22,7 +22,7 @@ InputChannelRef InputChannel::create(std::string name, std::string address, std:
 }
 
 InputChannel::InputChannel(std::string name, std::string address, std::string uuid)
-: mName(name), mAddress(address), mValue(0.f), mVec2Value(vec2(0.f)), mVec3Value(vec3(0.f)), mUuid(uuid), mIntValue(0)
+: mName(name), mAddress(address), mValue(0.f), mVec2Value(vec2(0.f)), mVec3Value(vec3(0.f)), mUuid(uuid), mIntValue(0), mSmoothing(1), mCurrentSmoothing(1)
 {
     if (mUuid == "")
         mUuid = generate_uuid();
@@ -38,25 +38,53 @@ void InputChannel::setName(const std::string name)
     mName = name;
 }
 
+// TODO: Change to template.
 void InputChannel::setValue(double value)
 {
+    updateCurrentSmooting();
+    if (mCurrentSmoothing > 1) {
+        mValue = (mValue * (mCurrentSmoothing -1) + (float) value) / mCurrentSmoothing;
+        return;
+    }
     mValue = (float) value;
 }
 
 void InputChannel::setValue(float value)
 {
+    updateCurrentSmooting();
+    if (mCurrentSmoothing > 1) {
+        mValue = (mValue * (mCurrentSmoothing -1) + value) / mCurrentSmoothing;
+        return;
+    }
     mValue = value;
 }
 
 void InputChannel::setValue(int value) {
+    updateCurrentSmooting();
+    if (mCurrentSmoothing > 1) {
+        mIntValue = (mIntValue * (mCurrentSmoothing -1) + value) / mCurrentSmoothing;
+        return;
+    }
+
     mIntValue = value;
 }
 
 void InputChannel::setValue(vec2 value) {
+    updateCurrentSmooting();
+    if (mCurrentSmoothing > 1) {
+        mVec2Value = (mVec2Value * (float) (mCurrentSmoothing -1) + value) / (float) mCurrentSmoothing;
+        return;
+    }
+
     mVec2Value = value;
 }
 
 void InputChannel::setValue(vec3 value) {
+    updateCurrentSmooting();
+    if (mCurrentSmoothing > 1) {
+        mVec3Value = (mVec3Value * (float) (mCurrentSmoothing -1) + value) / (float) mCurrentSmoothing;
+        return;
+    }
     mVec3Value = value;
 }
 
@@ -99,6 +127,24 @@ std::string InputChannel::getAddress()
 std::string InputChannel::getName() const
 {
     return mName;
+}
+
+void InputChannel::setSmoothing(int smoothing) {
+    if (smoothing < 1) {
+        return;
+    }
+    mSmoothing = smoothing;
+    mCurrentSmoothing = 1;
+}
+
+int InputChannel::getSmoothing() {
+    return mSmoothing;
+}
+
+void InputChannel::updateCurrentSmooting() {
+    if (mCurrentSmoothing < mSmoothing) {
+        mCurrentSmoothing++;
+    }
 }
 
 //////////////////////////////////////////////////////////////////
