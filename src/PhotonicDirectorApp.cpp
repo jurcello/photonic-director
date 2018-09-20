@@ -22,6 +22,9 @@ using protocol = asio::ip::udp;
 const int WINDOW_WIDTH = 1024;
 const int WINDOW_HEIGHT = 768;
 
+const char* LIGHT_SELECT = "LIGHT_SELECT";
+const char* CHANNEL_SELECT = "CHANN_SELECT";
+
 enum gui_status {
     IDLE,
     EDITING_LIGHT,
@@ -35,7 +38,10 @@ struct GuiStatusData {
     LightRef pickedLight;
     bool drawGui;
     bool visualizeEffects;
-    
+
+    bool isDraggingLight;
+    bool isDraggingChannel;
+
     gui_status status;
 };
 
@@ -107,8 +113,10 @@ protected:
     void drawLightControls();
     void drawEffectControls();
     void drawDmxInspector();
+    void drawObjectsHierarchy();
     GuiStatusData mGuiStatusData;
     bool mShowVisualizer;
+    bool mShowObjects;
 
     // Dmx output.
     DmxOutput mDmxOut;
@@ -125,6 +133,7 @@ PhotonicDirectorApp::PhotonicDirectorApp()
   mOscSendAddress("192.168.1.11"),
   mLightFactory(&mDmxOut),
   mShowVisualizer(true),
+  mShowObjects(false),
   mLastOscAddress(""),
   mUnityAddress("192.168.1.8"),
   mUnityPort(8089)
@@ -134,7 +143,9 @@ PhotonicDirectorApp::PhotonicDirectorApp()
     mGuiStatusData.pickedLight = nullptr;
     mGuiStatusData.drawGui = true;
     mGuiStatusData.visualizeEffects = false;
-    
+    mGuiStatusData.isDraggingLight = false;
+    mGuiStatusData.isDraggingChannel = false;
+
     mGuiStatusData.status = IDLE;
 }
 
@@ -190,6 +201,7 @@ void PhotonicDirectorApp::setTheme(ImGui::Options &options) {
     options.color(ImGuiCol_PlotHistogramHovered,  ImVec4(1.00f, 0.60f, 0.00f, 1.00f));
     options.color(ImGuiCol_TextSelectedBg,        ImVec4(0.32f, 0.52f, 0.65f, 1.00f));
     options.color(ImGuiCol_ModalWindowDarkening,  ImVec4(0.20f, 0.20f, 0.20f, 0.50f));
+    options.color(ImGuiCol_TextSelectedBg,        ImVec4(0.00f, 0.20f, 1.00f, 1.00f));
 }
 
 void PhotonicDirectorApp::setup()
@@ -607,6 +619,7 @@ void PhotonicDirectorApp::drawGui()
     ui::Checkbox("Show light editor", &showLightEditor);
     ui::Checkbox("Show channel editor", &showChannelEditor);
     ui::Checkbox("Show effect editor", &showEffectEditor);
+    ui::Checkbox("Show objects hierarchy", &mShowObjects);
     ui::Checkbox("Show DMX inspector", &showDmxInspector);
     ui::Separator();
     ui::Text("Unity connection");
@@ -656,6 +669,9 @@ void PhotonicDirectorApp::drawGui()
     }
     if (showLightEditor) {
         drawLightControls();
+    }
+    if (mShowObjects) {
+        drawObjectsHierarchy();
     }
     if (showDmxInspector) {
         drawDmxInspector();
@@ -734,9 +750,18 @@ void PhotonicDirectorApp::drawLightControls()
     }
     if (! ui::IsWindowCollapsed()) {
         ui::ListBoxHeader("Edit lights", mLights.size(), 20);
+        ImGuiDragDropFlags srcFlags = 0;
         for (LightRef light: mLights) {
             if (ui::Selectable(light->mName.c_str(), mGuiStatusData.lightToEdit == light)) {
                 mGuiStatusData.lightToEdit = light;
+            }
+            if (ui::BeginDragDropSource(srcFlags)) {
+                if (!(srcFlags & ImGuiDragDropFlags_SourceNoPreviewTooltip)) {
+                    ui::Text("Move %s to effect", light->mName.c_str());
+                }
+                ui::SetDragDropPayload(LIGHT_SELECT, &light, sizeof(light));
+                ui::EndDragDropSource();
+                mGuiStatusData.isDraggingLight = true;
             }
         }
         ui::ListBoxFooter();
@@ -833,9 +858,18 @@ void PhotonicDirectorApp::drawChannelControls()
         }
         if (! ui::IsWindowCollapsed()) {
             ui::ListBoxHeader("Edit channels", mChannels.size(), 20);
-            for (const InputChannelRef& channel : mChannels) {
+            for (const InputChannelRef channel : mChannels) {
                 if (ui::Selectable(channel->getName().c_str(), channelSelection == &channel)) {
                     channelSelection = &channel;
+                }
+                ImGuiDragDropFlags srcFlags = 0;
+                if (ui::BeginDragDropSource(srcFlags)) {
+                    if (!(srcFlags & ImGuiDragDropFlags_SourceNoPreviewTooltip)) {
+                        ui::Text("Move %s to effect", channel->getName().c_str());
+                    }
+                    ui::SetDragDropPayload(CHANNEL_SELECT, &channel, sizeof(channel));
+                    ui::EndDragDropSource();
+                    mGuiStatusData.isDraggingChannel = true;
                 }
                 ui::SameLine();
                 float value = channel->getValue();
@@ -1062,6 +1096,13 @@ void PhotonicDirectorApp::drawEffectControls()
                     }
                     ui::ListBoxFooter();
                 }
+                if (ui::BeginDragDropTarget() && mGuiStatusData.isDraggingLight) {
+                    ImGuiDragDropFlags target_flags = 0;
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(LIGHT_SELECT, target_flags)) {
+                        LightRef light = *(LightRef*)payload->Data;
+                        effect->addLight(light);
+                    }
+                }
             }
             ui::Separator();
             // Draw the params.
@@ -1116,13 +1157,25 @@ void PhotonicDirectorApp::drawEffectControls()
 
                     case photonic::Parameter::kType_Channel:
                         if (! ui::IsWindowCollapsed()) {
-                            ui::ListBoxHeader(param->description.c_str(), (int) mChannels.size());
-                            for (const auto channel : mChannels) {
-                                if (ui::Selectable(channel->getName().c_str(), channel == param->channelRef)) {
+                            ui::ListBoxHeader(param->description.c_str(), 1);
+                            if (param->channelRef) {
+                                ui::Selectable(param->channelRef->getName().c_str());
+                            }
+                            ui::ListBoxFooter();
+                            if (ui::BeginDragDropTarget() && mGuiStatusData.isDraggingChannel) {
+                                ImGuiDragDropFlags target_flags = 0;
+                                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(CHANNEL_SELECT, target_flags)) {
+                                    InputChannelRef channel = *(InputChannelRef*)payload->Data;
                                     param->channelRef = channel;
                                 }
                             }
-                            ui::ListBoxFooter();
+                            else {
+                                if (!param->channelRef) {
+                                    ui::Text("Please use drag and drop to assign channel");
+                                }
+                            }
+
+
                             if (ui::Button("Reset channel")) {
                                 param->channelRef = nullptr;
                             }
@@ -1155,6 +1208,46 @@ void PhotonicDirectorApp::drawDmxInspector()
         ui::Image(dmxVisuals, dmxVisuals->getSize());
     }
 }
+
+void PhotonicDirectorApp::drawObjectsHierarchy() {
+    ImGui::ScopedWindow window("Objects");
+    mGuiStatusData.isDraggingLight = false;
+    mGuiStatusData.isDraggingChannel = false;
+    if (! ui::IsWindowCollapsed()) {
+        ImGuiDragDropFlags srcFlags = 0;
+        if (ui::TreeNode("Lights")) {
+            for (const auto light: mLights) {
+                ui::Selectable(light->mName.c_str());
+                if (ui::BeginDragDropSource(srcFlags)) {
+                    if (!(srcFlags & ImGuiDragDropFlags_SourceNoPreviewTooltip)) {
+                        ui::Text("Move %s to effect", light->mName.c_str());
+                    }
+                    ui::SetDragDropPayload(LIGHT_SELECT, &light, sizeof(light));
+                    ui::EndDragDropSource();
+                    mGuiStatusData.isDraggingLight = true;
+                }
+            }
+            ui::TreePop();
+        }
+        if (ui::TreeNode("Channels")) {
+            for (const auto channel: mChannels) {
+                ui::Selectable(channel->getName().c_str());
+                if (ui::BeginDragDropSource(srcFlags)) {
+                    if (!(srcFlags & ImGuiDragDropFlags_SourceNoPreviewTooltip)) {
+                        ui::Text("Move %s to effect", channel->getName().c_str());
+                    }
+                    ui::SetDragDropPayload(CHANNEL_SELECT, &channel, sizeof(channel));
+                    ui::EndDragDropSource();
+                    mGuiStatusData.isDraggingChannel = true;
+                }
+
+            }
+            ui::TreePop();
+        }
+    }
+}
+
+
 void PhotonicDirectorApp::resize()
 {
     mVisualizer.resize();
