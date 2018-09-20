@@ -218,16 +218,6 @@ void ConfigManager::readParam(std::unique_ptr<XmlTree> &paramNode, Parameter *pa
     }
 }
 
-int ConfigManager::readInt(std::string name)
-{
-    if (mDoc.hasChild(name)) {
-        XmlTree node = mDoc.getChild(name);
-        return node.getValue<int>();
-    }
-    // TODO: better handling of absence of nodes.
-    return 0;
-}
-
 void ConfigManager::startNewDoc()
 {
     std::string beginXmlString("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>");
@@ -428,14 +418,6 @@ void ConfigManager::writeParameter(cinder::XmlTree &paramsNode, photonic::Parame
             break;
     }
     paramsNode.push_back(paramnode);
-}
-
-void ConfigManager::writeInt(std::string name, int value)
-{
-    XmlTree valueNode;
-    valueNode.setTag(name);
-    valueNode.setValue(value);
-    mDoc.push_back(valueNode);
 }
 
 void ConfigManager::writeToFile(fs::path path)

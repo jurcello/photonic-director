@@ -372,8 +372,12 @@ void PhotonicDirectorApp::save()
         config.writeLights(mLights);
         config.writeChannels(mChannels);
         config.writeEffects(mEffects);
-        config.writeInt("oscReceivePort", mOscReceivePort);
-        config.writeInt("oscSendPort", mOscSendPort);
+        config.writeValue<int>("oscReceivePort", mOscReceivePort);
+        config.writeValue<int>("oscSendPort", mOscSendPort);
+        config.writeValue<int>("unityPort", mUnityPort);
+        config.writeValue<bool>("oscUnicast", mOscUnicast);
+        config.writeValue<std::string>("oscSendAddress", mOscSendAddress);
+        config.writeValue<std::string>("unityAddress", mUnityAddress);
         config.writeToFile(savePath);
     }
 }
@@ -385,14 +389,12 @@ void PhotonicDirectorApp::load()
     fs::path loadPath = getOpenFilePath(fs::path(), extensions);
     if (! loadPath.empty()) {
         config.readFromFile(loadPath);
-        int oscReceivePort = config.readInt("oscReceivePort");
-        int oscSendPort = config.readInt("oscSendPort");
-        if (oscReceivePort > 0) {
-            mOscReceivePort = oscReceivePort;
-        }
-        if (oscSendPort > 0) {
-            mOscSendPort = oscSendPort;
-        }
+        mOscReceivePort = config.readValue<int>("oscReceivePort", mOscReceivePort);
+        mOscSendPort = config.readValue<int>("oscSendPort", mOscSendPort);
+        mUnityPort = config.readValue<int>("unityPort", mUnityPort);
+        mOscUnicast = config.readValue<bool>("oscUnicast", mOscUnicast);
+        mOscSendAddress = config.readValue<std::string>("oscSendAddress", mOscSendAddress);
+        mUnityAddress = config.readValue<std::string>("unityAddress", mUnityAddress);
         setupOsc(mOscReceivePort, mOscSendPort);
         // Reset the channelRegistry of the dmx out.
         mDmxOut.clearRegistry();
@@ -538,7 +540,9 @@ void PhotonicDirectorApp::drawGui()
     static bool showEffectEditor = true;
     static bool showDmxInspector = false;
     // Draw the general ui.
-    ImGui::ScopedWindow window("Controls");
+    ImGuiWindowFlags windowFlags = 0;
+    windowFlags |= ImGuiWindowFlags_NoMove;
+    ImGui::ScopedWindow window("Controls", windowFlags);
     
     ui::Separator();
     ui::Text("Osc settings");
@@ -729,7 +733,7 @@ void PhotonicDirectorApp::drawLightControls()
         }
     }
     if (! ui::IsWindowCollapsed()) {
-        ui::ListBoxHeader("Edit lights");
+        ui::ListBoxHeader("Edit lights", mLights.size(), 20);
         for (LightRef light: mLights) {
             if (ui::Selectable(light->mName.c_str(), mGuiStatusData.lightToEdit == light)) {
                 mGuiStatusData.lightToEdit = light;
@@ -828,7 +832,7 @@ void PhotonicDirectorApp::drawChannelControls()
             }
         }
         if (! ui::IsWindowCollapsed()) {
-            ui::ListBoxHeader("Edit channels");
+            ui::ListBoxHeader("Edit channels", mChannels.size(), 20);
             for (const InputChannelRef& channel : mChannels) {
                 if (ui::Selectable(channel->getName().c_str(), channelSelection == &channel)) {
                     channelSelection = &channel;
