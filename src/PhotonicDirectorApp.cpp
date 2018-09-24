@@ -695,10 +695,8 @@ void PhotonicDirectorApp::drawLightControls()
     if (ui::BeginPopupModal("Create Light")) {
         static std::string lightName;
         static int lightType = 0;
-//        static std::string lightType;
         static vec3 lightPosition;
         ui::InputText("Name", &lightName);
-//        ui::Combo("Type", &lightType, mLightFactory.getAvailableTypeNames());
         auto availableTypeNames = mLightFactory.getAvailableTypeNames();
         if (ui::BeginCombo("Type", availableTypeNames[lightType].c_str())) {
             for (int i=0; i < availableTypeNames.size(); i++) {
@@ -728,12 +726,6 @@ void PhotonicDirectorApp::drawLightControls()
         ui::EndPopup();
     }
 
-//    if (ui::Button("Add")) {
-//        LightRef newLight = mLightFactory.create(vec3(1.0f));
-//        mLights.push_back(newLight);
-//        mGuiStatusData.lightToEdit = newLight;
-//        mGuiStatusData.status = EDITING_LIGHT;
-//    }
     if (mGuiStatusData.lightToEdit) {
         ui::SameLine();
         if (ui::Button("Remove")) {
@@ -858,7 +850,7 @@ void PhotonicDirectorApp::drawChannelControls()
         }
         if (! ui::IsWindowCollapsed()) {
             ui::ListBoxHeader("Edit channels", mChannels.size(), 20);
-            for (const InputChannelRef channel : mChannels) {
+            for (const InputChannelRef &channel : mChannels) {
                 if (ui::Selectable(channel->getName().c_str(), channelSelection == &channel)) {
                     channelSelection = &channel;
                 }
@@ -1135,6 +1127,17 @@ void PhotonicDirectorApp::drawEffectControls()
                         break;
 
                     case photonic::Parameter::kType_Vector3:
+                        ui::ListBoxHeader("Drop Light", vec2(30,10));
+                        ui::ListBoxFooter();
+                        if (ui::BeginDragDropTarget() && mGuiStatusData.isDraggingLight) {
+                            ImGuiDragDropFlags target_flags = 0;
+                            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(LIGHT_SELECT, target_flags)) {
+                                LightRef light = *(LightRef*)payload->Data;
+                                param->vec3Value = vec3(light->position.x, light->position.y, light->position.z);
+
+                            }
+                        }
+                        ui::SameLine();
                         ui::InputFloat3(param->description.c_str(), &param->vec3Value[0]);
                         break;
 
