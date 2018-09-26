@@ -21,7 +21,8 @@ namespace photonic {
             kInput_IntensityChannel = 5,
             kInput_PanChannel = 6,
             kInput_TiltChannel = 7,
-            kInput_FocusChannel = 8,
+            kInput_IrisChannel = 8,
+            kInput_FocusChannel = 9,
         };
 
         MovingHead(std::string name, std::string uuid = "");

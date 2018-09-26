@@ -147,8 +147,15 @@ void CommandComponent::execute(std::string command) {
 
 void CommandComponent::execute(std::string command, int value) {
     mCurrentCommand = mCommands.at(command);
+    value = glm::clamp(value, mCurrentCommand.min, mCurrentCommand.max);
     mCurrentValue = value;
     updateCurrentCommandIndex();
+}
+
+void CommandComponent::execute(std::string command, float value) {
+    mCurrentCommand = mCommands.at(command);
+    int intValue = value * (mCurrentCommand.max - mCurrentCommand.min) + mCurrentCommand.min;
+    mCurrentValue = glm::clamp(intValue, mCurrentCommand.min, mCurrentCommand.max);
 }
 
 void CommandComponent::updateCurrentCommandIndex() {
@@ -205,6 +212,10 @@ void ChannelComponent::updateDmx(DmxOutput *dmxOutput) {
 
 void ChannelComponent::setValue(int value) {
     mValue = value;
+}
+
+void ChannelComponent::setValue(float value) {
+    mValue = (int) glm::clamp(value, 0.f, 1.f) * 255;
 }
 
 int ChannelComponent::getValue() {
@@ -273,14 +284,11 @@ void CommandComponentGui::draw(int id) {
     currentCommandIndex = component.getCurrentCommandIndex();
     std::vector<std::string> availableCommands = component.getAvailableCommands();
     ui::PushID(id);
-//    if (ui::Combo("Command", &currentCommandIndex, availableCommands)) {
-//        component.execute(availableCommands[currentCommandIndex]);
-//    }
     if (ui::BeginCombo("Command", availableCommands.at(currentCommandIndex).c_str())) {
         for (int index = 0; index < availableCommands.size(); index++) {
             bool is_selected = (currentCommandIndex == index);
             if (ui::Selectable(availableCommands[index].c_str(), is_selected)) {
-                component.execute(availableCommands[currentCommandIndex]);
+                component.execute(availableCommands[index]);
             }
             if (is_selected) {
                 ui::SetItemDefaultFocus();

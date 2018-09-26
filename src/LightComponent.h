@@ -96,6 +96,7 @@ public:
     CommandComponent(LightComponentDefintion definition, int fixtureChannel);
     void updateDmx(DmxOutput *dmxOutput) override;
     void execute(std::string command, int value);
+    void execute(std::string command, float value);
     void execute(std::string command);
     Command getCurrentCommand();
     int getCurrentCommandIndex();
@@ -121,6 +122,7 @@ public:
     using LightComponent::LightComponent;
     void updateDmx(DmxOutput *dmxOutput) override;
     void setValue(int value);
+    void setValue(float value);
     int getValue();
     LightComponentGuiRef getGui() override;
 

@@ -513,20 +513,18 @@ void PhotonicDirectorApp::handleLightOscSending() {
     for (auto light : mLights) {
         counter++;
         if (light->mSendOsc && light->mOscAdress[0] == '/') {
-            osc::Message message(light->mOscAdress + "/intensity");
+            osc::Message message(light->mOscAdress);
             message.append(light->intensity);
-            bundle.append(message);
             if (light->isColorEnabled()) {
-                osc::Message messageR(light->mOscAdress + "/r");
-                messageR.append(light->color.r);
-                bundle.append(messageR);
-                osc::Message messageG(light->mOscAdress + "/g");
-                messageG.append(light->color.g);
-                bundle.append(messageG);
-                osc::Message messageB(light->mOscAdress + "/b");
-                messageB.append(light->color.b);
-                bundle.append(messageB);
+                message.append(true);
+                message.append(light->color.r);
+                message.append(light->color.g);
+                message.append(light->color.b);
             }
+            else {
+                message.append(false);
+            }
+            bundle.append(message);
             if (counter > maxLightsToSend) {
                 mOscSender->send(bundle);
                 bundle.clear();
@@ -910,11 +908,12 @@ void PhotonicDirectorApp::drawEffectControls()
         }
         if (ui::BeginPopupModal("Create effect")) {
             static std::string effectName;
+            static std::string filter;
+            static std::string previousFilter;
             static int effectType = 0;
             ui::InputText("Name", &effectName);
-//            ui::Combo("Type", &effectType, Effect::getTypes());
             auto effectTypes = Effect::getTypes();
-            if (ui::BeginCombo("Type", effectTypes[effectType].c_str())) {
+            if (ui::BeginCombo("Type", effectTypes[effectType].c_str()) ) {
                 for (int i=0; i < effectTypes.size(); i++) {
                     bool isSelected = (effectType == i);
                     if (ui::Selectable(effectTypes.at(i).c_str(), isSelected)) {
@@ -926,6 +925,7 @@ void PhotonicDirectorApp::drawEffectControls()
                 }
                 ui::EndCombo();
             }
+            previousFilter = filter;
             if (ui::Button("Done")) {
                 // In order to test if a strange exception occurs,
                 // close the effect editor for now.

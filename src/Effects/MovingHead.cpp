@@ -16,7 +16,8 @@ MovingHead::MovingHead(std::string name, std::string uuid) : Effect(name, uuid) 
     registerParam(Parameter::Type::kType_Channel_MinMax, kInput_IntensityChannel, vec4(0.0f, 1.0f, 0.0f, 1.0f), "Intensity channel");
     registerParam(Parameter::Type::kType_Channel_MinMax, kInput_PanChannel, vec4(0.0f, 360.0f, 0.0f, 360.0f), "Pan channel");
     registerParam(Parameter::Type::kType_Channel_MinMax, kInput_TiltChannel, vec4(-90.0f, 90.0f, 0.0f, 360.0f), "Tilt channel");
-    registerParam(Parameter::Type::kType_Channel_MinMax, kInput_FocusChannel, vec4(0.0f, 1.0f, 0.0f, 1.0f), "Tilt channel");
+    registerParam(Parameter::Type::kType_Channel_MinMax, kInput_IrisChannel, vec4(0.0f, 1.0f, 0.0f, 1.0f), "Iris channel");
+    registerParam(Parameter::Type::kType_Channel_MinMax, kInput_FocusChannel, vec4(0.0f, 1.0f, 0.0f, 1.0f), "Focus channel");
 }
 
 bool MovingHead::supportsLight(LightRef light) {
@@ -44,12 +45,13 @@ void MovingHead::execute(double dt) {
     float intensity = mParams[kInput_Intensity]->floatValue;
     float pan = mParams[kInput_Pan]->floatValue;
     float tilt = mParams[kInput_Tilt]->floatValue;
-    float focus = mParams[kInput_Focus]->floatValue;
+    float iris = 1.0f - mParams[kInput_Focus]->floatValue;
     for (const auto light: mLights) {
         light->setEffectIntensity(mUuid, intensity);
         if (this->isTurnedOn) {
             auto panComponent = light->getComponent<PanComponent>();
             auto tiltComponent = light->getComponent<TiltComponent>();
+            auto irisComponent = light->getComponentById<CommandComponent>("iris");
             auto focusComponent = light->getComponentById<ChannelComponent>("focus");
             if (panComponent) {
                 panComponent->setPanning(pan);
@@ -59,9 +61,12 @@ void MovingHead::execute(double dt) {
                 tiltComponent->setTilt(tilt);
                 tiltComponent->controlledBy = mName;
             }
+            if (irisComponent) {
+                irisComponent->execute("Open -> Close", iris);
+                irisComponent->controlledBy = mName;
+            }
             if (focusComponent) {
-                focusComponent->setValue(focus);
-                focusComponent->controlledBy = mName;
+                focusComponent->setValue(glm::clamp(mParams[kInput_Focus]->floatValue, 0.f, 1.f));
             }
         }
     }
