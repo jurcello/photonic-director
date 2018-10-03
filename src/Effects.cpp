@@ -399,14 +399,11 @@ void Effect::listenToOsc(const osc::Message &message) {
     for (auto &item : mParams) {
         Parameter* param = item.second;
         if (param->type == photonic::Parameter::kType_OscTrigger) {
-            app::console() << "osc received" << std::endl;
             if (message.getAddress() == param->oscAdress) {
-                app::console() << "Addrress received" << std::endl;
                 if ((message.getArgType(0) == osc::ArgType::INTEGER_32 && message.getArgInt32(0) == 1) || (message.getArgType(0) == osc::ArgType::FLOAT && message.getArgFloat(0) == 1.0f)) {
-                    app::console() << "Triggered" << std::endl;
                     param->triggerValue = true;
                 }
-                else {
+                else if ((message.getArgType(0) == osc::ArgType::INTEGER_32 && message.getArgInt32(0) == 0) || (message.getArgType(0) == osc::ArgType::FLOAT && message.getArgFloat(0) == 0.0f)) {
                     param->triggerValue = false;
                 }
             }
