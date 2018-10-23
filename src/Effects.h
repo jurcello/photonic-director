@@ -194,7 +194,8 @@ namespace photonic {
         virtual void visualize();
 
         // Public accessable variables. Part of the interface!
-        float fadeTime;
+        float fadeInTime;
+        float fadeOutTime;
         bool isTurnedOn;
         float weight;
 

@@ -223,7 +223,7 @@ EffectRef Effect::create(std::string type, std::string name, std::string uuid)
 }
 
 Effect::Effect(std::string name, std::string uuid)
-:mName(name), mUuid(uuid), mStatus(kStatus_Off), isTurnedOn(false), fadeTime(2.0f), mFadeValue(0.0), weight(1.0f), oscAddressForOnOff("")
+:mName(name), mUuid(uuid), mStatus(kStatus_Off), isTurnedOn(false), fadeInTime(2.0f), fadeOutTime(2.0f), mFadeValue(0.0), weight(1.0f), oscAddressForOnOff("")
 {
     if (uuid == "") {
         mUuid = generate_uuid();
@@ -358,31 +358,44 @@ void Effect::execute(double dt) {
         // Initialize the effect.
         init();
     }
-    if (! isTurnedOn && mStatus == kStatus_On) {
+    else if (! isTurnedOn && mStatus == kStatus_On) {
         mStatus = kStatus_FadingOut;
         mStatusChangeTime = getElapsedSeconds();
     }
     
     // Start with the end of the status transitions.
-    if ( isTurnedOn && mStatus == kStatus_FadingIn) {
-        if (getElapsedSeconds() - mStatusChangeTime > fadeTime) {
+    else if ( isTurnedOn && mStatus == kStatus_FadingIn) {
+        if (getElapsedSeconds() - mStatusChangeTime > fadeInTime) {
             mStatus = kStatus_On;
             mFadeValue = 1.0;
             mStatusChangeTime = 0.0;
         }
         else {
-            mFadeValue = (getElapsedSeconds() - mStatusChangeTime) / fadeTime;
+            mFadeValue = (getElapsedSeconds() - mStatusChangeTime) / fadeInTime;
         }
     }
-    if ( !isTurnedOn && mStatus == kStatus_FadingOut) {
-        if (getElapsedSeconds() - mStatusChangeTime > fadeTime) {
+    else if ( !isTurnedOn && mStatus == kStatus_FadingOut) {
+        if (getElapsedSeconds() - mStatusChangeTime > fadeOutTime) {
             mStatus = kStatus_Off;
             mFadeValue = 0.0;
             mStatusChangeTime = 0.0;
         }
         else {
-            mFadeValue = 1.0 - (getElapsedSeconds() - mStatusChangeTime) / fadeTime;
+            mFadeValue = 1.0 - (getElapsedSeconds() - mStatusChangeTime) / fadeOutTime;
         }
+    }
+    // Handle transitions from fadingOut to fadingIn and backwards.
+    else if (! isTurnedOn && mStatus == kStatus_FadingIn) {
+        // Calculate a new statuschanged time in order to start a smooth transition.
+        float dt = (1.f - mFadeValue) * fadeOutTime;
+        mStatusChangeTime = getElapsedSeconds() - dt;
+        mStatus = kStatus_FadingOut;
+    }
+    else if (isTurnedOn && mStatus == kStatus_FadingOut) {
+        // Calculate a new statuschanged time in order to start a smooth transition.
+        float dt =  mFadeValue * fadeInTime;
+        mStatusChangeTime = getElapsedSeconds() - dt;
+        mStatus = kStatus_FadingIn;
     }
 }
 

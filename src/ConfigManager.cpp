@@ -109,9 +109,13 @@ void ConfigManager::readEffects(std::vector<EffectRef> &effects, const std::vect
             std::string uuid = effectNode.getAttributeValue<std::string>("uuid");
             // Create the effect.
             EffectRef newEffect = Effect::create(type, name, uuid);
-            if (effectNode.hasChild("fadetime")) {
-                float fadeTime = effectNode.getChild("fadetime").getValue<float>();
-                newEffect->fadeTime = fadeTime;
+            if (effectNode.hasChild("fadeInTime")) {
+                float fadeTime = effectNode.getChild("fadeInTime").getValue<float>();
+                newEffect->fadeInTime = fadeTime;
+            }
+            if (effectNode.hasChild("fadeOutTime")) {
+                float fadeTime = effectNode.getChild("fadeOutTime").getValue<float>();
+                newEffect->fadeOutTime = fadeTime;
             }
             if (effectNode.hasChild("weight")) {
                 float weight = effectNode.getChild("weight").getValue<float>();
@@ -326,9 +330,14 @@ void ConfigManager::writeEffects(std::vector<EffectRef> &effects)
         nameNode.setTag("name");
         nameNode.setValue(effect->getName());
         effectNode.push_back(nameNode);
-        XmlTree fadeTimeNode;
-        fadeTimeNode.setTag("fadetime");
-        fadeTimeNode.setValue(effect->fadeTime);
+        XmlTree fadeInTimeNode;
+        fadeInTimeNode.setTag("fadeInTime");
+        fadeInTimeNode.setValue(effect->fadeInTime);
+        effectNode.push_back(fadeInTimeNode);
+        XmlTree fadeOutTimeNode;
+        fadeOutTimeNode.setTag("fadeOutTime");
+        fadeOutTimeNode.setValue(effect->fadeOutTime);
+        effectNode.push_back(fadeOutTimeNode);
         XmlTree weightNode;
         weightNode.setTag("weight");
         weightNode.setValue(effect->weight);

@@ -943,6 +943,13 @@ void PhotonicDirectorApp::drawEffectControls()
             EffectRef & effectRef = *it;
             ui::Checkbox("", &effectRef->isTurnedOn);
             ui::SameLine();
+            {
+                ui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.0f, 0.93f, 0.0f, 0.63f));
+                float fadeValueContent = effectRef->getFadeValue();
+                float fadeValue[] = {fadeValueContent};
+                ui::PlotHistogram("", fadeValue, 1, 0, NULL, 0.0f, 1.0f, ImVec2(20, 18));
+            }
+            ui::SameLine();
             if (ui::Button("Remove")) {
                 it = mEffects.erase(it);
                 effectSelection = nullptr;
@@ -1004,7 +1011,8 @@ void PhotonicDirectorApp::drawEffectControls()
             ui::Checkbox("OSC learn", &oscLearn);
             // End OSC input.
             ui::Separator();
-            ui::InputFloat("FadeTime", &effect->fadeTime);
+            ui::InputFloat("Fadein Time", &effect->fadeInTime);
+            ui::InputFloat("Fadeout Time", &effect->fadeOutTime);
             ui::SliderFloat("Weight", &effect->weight, 0.0f, 100.0f);
             ui::Spacing();
             if (! ui::IsWindowCollapsed()) {
