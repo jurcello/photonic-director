@@ -140,7 +140,7 @@ namespace photonic {
             kStage_After,
         };
         
-        static void registerType(const std::string type, EffectFactory* factory);
+        static void registerType(std::string type, EffectFactory* factory);
         static EffectRef create(std::string type, std::string name);
         static EffectRef create(std::string type, std::string name, std::string uuid);
         static std::vector<std::string> getTypes();
@@ -198,6 +198,8 @@ namespace photonic {
         float fadeOutTime;
         bool isTurnedOn;
         float weight;
+
+//        bool
 
         std::string oscAddressForOnOff;
 

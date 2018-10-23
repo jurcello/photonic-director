@@ -223,7 +223,7 @@ EffectRef Effect::create(std::string type, std::string name, std::string uuid)
 }
 
 Effect::Effect(std::string name, std::string uuid)
-:mName(name), mUuid(uuid), mStatus(kStatus_Off), isTurnedOn(false), fadeInTime(2.0f), fadeOutTime(2.0f), mFadeValue(0.0), weight(1.0f), oscAddressForOnOff("")
+:mName(name), mUuid(uuid), mStatus(kStatus_Off), isTurnedOn(false), fadeInTime(2.0f), fadeOutTime(2.0f), mFadeValue(0.0f), weight(1.0f), oscAddressForOnOff("")
 {
     if (uuid == "") {
         mUuid = generate_uuid();
@@ -387,14 +387,14 @@ void Effect::execute(double dt) {
     // Handle transitions from fadingOut to fadingIn and backwards.
     else if (! isTurnedOn && mStatus == kStatus_FadingIn) {
         // Calculate a new statuschanged time in order to start a smooth transition.
-        float dt = (1.f - mFadeValue) * fadeOutTime;
-        mStatusChangeTime = getElapsedSeconds() - dt;
+        float timeDiff = (1.f - mFadeValue) * fadeOutTime;
+        mStatusChangeTime = getElapsedSeconds() - timeDiff;
         mStatus = kStatus_FadingOut;
     }
     else if (isTurnedOn && mStatus == kStatus_FadingOut) {
         // Calculate a new statuschanged time in order to start a smooth transition.
-        float dt =  mFadeValue * fadeInTime;
-        mStatusChangeTime = getElapsedSeconds() - dt;
+        float timeDiff =  mFadeValue * fadeInTime;
+        mStatusChangeTime = getElapsedSeconds() - timeDiff;
         mStatus = kStatus_FadingIn;
     }
 }

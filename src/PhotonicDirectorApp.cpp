@@ -155,6 +155,7 @@ PhotonicDirectorApp::PhotonicDirectorApp()
 
 void PhotonicDirectorApp::setTheme(ImGui::Options &options) {
     options = options.darkTheme();
+    options.color(ImGuiCol_PlotHistogram, ImVec4(0.0f, 0.93f, 0.0f, 0.63f));
 }
 
 void PhotonicDirectorApp::setup()
@@ -943,12 +944,10 @@ void PhotonicDirectorApp::drawEffectControls()
             EffectRef & effectRef = *it;
             ui::Checkbox("", &effectRef->isTurnedOn);
             ui::SameLine();
-            {
-                ui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.0f, 0.93f, 0.0f, 0.63f));
-                float fadeValueContent = effectRef->getFadeValue();
-                float fadeValue[] = {fadeValueContent};
-                ui::PlotHistogram("", fadeValue, 1, 0, NULL, 0.0f, 1.0f, ImVec2(20, 18));
-            }
+
+            float fadeValueContent = effectRef->getFadeValue();
+            float fadeValue[] = {fadeValueContent};
+            ui::PlotHistogram("", fadeValue, 1, 0, NULL, 0.0f, 1.0f, ImVec2(20, 18));
             ui::SameLine();
             if (ui::Button("Remove")) {
                 it = mEffects.erase(it);

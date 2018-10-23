@@ -158,4 +158,12 @@ struct LightBufferData
     explicit LightBufferData(LightRef light);
 };
 
+struct LightControl {
+    LightRef light;
+    ColorA color;
+    float intensity;
+
+    explicit LightControl(LightRef cLight, ColorA cColor, float cIntensity);
+};
+
 #endif /* Light_h */
