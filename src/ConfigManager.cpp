@@ -154,6 +154,9 @@ void ConfigManager::readEffects(std::vector<EffectRef> &effects, const std::vect
                     
                 }
             }
+            // Handle the serializer;
+            EffectXmlSerializerRef serializer = newEffect->getXmlSerializer();
+            serializer->readEffect(effectNode, lights, channels);
             effects.push_back(newEffect);
         }
         
@@ -372,6 +375,11 @@ void ConfigManager::writeEffects(std::vector<EffectRef> &effects)
         }
         effectNode.push_back(paramsNode);
         effectNode.push_back(lightsNode);
+
+        // Handle custom serialization.
+        EffectXmlSerializerRef serializer = effect->getXmlSerializer();
+        serializer->writeEffect(effectNode);
+
         effectsNode.push_back(effectNode);
     }
     mDoc.push_back(effectsNode);

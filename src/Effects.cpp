@@ -439,6 +439,29 @@ void Effect::init() {
 void Effect::visualize() {
     // No default visualisation.
 }
+
+EffectXmlSerializerRef Effect::getXmlSerializer() {
+    return EffectXmlSerializerRef(new EffectXmlSerializer(this));
+}
+
+//////////////////////////////////////////////////////////////////
+/// Xml Serializer
+//////////////////////////////////////////////////////////////////
+EffectXmlSerializer::EffectXmlSerializer(Effect* cEffect)
+: mEffect(cEffect)
+{
+}
+
+void EffectXmlSerializer::writeEffect(XmlTree &xmlNode) {
+    // for now do nothing yet.
+    int dummy = 0;
+}
+
+void EffectXmlSerializer::readEffect(XmlTree &xmlNode, const std::vector<LightRef> &lights, std::vector<InputChannelRef> &channels) {
+    // for now do nothing yet.
+}
+
+
 //////////////////////////////////////////////////////////////////
 /// Start SimpleVolume
 //////////////////////////////////////////////////////////////////

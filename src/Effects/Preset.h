@@ -17,6 +17,10 @@ namespace photonic {
         std::string getTypeName() override;
         std::string getTypeClassName() override;
         void drawEditGui() override;
+        EffectXmlSerializerRef getXmlSerializer() override;
+
+        std::vector<LightControl> getLightControls();
+        void setLightControls(std::vector<LightControl> controls);
 
     protected:
         std::vector<LightControl> mLightControls;
@@ -24,6 +28,15 @@ namespace photonic {
         void repopulateLightControls();
     };
 
+
+    class PresetXmlSerializer : public EffectXmlSerializer {
+    public:
+        explicit PresetXmlSerializer(Effect* cEffect);
+
+        void writeEffect(XmlTree &xmlNode) override;
+        void readEffect(XmlTree &xmlNode, const std::vector<LightRef> &lights, std::vector<InputChannelRef> &channels) override;
+
+    };
 }
 
 

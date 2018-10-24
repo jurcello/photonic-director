@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include "cinder/app/App.h"
 #include <ctime>
+#include "cinder/Xml.h"
 #include "Light.h"
 #include "Osc.h"
 
@@ -125,7 +126,10 @@ namespace photonic {
         virtual EffectRef create(std::string name) = 0;
         virtual EffectRef create(std::string name, std::string uuid) = 0;
     };
-    
+
+    class EffectXmlSerializer;
+    typedef std::shared_ptr<EffectXmlSerializer> EffectXmlSerializerRef;
+
     class Effect {
     public:
         enum Status {
@@ -192,14 +196,13 @@ namespace photonic {
         bool hasOutput();
         virtual void init();
         virtual void visualize();
+        virtual EffectXmlSerializerRef getXmlSerializer();
 
         // Public accessable variables. Part of the interface!
         float fadeInTime;
         float fadeOutTime;
         bool isTurnedOn;
         float weight;
-
-//        bool
 
         std::string oscAddressForOnOff;
 
@@ -220,7 +223,23 @@ namespace photonic {
         static std::map<std::string, EffectFactory*> factories;
         static std::vector<std::string> types;
     };
-    
+
+
+    class EffectXmlSerializer;
+
+
+    class EffectXmlSerializer {
+    public:
+        explicit EffectXmlSerializer(Effect* cEffect);
+
+        virtual void writeEffect(XmlTree &xmlNode);
+        virtual void readEffect(XmlTree &xmlNode, const std::vector<LightRef> &lights, std::vector<InputChannelRef> &channels);
+
+    protected:
+        Effect* mEffect;
+    };
+
+
     class SimpleVolumeEffect : public Effect {
     public:
         enum Inputs {
