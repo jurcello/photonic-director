@@ -10,6 +10,10 @@
 
 #include <stdio.h>
 #include "DMXPro.h"
+#include "cinder/Text.h"
+
+using namespace cinder;
+using namespace cinder::app;
 
 class DmxOutput {
 public:
@@ -37,12 +41,17 @@ public:
     
 private:
     int mOut[512];
-    cinder::gl::FboRef mFbo;
+    gl::FboRef mFbo;
+    gl::BatchRef mRect;
     int mWidth, mHeight;
     std::map<int, std::string> mChannelRegistry;
     
     DMXProRef mDmxPro;
     bool mDmxProIsConnected;
+
+    gl::Texture2dRef mValueTextures[256];
+
+    void generateVisualizeTextures();
 };
 
 #endif /* Output_hpp */

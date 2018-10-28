@@ -9,15 +9,16 @@
 #include "cinder/app/App.h"
 #include "DMXPro.h"
 
-using namespace cinder;
-using namespace cinder::app;
-
 DmxOutput::DmxOutput()
 :mOut{0}, mWidth(320), mHeight(320), mDmxPro(nullptr), mDmxProIsConnected(false)
 {
     gl::Fbo::Format format;
     format.colorTexture();
     mFbo = gl::Fbo::create(mWidth, mHeight, format);
+    auto lambert = gl::ShaderDef().lambert().color();
+    gl::GlslProgRef shader = gl::getStockShader( lambert );
+    mRect = gl::Batch::create(geom::Rect(Rectf(0.f, 0.f, 1.f, 1.f)), shader);
+    generateVisualizeTextures();
 }
 
 void DmxOutput::setChannelValue(int channel, int value)
@@ -143,6 +144,19 @@ void DmxOutput::releaseChannels(std::string uid)
     }
 }
 
+void DmxOutput::generateVisualizeTextures() {
+    for (int i = 0; i < 256; i++) {
+        TextLayout layout;
+        layout.clear(ColorA(0.f, 0.f, 0.f, 0.f));
+        layout.setFont(Font::getDefault());
+        layout.setColor(Color::white());
+        layout.addLine(std::to_string(i));
+        Surface8u rendered = layout.render(TRUE, false);
+        gl::Texture2dRef texture = gl::Texture2d::create(rendered);
+        mValueTextures[i] = texture;
+    }
+}
+
 void DmxOutput::visualize()
 {
     gl::draw(getVisualizeTexture(), vec2(10,10));
@@ -161,14 +175,25 @@ gl::TextureRef DmxOutput::getVisualizeTexture()
     int height = (mHeight / 16) - gutter;
     int textMargin = 3;
     for (int i = 0; i < 16; i++ ) {
-        int yPos = i * (width + gutter) + gutter / 2;
+        float yPos = i * (width + gutter) + gutter / 2;
         for (int j = 0; j < 16; j++) {
-            int xPos = j * (width + gutter) + gutter / 2;
+            gl::pushMatrices();
+            float xPos = j * (width + gutter) + gutter / 2;
+            gl::translate(xPos, yPos);
             // Draw a rectangle.
             int value = mOut[i * 16 + j];
             gl::ScopedColor color(0.f, value / 256.f, 0.f);
-            gl::drawSolidRect(Rectf(vec2(xPos, yPos), vec2(xPos + width, yPos + height)));
-            gl::drawStringCentered(std::to_string(value), vec2(xPos + gutter + width / 2, yPos + gutter + textMargin));
+
+            gl::pushMatrices();
+            gl::scale(width, height);
+            mRect->draw();
+            gl::popMatrices();
+
+            gl::ScopedColor textColor(Color::white());
+            gl::draw(mValueTextures[value]);
+
+            gl::popMatrices();
+
         }
     }
     gl::popMatrices();
