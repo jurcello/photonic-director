@@ -31,6 +31,7 @@ namespace photonic {
         bool mIsOn;
         bool mWasOn;
         bool mIsFading;
+        float intensityDuringFading;
         float mFadeFactor;
 
         void updateStatus();

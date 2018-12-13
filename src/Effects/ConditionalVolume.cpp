@@ -24,17 +24,24 @@ void photonic::ConditionalVolume::execute(double dt) {
     Effect::execute(dt);
     if (mParams[kInput_ConditionChannel]->channelRef && mParams[kInput_VolumeChannel]->channelRef) {
         updateStatus();
-
-        if (mIsOn || !mTimer.isStopped()) {
-            float intensity = mParams[kInput_VolumeChannel]->getMappedChannelValue();
-            intensity *= mFadeFactor;
-
-            for (LightRef light: mLights) {
-                light->setEffectIntensity(mUuid, intensity);
-                ColorA endColor = interPolateColors(mParams[kInput_BaseColor]->colorValue, mParams[kInput_EffectColor]->colorValue, intensity);
-                light->setEffectColor(mUuid, endColor);
+        float intensity = 0.f;
+        if (mIsOn) {
+            intensity = mParams[kInput_VolumeChannel]->getMappedChannelValue();
+        }
+        if (!mTimer.isStopped()) {
+            if (mIsOn) {
+                intensity *= mFadeFactor;
+            }
+            else {
+                intensity = intensityDuringFading * mFadeFactor;
             }
         }
+        for (const LightRef light: mLights) {
+            light->setEffectIntensity(mUuid, intensity);
+            ColorA endColor = interPolateColors(mParams[kInput_BaseColor]->colorValue, mParams[kInput_EffectColor]->colorValue, intensity);
+            light->setEffectColor(mUuid, endColor);
+        }
+
     }
 }
 
@@ -50,6 +57,7 @@ void photonic::ConditionalVolume::updateStatus() {
     if (mIsOn != mWasOn) {
         mIsFading = true;
         mTimer.start(0.0);
+        intensityDuringFading = mParams[kInput_VolumeChannel]->getMappedChannelValue();
         mWasOn = mIsOn;
     }
     else {
