@@ -98,7 +98,7 @@ void ConfigManager::readChannels(std::vector<InputChannelRef> &channels)
     }
 }
 
-void ConfigManager::readEffects(std::vector<EffectRef> &effects, const std::vector<LightRef> &lights, std::vector<InputChannelRef> &channels)
+void ConfigManager::readEffects(std::vector<EffectRef> &effects, std::vector<LightRef> &lights, std::vector<InputChannelRef> &channels)
 {
     effects.clear();
     if (mDoc.hasChild("effects")) {
@@ -150,7 +150,7 @@ void ConfigManager::readEffects(std::vector<EffectRef> &effects, const std::vect
                 for (auto &paramNode: effectNode.getChild("params").getChildren()) {
                     int index = paramNode->getAttributeValue<int>("index");
                     Parameter* param = newEffect->getParam(index);
-                    readParam(paramNode, param, channels);
+                    readParam(paramNode, param, channels, lights);
                     
                 }
             }
@@ -163,7 +163,7 @@ void ConfigManager::readEffects(std::vector<EffectRef> &effects, const std::vect
     }
 }
 
-void ConfigManager::readParam(std::unique_ptr<XmlTree> &paramNode, Parameter *param, std::vector<InputChannelRef> &channels)
+void ConfigManager::readParam(std::unique_ptr<XmlTree> &paramNode, Parameter *param, std::vector<InputChannelRef> &channels, std::vector<LightRef> &lights)
 {
     // We only need the type and the value
     Parameter::Type type = (Parameter::Type) paramNode->getAttributeValue<int>("type");
@@ -216,6 +216,19 @@ void ConfigManager::readParam(std::unique_ptr<XmlTree> &paramNode, Parameter *pa
                                    });
             if (it != channels.end()) {
                 param->channelRef = *it;
+            }
+            break;
+        }
+
+        case photonic::Parameter::kType_Light:
+        {
+            std::string lightUuid = paramNode->getValue();
+            auto it = std::find_if(lights.begin(), lights.end(),
+                                   [&lightUuid](const LightRef &lightCandidate) {
+                                       return lightCandidate->getUuid() == lightUuid;
+                                   });
+            if (it != lights.end()) {
+                param->lightRef = *it;
             }
             break;
         }
@@ -428,6 +441,12 @@ void ConfigManager::writeParameter(cinder::XmlTree &paramsNode, photonic::Parame
         case photonic::Parameter::kType_Channel:
             if (param->channelRef != nullptr) {
                 paramnode.setValue(param->channelRef->getUuid());
+            }
+            break;
+
+        case photonic::Parameter::kType_Light:
+            if (param->lightRef != nullptr) {
+                paramnode.setValue(param->lightRef->getUuid());
             }
             break;
 

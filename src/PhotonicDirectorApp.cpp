@@ -1129,6 +1129,33 @@ void PhotonicDirectorApp::drawEffectControls()
                         ui::InputFloat3(param->description.c_str(), &param->vec3Value[0]);
                         break;
 
+                    case photonic::Parameter::kType_Light:
+                        if (! ui::IsWindowCollapsed()) {
+                            ui::ListBoxHeader(param->description.c_str(), 1);
+                            if (param->lightRef) {
+                                ui::Selectable(param->lightRef->mName.c_str());
+                            }
+                            ui::ListBoxFooter();
+                            if (ui::BeginDragDropTarget() && mGuiStatusData.isDraggingLight) {
+                                ImGuiDragDropFlags target_flags = 0;
+                                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(LIGHT_SELECT, target_flags)) {
+                                    LightRef light = *(LightRef*)payload->Data;
+                                    param->lightRef = light;
+                                }
+                            }
+                            else {
+                                if (!param->lightRef) {
+                                    ui::Text("Please use drag and drop to assign light");
+                                }
+                            }
+
+
+                            if (ui::Button("Reset light")) {
+                                param->lightRef = nullptr;
+                            }
+                        }
+                        break;
+
                     case photonic::Parameter::kType_Channel_MinMax:
                     {
                         ui::Text("Settings for: %s, current value: %f", param->description.c_str(), param->getMappedChannelValue());

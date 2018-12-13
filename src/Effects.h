@@ -90,6 +90,7 @@ namespace photonic {
             kType_Channel,
             kType_Channel_MinMax,
             kType_OscTrigger,
+            kType_Light,
         };
         Parameter();
         Parameter(Type type, std::string description = "");
@@ -103,6 +104,8 @@ namespace photonic {
         // Type channel and channel min max.
         InputChannelRef channelRef;
         float minIn, min, maxIn, max;
+        // Type light
+        LightRef lightRef;
 
         // Osc Trigger related.
         std::string oscAdress;
@@ -181,6 +184,7 @@ namespace photonic {
         void registerParam(ENUM_TYPE type, PARAM_INDEX index, std::string description) {
             Parameter* newParam = new Parameter(type, description);
             newParam->channelRef = nullptr;
+            newParam->lightRef = nullptr;
             mParams[index] = newParam;
         };
 

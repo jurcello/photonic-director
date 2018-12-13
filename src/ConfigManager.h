@@ -23,7 +23,7 @@ public:
     void readFromFile(fs::path path);
     void readLights(std::vector<LightRef> &lights, LightFactory* lightFactory);
     void readChannels(std::vector<InputChannelRef> &channels);
-    void readEffects(std::vector<EffectRef> &effects, const std::vector<LightRef> &lights, std::vector<InputChannelRef> &channels);
+    void readEffects(std::vector<EffectRef> &effects, std::vector<LightRef> &lights, std::vector<InputChannelRef> &channels);
     template <class T>
     T readValue(std::string name, T defaultValue) {
         if (mDoc.hasChild(name)) {
@@ -32,7 +32,7 @@ public:
         }
         return defaultValue;
     }
-    void readParam(std::unique_ptr<XmlTree> &paramNode, Parameter *param, std::vector<InputChannelRef> &channels);
+    void readParam(std::unique_ptr<XmlTree> &paramNode, Parameter *param, std::vector<InputChannelRef> &channels, std::vector<LightRef> &lights);
     
     void startNewDoc();
     void writeLights(std::vector<LightRef> &lights);

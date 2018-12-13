@@ -35,6 +35,7 @@ set( SRC_FILES
 	${APP_PATH}/src/Effects/CloseInLocation.cpp
 	${APP_PATH}/src/Effects/PulseStatic.cpp
 	${APP_PATH}/src/Effects/Preset.cpp
+	${APP_PATH}/src/Effects/FightingInputs.cpp
 	${APP_PATH}/src/Effects/Drifter.cpp
 	${APP_PATH}/src/Effects/StoryTeller.cpp
 	${APP_PATH}/src/Effects/MovingHead.cpp
