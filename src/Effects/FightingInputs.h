@@ -6,6 +6,7 @@
 #define PHOTONICDIRECTOR_FIGHTINGINPUTS_H
 
 #include "../Effects.h"
+#include "CinderImGui.h"
 
 namespace photonic {
     class FightingInputs : public Effect {
@@ -28,12 +29,14 @@ namespace photonic {
         void execute(double dt) override;
         std::string getTypeName() override;
         std::string getTypeClassName() override;
+        void drawEditGui() override;
 
     protected:
         float mVictimRadius;
         float mAttackerRadius;
 
         float mVictimOwnLampIntensityFactor;
+        float mVictimLampIntensity;
 
         void UpdateRadius(double dt);
         void updateVictimLamp();

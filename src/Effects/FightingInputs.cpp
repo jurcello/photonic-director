@@ -24,6 +24,8 @@ FightingInputs::FightingInputs(std::string name, std::string uuid)
 
 void FightingInputs::init() {
     mAttackerRadius = mParams[kInput_AttackerStartRadius]->floatValue;
+    mVictimRadius = 0.f;
+    mVictimOwnLampIntensityFactor = 1.0f;
 }
 
 void FightingInputs::execute(double dt) {
@@ -33,58 +35,66 @@ void FightingInputs::execute(double dt) {
     }
     float dropOff = mParams[kInput_DropOff]->floatValue;
     UpdateRadius(dt);
-    updateVictimLamp();
+    updateVictimLamp(dt);
 
     for (const auto light : mLights) {
-        float victimIntensity = 0;
-        float attackerIntensity = 0;
-        float distance = glm::distance(mParams[kInput_VictimLamp]->lightRef->getPosition(), light->getPosition());
+        if (light->getUuid() != mParams[kInput_VictimLamp]->lightRef->getUuid()) {
+            float victimIntensity = 0;
+            float attackerIntensity = 0;
+            float distance = glm::distance(mParams[kInput_VictimLamp]->lightRef->getPosition(), light->getPosition());
 
-        // Victim
-        if (distance < mVictimRadius ) {
-            victimIntensity = mParams[kInput_VictimChannel]->getMappedChannelValue();
-        }
-        else {
-            float distanceFromRadius = mVictimRadius - distance;
-            victimIntensity = mParams[kInput_VictimChannel]->getMappedChannelValue() / math<float>::pow(1 + distanceFromRadius, dropOff);
-        }
+            // Victim
+            if (distance < mVictimRadius ) {
+                victimIntensity = mParams[kInput_VictimChannel]->getMappedChannelValue();
+            }
+            else {
+                float distanceFromRadius = mVictimRadius - distance;
+                victimIntensity = mParams[kInput_VictimChannel]->getMappedChannelValue() / math<float>::pow(1 + distanceFromRadius, dropOff);
+            }
 
-        // Attacker
-        if (distance > mAttackerRadius ) {
-            attackerIntensity = mParams[kInput_AttackerChannel]->getMappedChannelValue();
-        }
-        else {
-            float distanceFromRadius = mAttackerRadius - distance;
-            attackerIntensity = mParams[kInput_AttackerChannel]->getMappedChannelValue() / math<float>::pow(1 + distanceFromRadius, dropOff);
-        }
+            // Attacker
+            if (distance > mAttackerRadius ) {
+                attackerIntensity = mParams[kInput_AttackerChannel]->getMappedChannelValue();
+            }
+            else {
+                float distanceFromRadius = mAttackerRadius - distance;
+                attackerIntensity = mParams[kInput_AttackerChannel]->getMappedChannelValue() / math<float>::pow(1 + distanceFromRadius, dropOff);
+            }
 
-        // The attacker diminshes the victim intensity.
-        victimIntensity -= attackerIntensity;
-        if (victimIntensity < 0) {
-            victimIntensity = 0;
+            // The attacker diminshes the victim intensity.
+            victimIntensity -= attackerIntensity;
+            if (victimIntensity < 0) {
+                victimIntensity = 0;
+            }
+
+            // Set the color.
+            Color victimColor = mParams[kInput_VictimColor]->colorValue * victimIntensity;
+            Color attackerColor = mParams[kInput_AttackerColor]->colorValue * attackerIntensity;
+            ColorA finalColor = interPolateColors(victimColor, attackerColor, attackerIntensity);
+            light->setEffectColor(mUuid, finalColor);
+
+            // Set the final intensity.
+            float finalIntensity = math<float>::max(attackerIntensity + victimIntensity, 1.f);
+            light->setEffectIntensity(mUuid, finalIntensity);
         }
-
-        // Set the color.
-        Color victimColor = mParams[kInput_VictimColor]->colorValue * victimIntensity;
-        Color attackerColor = mParams[kInput_AttackerColor]->colorValue * attackerIntensity;
-        ColorA finalColor = interPolateColors(victimColor, attackerColor, attackerIntensity);
-        light->setEffectColor(mUuid, finalColor);
-
-        // Set the final intensity.
-        float finalIntensity = math<float>::max(attackerIntensity + victimIntensity, 1.f);
-        light->setEffectIntensity(mUuid, finalIntensity);
     }
 }
 
 void FightingInputs::updateVictimLamp() {
+    float negativeRadiusCausingZero = 3.f;
     if (mAttackerRadius < 0) {
-        mVictimOwnLampIntensityFactor -= mAttackerRadius / 5.f;
+        // Note that in these calculations the attacker radius is smaller than zero.
+        mVictimOwnLampIntensityFactor = (negativeRadiusCausingZero + mAttackerRadius) / negativeRadiusCausingZero;
         if (mVictimOwnLampIntensityFactor < 0) {
             mVictimOwnLampIntensityFactor = 0;
         }
     }
-    mParams[kInput_VictimLamp]->lightRef->setEffectColor(mUuid, mParams[kInput_VictimColor]->colorValue * mVictimOwnLampIntensityFactor);
-    mParams[kInput_VictimLamp]->lightRef->setEffectIntensity(mUuid, mVictimOwnLampIntensityFactor);
+    if (mParams[kInput_VictimLamp]->lightRef->isColorEnabled()) {
+        mParams[kInput_VictimLamp]->lightRef->setEffectColor(mUuid, mParams[kInput_VictimColor]->colorValue * mVictimOwnLampIntensityFactor);
+    }
+    mVictimLampIntensity = mVictimOwnLampIntensityFactor * mParams[kInput_VictimChannel]->getMappedChannelValue();
+    mParams[kInput_VictimLamp]->lightRef->setEffectIntensity(mUuid, mVictimLampIntensity);
+
 }
 
 void FightingInputs::UpdateRadius(double dt) {
@@ -93,7 +103,15 @@ void FightingInputs::UpdateRadius(double dt) {
         mVictimRadius = mAttackerRadius;
         return;
     }
-    mVictimRadius += mParams[kInput_VictimIncreaseSpeed]->floatValue * dt * mParams[kInput_AttackerChannel]->getMappedChannelValue();
+    mVictimRadius += mParams[kInput_VictimIncreaseSpeed]->floatValue * dt * mParams[kInput_VictimChannel]->getMappedChannelValue();
+}
+
+
+void FightingInputs::drawEditGui() {
+    ui::InputFloat("Victim radius", &mVictimRadius);
+    ui::InputFloat("Attacker radius", &mAttackerRadius);
+    ui::InputFloat("Victim lamp intensity", &mVictimLampIntensity);
+    ui::InputFloat("Victim intensity factor", &mVictimOwnLampIntensityFactor);
 }
 
 std::string FightingInputs::getTypeName() {
