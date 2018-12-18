@@ -35,7 +35,7 @@ void FightingInputs::execute(double dt) {
     }
     float dropOff = mParams[kInput_DropOff]->floatValue;
     UpdateRadius(dt);
-    updateVictimLamp(dt);
+    updateVictimLamp();
 
     for (const auto light : mLights) {
         if (light->getUuid() != mParams[kInput_VictimLamp]->lightRef->getUuid()) {

@@ -12,6 +12,7 @@
 #include "UnityConnector.h"
 #include "Visualizer.h"
 #include "Osc.h"
+#include <boost/algorithm/string.hpp>
 
 using namespace ci;
 using namespace ci::app;
@@ -895,15 +896,35 @@ void PhotonicDirectorApp::drawEffectControls()
             static int effectType = 0;
             ui::InputText("Name", &effectName);
             auto effectTypes = Effect::getTypes();
-            if (ui::BeginCombo("Type", effectTypes[effectType].c_str()) ) {
+            if (ui::InputText("Filter", &filter)) {
                 for (int i=0; i < effectTypes.size(); i++) {
-                    bool isSelected = (effectType == i);
-                    if (ui::Selectable(effectTypes.at(i).c_str(), isSelected)) {
+                    if (boost::algorithm::istarts_with(effectTypes.at(i).c_str(), filter)) {
                         effectType = i;
+                        break;
                     }
-                    if (isSelected) {
-                        ui::SetItemDefaultFocus();
+                }
+            }
+            if (ui::BeginCombo("Type", effectTypes[effectType].c_str())) {
+                bool selectedInFilter = false;
+                int firstFilteredItem = -1;
+                for (int i=0; i < effectTypes.size(); i++) {
+                    if (boost::algorithm::istarts_with(effectTypes.at(i).c_str(), filter)) {
+                        if (firstFilteredItem < 0) {
+                            firstFilteredItem = i;
+                        }
+
+                        bool isSelected = (effectType == i);
+                        if (ui::Selectable(effectTypes.at(i).c_str(), isSelected)) {
+                            effectType = i;
+                        }
+                        if (isSelected) {
+                            selectedInFilter = true;
+                            ui::SetItemDefaultFocus();
+                        }
                     }
+                }
+                if (!selectedInFilter) {
+                    effectType = firstFilteredItem;
                 }
                 ui::EndCombo();
             }
