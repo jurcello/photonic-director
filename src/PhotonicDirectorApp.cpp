@@ -724,7 +724,11 @@ void PhotonicDirectorApp::drawLightControls()
     if (! ui::IsWindowCollapsed()) {
         ui::ListBoxHeader("Edit lights", mLights.size(), 20);
         ImGuiDragDropFlags srcFlags = 0;
-        for (LightRef light: mLights) {
+        std::vector<LightRef> lightsSorted = mLights;
+        std::sort(lightsSorted.begin(), lightsSorted.end(), [](LightRef light1, LightRef light2) -> bool {
+            return light1->mName < light2->mName;
+        });
+        for (LightRef light: lightsSorted) {
             if (ui::Selectable(light->mName.c_str(), mGuiStatusData.lightToEdit == light)) {
                 mGuiStatusData.lightToEdit = light;
             }
