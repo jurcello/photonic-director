@@ -9,6 +9,14 @@
 #include "CinderImGui.h"
 
 namespace photonic {
+    struct IntensityTracker {
+        float intensity = 0.f;
+        float stepSize = 0.f;
+
+        void update(float newIntensity);
+
+    };
+
     class FightingInputs : public Effect {
     public:
         enum Inputs {
@@ -21,6 +29,9 @@ namespace photonic {
             kInput_AttackerDecreaseSpeed = 7,
             kInput_AttackerStartRadius = 8,
             kInput_DropOff = 9,
+            kInput_MaxLightsIntensiy = 10,
+            kInput_MaxLightsFadeOutTime = 11,
+            kInput_NegativeRadiusCausingZero = 12,
         };
 
         FightingInputs(std::string name, std::string uuid = "");
@@ -35,12 +46,18 @@ namespace photonic {
         float mVictimRadius;
         float mAttackerRadius;
 
+        // Intensity trackers.
+        IntensityTracker mVictimIntensityTracker;
+        IntensityTracker mAttackerIntensityTracker;
+
         float mVictimOwnLampIntensityFactor;
         float mVictimLampIntensity;
 
         void UpdateRadius(double dt);
         void updateVictimLamp();
+        void updateIntensityTrackers(double dt);
 
+        void reset();
     };
 }
 

@@ -20,12 +20,21 @@ FightingInputs::FightingInputs(std::string name, std::string uuid)
     registerParam(Parameter::Type::kType_Float, kInput_AttackerDecreaseSpeed, 1.f, "Attacker descrease speed");
     registerParam(Parameter::Type::kType_Float, kInput_AttackerStartRadius, 1.f, "Attacker start radius");
     registerParam(Parameter::Type::kType_Float, kInput_DropOff, 1.0f, "Dropoff");
+    registerParam(Parameter::Type::kType_Float, kInput_MaxLightsIntensiy, .5f, "Max lights intensity");
+    registerParam(Parameter::Type::kType_Float, kInput_MaxLightsFadeOutTime, .5f, "Max lights fadeout time");
+    registerParam(Parameter::Type::kType_Float, kInput_NegativeRadiusCausingZero, 1.f, "Negative attacker radius which causes zero");
 }
 
 void FightingInputs::init() {
+    reset();
+}
+
+void FightingInputs::reset() {
     mAttackerRadius = mParams[kInput_AttackerStartRadius]->floatValue;
     mVictimRadius = 0.f;
     mVictimOwnLampIntensityFactor = 1.0f;
+    mVictimIntensityTracker.intensity = 0.f;
+    mAttackerIntensityTracker.intensity = 0.f;
 }
 
 void FightingInputs::execute(double dt) {
@@ -35,6 +44,7 @@ void FightingInputs::execute(double dt) {
     }
     float dropOff = mParams[kInput_DropOff]->floatValue;
     UpdateRadius(dt);
+    updateIntensityTrackers(dt);
     updateVictimLamp();
 
     for (const auto light : mLights) {
@@ -45,20 +55,20 @@ void FightingInputs::execute(double dt) {
 
             // Victim
             if (distance < mVictimRadius ) {
-                victimIntensity = mParams[kInput_VictimChannel]->getMappedChannelValue();
+                victimIntensity = mVictimIntensityTracker.intensity;
             }
             else {
-                float distanceFromRadius = mVictimRadius - distance;
-                victimIntensity = mParams[kInput_VictimChannel]->getMappedChannelValue() / math<float>::pow(1 + distanceFromRadius, dropOff);
+                float distanceFromRadius = math<float>::abs(distance - mVictimRadius);
+                victimIntensity = mVictimIntensityTracker.intensity / math<float>::pow(1 + distanceFromRadius, dropOff);
             }
 
             // Attacker
             if (distance > mAttackerRadius ) {
-                attackerIntensity = mParams[kInput_AttackerChannel]->getMappedChannelValue();
+                attackerIntensity = mAttackerIntensityTracker.intensity;
             }
             else {
-                float distanceFromRadius = mAttackerRadius - distance;
-                attackerIntensity = mParams[kInput_AttackerChannel]->getMappedChannelValue() / math<float>::pow(1 + distanceFromRadius, dropOff);
+                float distanceFromRadius = math<float>::abs(mAttackerRadius - distance);
+                attackerIntensity = mAttackerIntensityTracker.intensity / math<float>::pow(1 + distanceFromRadius, dropOff);
             }
 
             // The attacker diminshes the victim intensity.
@@ -74,14 +84,14 @@ void FightingInputs::execute(double dt) {
             light->setEffectColor(mUuid, finalColor);
 
             // Set the final intensity.
-            float finalIntensity = math<float>::max(attackerIntensity + victimIntensity, 1.f);
+            float finalIntensity = math<float>::min(attackerIntensity + victimIntensity, mParams[kInput_MaxLightsIntensiy]->floatValue);
             light->setEffectIntensity(mUuid, finalIntensity);
         }
     }
 }
 
 void FightingInputs::updateVictimLamp() {
-    float negativeRadiusCausingZero = 3.f;
+    float negativeRadiusCausingZero = mParams[kInput_NegativeRadiusCausingZero]->floatValue;
     if (mAttackerRadius < 0) {
         // Note that in these calculations the attacker radius is smaller than zero.
         mVictimOwnLampIntensityFactor = (negativeRadiusCausingZero + mAttackerRadius) / negativeRadiusCausingZero;
@@ -106,12 +116,30 @@ void FightingInputs::UpdateRadius(double dt) {
     mVictimRadius += mParams[kInput_VictimIncreaseSpeed]->floatValue * dt * mParams[kInput_VictimChannel]->getMappedChannelValue();
 }
 
+void FightingInputs::updateIntensityTrackers(double dt) {
+    float fadeStepSize = 0.f;
+    if (mParams[kInput_MaxLightsFadeOutTime]->floatValue > 0) {
+        fadeStepSize = (float) dt / mParams[kInput_MaxLightsFadeOutTime]->floatValue;
+    }
+    mVictimIntensityTracker.stepSize = fadeStepSize;
+    mVictimIntensityTracker.update(mParams[kInput_VictimChannel]->getMappedChannelValue());
+    mAttackerIntensityTracker.stepSize = fadeStepSize;
+    mAttackerIntensityTracker.update(mParams[kInput_AttackerChannel]->getMappedChannelValue());
+
+
+}
 
 void FightingInputs::drawEditGui() {
+    ui::Spacing();
+    ui::Dummy(vec2(10,10));
     ui::InputFloat("Victim radius", &mVictimRadius);
     ui::InputFloat("Attacker radius", &mAttackerRadius);
     ui::InputFloat("Victim lamp intensity", &mVictimLampIntensity);
     ui::InputFloat("Victim intensity factor", &mVictimOwnLampIntensityFactor);
+    ui::InputFloat("Attacker intensity", &mAttackerIntensityTracker.intensity);
+    if (ui::Button("Reset")) {
+        reset();
+    }
 }
 
 std::string FightingInputs::getTypeName() {
@@ -123,3 +151,15 @@ std::string FightingInputs::getTypeClassName() {
 }
 
 REGISTER_TYPE(FightingInputs)
+
+void IntensityTracker::update(float newIntensity) {
+    if (stepSize > 0 && newIntensity - stepSize < intensity) {
+        intensity -= stepSize;
+        if (intensity < 0) {
+            intensity = 0;
+        }
+    }
+    else {
+        intensity = newIntensity;
+    }
+}
