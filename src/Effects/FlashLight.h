@@ -12,12 +12,18 @@ namespace photonic {
     class FlashLight : public Effect {
     public:
         enum Inputs {
-            kInput_Radius = 1,
-            kInput_DropOff = 2,
-            kInput_EffectColor = 3,
-            kInput_Intensity = 4,
-            kInput_EyeLocation = 5,
-            kInput_ViewDirection = 6,
+            kInput_Radius,
+            kInput_DropOff,
+            kInput_EffectColor,
+            kInput_Intensity,
+            kInput_EyeLocation,
+            kInput_ViewDirection,
+            kInput_HSLColorChannel,
+            kInput_WidthChannel,
+            kInput_DropOffChannel,
+            kInput_ControllerVolumeChannel,
+            kInput_InstrumentVolumeChannel,
+            kInput_UseInstrumentInput,
         };
         FlashLight(std::string name, std::string uuid = "");
 

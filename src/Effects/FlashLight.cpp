@@ -37,6 +37,27 @@ FlashLight::FlashLight(std::string name, std::string uuid)
     viewDirection->channelRef = nullptr;
     mParams[kInput_ViewDirection] = viewDirection;
 
+    registerParam(Parameter::Type::kType_Channel, kInput_HSLColorChannel, "HSL color input");
+    registerParam(Parameter::Type::kType_Channel_MinMax, kInput_WidthChannel, vec4(0.0f, 1.0f, 0.0f, 1.0f), "Width channel");
+    registerParam(Parameter::Type::kType_Channel_MinMax, kInput_DropOffChannel, vec4(0.0f, 1.0f, 0.0f, 1.0f), "Dropoff channel");
+    registerParam(Parameter::Type::kType_Channel_MinMax, kInput_ControllerVolumeChannel, vec4(0.0f, 1.0f, 0.0f, 1.0f), "Controller volume channel");
+    registerParam(Parameter::Type::kType_Channel_MinMax, kInput_InstrumentVolumeChannel, vec4(0.0f, 1.0f, 0.0f, 1.0f), "Intrument volume channel");
+    registerParam(Parameter::Type::kType_Channel, kInput_UseInstrumentInput, "Use instrument channel");
+
+    mOrderedParams[1] = mParams[kInput_Radius];
+    mOrderedParams[2] = mParams[kInput_WidthChannel];
+    mOrderedParams[3] = mParams[kInput_DropOff];
+    mOrderedParams[4] = mParams[kInput_DropOffChannel];
+    mOrderedParams[5] = mParams[kInput_EffectColor];
+    mOrderedParams[6] = mParams[kInput_HSLColorChannel];
+    mOrderedParams[7] = mParams[kInput_Intensity];
+    mOrderedParams[8] = mParams[kInput_ControllerVolumeChannel];
+    mOrderedParams[9] = mParams[kInput_InstrumentVolumeChannel];
+    mOrderedParams[10] = mParams[kInput_EyeLocation];
+    mOrderedParams[11] = mParams[kInput_ViewDirection];
+    mOrderedParams[12] = mParams[kInput_UseInstrumentInput];
+
+
 }
 
 void FlashLight::execute(double dt) {

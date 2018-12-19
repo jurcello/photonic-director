@@ -220,6 +220,7 @@ namespace photonic {
         double mStatusChangeTime;
         double mFadeValue;
         std::map<int, Parameter*> mParams;
+        std::map<int, Parameter*> mOrderedParams;
 
         ColorA interPolateColors(ColorA color1, ColorA color2, double intensity);
         
