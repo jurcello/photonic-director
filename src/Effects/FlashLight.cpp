@@ -11,7 +11,7 @@ using namespace photonic;
 using namespace ci;
 
 FlashLight::FlashLight(std::string name, std::string uuid)
-: Effect(name, uuid), mEyeLocation(vec3(0.0f)), mViewDirection(vec3(0.f))
+: Effect(name, uuid), mEyeLocation(vec3(0.0f)), mViewDirection(vec3(0.f)), mEffectIntensity(1.0f)
 {
     Parameter* radius = new Parameter(Parameter::Type::kType_Float, "Radius");
     radius->floatValue = 0.5f;
@@ -37,7 +37,7 @@ FlashLight::FlashLight(std::string name, std::string uuid)
     viewDirection->channelRef = nullptr;
     mParams[kInput_ViewDirection] = viewDirection;
 
-    registerParam(Parameter::Type::kType_Channel, kInput_HSLColorChannel, "HSL color input");
+    registerParam(Parameter::Type::kType_Channel, kInput_ColorChannel, "HSL color input");
     registerParam(Parameter::Type::kType_Channel_MinMax, kInput_WidthChannel, vec4(0.0f, 1.0f, 0.0f, 1.0f), "Width channel");
     registerParam(Parameter::Type::kType_Channel_MinMax, kInput_DropOffChannel, vec4(0.0f, 1.0f, 0.0f, 1.0f), "Dropoff channel");
     registerParam(Parameter::Type::kType_Channel_MinMax, kInput_ControllerVolumeChannel, vec4(0.0f, 1.0f, 0.0f, 1.0f), "Controller volume channel");
@@ -49,7 +49,7 @@ FlashLight::FlashLight(std::string name, std::string uuid)
     mOrderedParams[3] = mParams[kInput_DropOff];
     mOrderedParams[4] = mParams[kInput_DropOffChannel];
     mOrderedParams[5] = mParams[kInput_EffectColor];
-    mOrderedParams[6] = mParams[kInput_HSLColorChannel];
+    mOrderedParams[6] = mParams[kInput_ColorChannel];
     mOrderedParams[7] = mParams[kInput_Intensity];
     mOrderedParams[8] = mParams[kInput_ControllerVolumeChannel];
     mOrderedParams[9] = mParams[kInput_InstrumentVolumeChannel];
@@ -63,6 +63,8 @@ FlashLight::FlashLight(std::string name, std::string uuid)
 void FlashLight::execute(double dt) {
     Effect::execute(dt);
     if (mParams[kInput_EyeLocation]->channelRef != nullptr && mParams[kInput_ViewDirection]->channelRef != nullptr) {
+        updateStaticValuesWithChannels();
+
         auto viewDirectionChannel = mParams[kInput_ViewDirection]->channelRef;
         auto eyePositionChannel = mParams[kInput_EyeLocation]->channelRef;
         vec3 directionNormal = glm::normalize(viewDirectionChannel->getVec3Value());
@@ -82,6 +84,8 @@ void FlashLight::execute(double dt) {
         mViewDirection = directionNormal;
 
         if (isTurnedOn) {
+            updateEffectIntensity();
+
             for (const auto light : mLights) {
                 float intensity = 0;
                 if (glm::dot(light->getPosition() - mEyeLocation, mViewDirection) > 0) {
@@ -89,12 +93,13 @@ void FlashLight::execute(double dt) {
                     float distanceToEye = calculateDistanceToEye(light->getPosition(), mEyeLocation, mViewDirection);
 
                     float radiusForLight = distanceToEye * radius;
+
                     if (distanceToLine < radiusForLight) {
-                        intensity = mParams[kInput_Intensity]->floatValue;
+                        intensity = mEffectIntensity;
                     }
                     else {
                         float distanceFromRadius = distanceToLine - radiusForLight;
-                        intensity = mParams[kInput_Intensity]->floatValue / math<float>::pow(1 + distanceFromRadius, dropOff);
+                        intensity = mEffectIntensity / math<float>::pow(1 + distanceFromRadius, dropOff);
                     }
                 }
 
@@ -103,6 +108,28 @@ void FlashLight::execute(double dt) {
             }
         }
     }
+}
+
+void FlashLight::updateStaticValuesWithChannels() {
+    if (mParams[kInput_WidthChannel]->channelRef != nullptr) {
+        mParams[kInput_Radius]->floatValue = mParams[kInput_WidthChannel]->getMappedChannelValue();
+    }
+    if (mParams[kInput_DropOffChannel]->channelRef != nullptr) {
+        mParams[kInput_DropOff]->floatValue = mParams[kInput_DropOffChannel]->getMappedChannelValue();
+    }
+    if (mParams[kInput_ControllerVolumeChannel]->channelRef != nullptr) {
+        mParams[kInput_Intensity]->floatValue = mParams[kInput_ControllerVolumeChannel]->getMappedChannelValue();
+    }
+    updateColorFromExternalSignal();
+}
+
+void FlashLight::updateEffectIntensity() {
+    if (mParams[kInput_UseInstrumentInput]->channelRef != nullptr && mParams[kInput_UseInstrumentInput]->channelRef->getIntValue() != 0 && mParams[kInput_InstrumentVolumeChannel]->channelRef !=
+                                                                                                                                                   nullptr) {
+        mEffectIntensity = mParams[kInput_InstrumentVolumeChannel]->getMappedChannelValue();
+        return;
+    }
+    mEffectIntensity = mParams[kInput_Intensity]->floatValue;
 }
 
 float FlashLight::calculateDistanceToLine(vec3 itemPosition, vec3 eyePosition, vec3 direction) {
@@ -151,6 +178,13 @@ std::string FlashLight::getTypeName() {
 
 std::string FlashLight::getTypeClassName() {
     return "FlashLight";
+}
+
+void FlashLight::updateColorFromExternalSignal() {
+    if (mParams[kInput_ColorChannel]->channelRef != nullptr) {
+        vec3 colorValues = mParams[kInput_ColorChannel]->channelRef->getVec3Value();
+        mParams[kInput_EffectColor]->colorValue = ColorA(colorValues.r, colorValues.g, colorValues.b);
+    }
 }
 
 REGISTER_TYPE(FlashLight)

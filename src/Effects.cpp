@@ -341,6 +341,10 @@ Parameter* Effect::getParam(int index)
 
 std::map<int, Parameter*>& Effect::getParams()
 {
+    return mParams;
+}
+
+std::map<int, Parameter *> &Effect::getOrderedParamsForUI() {
     // If the effect added ordered params (for UI only), return them.
     // Otherwise only other params.
     // TODO: find a nicer way.

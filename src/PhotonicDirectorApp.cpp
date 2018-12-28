@@ -246,7 +246,7 @@ void PhotonicDirectorApp::oscReceive(const osc::Message &message)
     mLastOscAddress = message.getAddress();
     if (std::find(mIncomingOscAdresses.begin(), mIncomingOscAdresses.end(), mLastOscAddress) == mIncomingOscAdresses.end()) {
         // Only add messages containing a float at the start to the addresses.
-        if (message.getArgType(0) == osc::ArgType::FLOAT) {
+        if (message.getArgType(0) == osc::ArgType::FLOAT || message.getArgType(0) == osc::ArgType::INTEGER_32) {
             mIncomingOscAdresses.push_back(mLastOscAddress);
         }
     }
@@ -1111,7 +1111,7 @@ void PhotonicDirectorApp::drawEffectControls()
             }
             ui::Separator();
             // Draw the params.
-            std::map<int, Parameter*> params = effect->getParams();
+            std::map<int, Parameter*> params = effect->getOrderedParamsForUI();
             int paramId = 100;
             for (auto &item : params) {
                 ui::PushID(paramId);
