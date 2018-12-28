@@ -172,6 +172,7 @@ namespace photonic {
         // Params section.
         Parameter* getParam(int index);
         std::map<int, Parameter*>& getParams();
+        std::map<int, Parameter*>& getOrderedParamsForUI();
 
         template<typename ENUM_TYPE, typename PARAM_INDEX, typename DATA_TYPE>
         void registerParam(ENUM_TYPE type, PARAM_INDEX index, DATA_TYPE initialValue, std::string description) {
@@ -220,6 +221,7 @@ namespace photonic {
         double mStatusChangeTime;
         double mFadeValue;
         std::map<int, Parameter*> mParams;
+        std::map<int, Parameter*> mOrderedParams;
 
         ColorA interPolateColors(ColorA color1, ColorA color2, double intensity);
         

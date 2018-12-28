@@ -344,6 +344,16 @@ std::map<int, Parameter*>& Effect::getParams()
     return mParams;
 }
 
+std::map<int, Parameter *> &Effect::getOrderedParamsForUI() {
+    // If the effect added ordered params (for UI only), return them.
+    // Otherwise only other params.
+    // TODO: find a nicer way.
+    if (mOrderedParams.size() == mParams.size()) {
+        return mOrderedParams;
+    }
+    return mParams;
+}
+
 void Effect::drawEditGui() {
     // This might be used in the child classes.
 }
