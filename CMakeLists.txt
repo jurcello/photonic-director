@@ -11,6 +11,9 @@ get_filename_component( APP_PATH "." ABSOLUTE )
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CINDER_PATH}/proj/cmake/modules)
 include( "${CINDER_PATH}/proj/cmake/modules/cinderMakeApp.cmake" )
 
+include(build/conanbuildinfo.cmake)
+conan_basic_setup()
+
 set( SRC_FILES
 	${APP_PATH}/src/ConfigManager.cpp
 	${APP_PATH}/src/UnityConnector.cpp
@@ -45,4 +48,6 @@ ci_make_app(
 	SOURCES     ${SRC_FILES}
 	CINDER_PATH ${CINDER_PATH}
 	BLOCKS      DMXusbPro Cinder-ImGui OSC
+	LIBRARIES 	${CONAN_LIBS}
 )
+
