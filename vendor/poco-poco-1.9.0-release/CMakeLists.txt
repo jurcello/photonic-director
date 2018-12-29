@@ -109,6 +109,11 @@ option(ENABLE_CPPPARSER "Enable C++ parser" OFF)
 option(ENABLE_POCODOC "Enable Poco Documentation Generator" OFF)
 option(ENABLE_PAGECOMPILER "Enable PageCompiler" ON)
 option(ENABLE_PAGECOMPILER_FILE2PAGE "Enable File2Page" ON)
+option(ENABLE_DNSSD "Enable DNSSD" ON)
+option(ENABLE_DNSSD_DEFAULT "Enable DNSSD Default" ON)
+
+option(ENABLE_DNSSD_AVAHI "Enable DNSSD Avahi" OFF)
+option(ENABLE_DNSSD_BONJOUR "Enable DNSSD Bonjour" OFF)
 
 option(FORCE_OPENSSL "Force usage of OpenSSL even under windows" OFF)
 
@@ -199,8 +204,10 @@ if(EXISTS ${PROJECT_SOURCE_DIR}/PDF AND ENABLE_PDF)
 add_subdirectory(PDF)
 list(APPEND Poco_COMPONENTS "PDF")
 endif()
-
-
+if(ENABLE_DNSSD)
+    add_subdirectory(DNSSD)
+    list(APPEND Poco_COMPONENTS "DNSSD")
+endif()
 #NetSSL
 
 

@@ -13,6 +13,8 @@
 #include "Visualizer.h"
 #include "Osc.h"
 #include <boost/algorithm/string.hpp>
+#include "Poco/DNSSD/DNSSDResponder.h"
+#include "Poco/DNSSD/Bonjour/Bonjour.h"
 
 using namespace ci;
 using namespace ci::app;
@@ -124,6 +126,10 @@ protected:
 
     // Dmx output.
     DmxOutput mDmxOut;
+
+    // Zeroconf
+    Poco::DNSSD::DNSSDResponder* mDnssdResponder;
+    Poco::DNSSD::ServiceHandle mServiceHandle;
     
 };
 
@@ -152,6 +158,7 @@ PhotonicDirectorApp::PhotonicDirectorApp()
     mGuiStatusData.isDraggingChannel = false;
 
     mGuiStatusData.status = IDLE;
+    Poco::DNSSD::initializeDNSSD();
 }
 
 void PhotonicDirectorApp::setTheme(ImGui::Options &options) {
@@ -161,6 +168,9 @@ void PhotonicDirectorApp::setTheme(ImGui::Options &options) {
 
 void PhotonicDirectorApp::setup()
 {
+    mDnssdResponder = new Poco::DNSSD::DNSSDResponder();
+    mDnssdResponder->start();
+
     ImGui::Options options;
     setTheme(options);
     ImGui::initialize(options);
@@ -183,6 +193,12 @@ void PhotonicDirectorApp::setup()
 
 void PhotonicDirectorApp::setupOsc(int receivePort, int sendPort)
 {
+    // register with DNSSDResponder
+    mDnssdResponder->unregisterService(mServiceHandle);
+    std::string name = "Photonic Director - " + std::to_string(receivePort);
+    Poco::DNSSD::Service service(0, name, "", "_osc._udp", "", "", receivePort);
+    mServiceHandle = mDnssdResponder->registerService(service);
+
     if (mOscReceiver) {
         mOscReceiver->close();
         delete mOscReceiver;
@@ -1352,6 +1368,7 @@ PhotonicDirectorApp::~PhotonicDirectorApp() {
     for (const auto light : mLights) {
         light->setDmxChannel(0);
     }
+    Poco::DNSSD::uninitializeDNSSD();
 }
 
 CINDER_APP( PhotonicDirectorApp, RendererGl( RendererGl::Options().msaa(8)), [](cinder::app::AppBase::Settings *settings){

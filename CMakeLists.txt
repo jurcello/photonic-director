@@ -53,6 +53,6 @@ ci_make_app(
 	SOURCES     ${SRC_FILES}
 	CINDER_PATH ${CINDER_PATH}
 	BLOCKS      DMXusbPro Cinder-ImGui OSC
-	LIBRARIES 	PocoFoundation
+	LIBRARIES 	PocoFoundation PocoNet PocoDNSSD PocoDNSSDBonjour
 )
 
