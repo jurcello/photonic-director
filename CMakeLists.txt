@@ -52,7 +52,7 @@ message(STATUS "Poco components: ${Poco_COMPONENTS}")
 ci_make_app(
 	SOURCES     ${SRC_FILES}
 	CINDER_PATH ${CINDER_PATH}
-	BLOCKS      DMXusbPro Cinder-ImGui OSC
+	BLOCKS      DMXusbPro Cinder-ImGui OSC Cinder-MIDI2
 	LIBRARIES 	PocoFoundation PocoNet PocoDNSSD PocoDNSSDBonjour
 )
 
