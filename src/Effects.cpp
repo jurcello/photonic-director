@@ -434,6 +434,10 @@ void Effect::listenToOsc(const osc::Message &message) {
     }
 }
 
+void Effect::listenToMidi(const smf::MidiMessage* message) {
+    // Normally do nothing.
+}
+
 Effect::Stage Effect::getStage() {
     return kStage_Main;
 }

@@ -14,6 +14,7 @@
 #include "cinder/Xml.h"
 #include "Light.h"
 #include "Osc.h"
+#include "MidiMessage.h"
 
 #define REGISTER_TYPE(klass) \
 class klass##Factory : public EffectFactory { \
@@ -197,6 +198,7 @@ namespace photonic {
         virtual void execute(double dt);
         // TODO: implement using listener pattern.
         void listenToOsc(const osc::Message &message);
+        virtual void listenToMidi(const smf::MidiMessage* message);
         virtual Stage getStage();
         bool hasOutput();
         virtual void init();

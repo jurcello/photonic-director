@@ -41,6 +41,7 @@ set( SRC_FILES
 	${APP_PATH}/src/Effects/CloseInLocation.cpp
 	${APP_PATH}/src/Effects/PulseStatic.cpp
 	${APP_PATH}/src/Effects/Preset.cpp
+	${APP_PATH}/src/Effects/MidiLight.cpp
 	${APP_PATH}/src/Effects/FightingInputs.cpp
 	${APP_PATH}/src/Effects/Drifter.cpp
 	${APP_PATH}/src/Effects/StoryTeller.cpp
@@ -52,7 +53,7 @@ message(STATUS "Poco components: ${Poco_COMPONENTS}")
 ci_make_app(
 	SOURCES     ${SRC_FILES}
 	CINDER_PATH ${CINDER_PATH}
-	BLOCKS      DMXusbPro Cinder-ImGui OSC Cinder-MIDI2
+	BLOCKS      DMXusbPro Cinder-ImGui OSC midifile
 	LIBRARIES 	PocoFoundation PocoNet PocoDNSSD PocoDNSSDBonjour
 )
 
