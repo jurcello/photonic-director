@@ -15,6 +15,7 @@
 #include <boost/algorithm/string.hpp>
 #include "Poco/DNSSD/DNSSDResponder.h"
 #include "Poco/DNSSD/Bonjour/Bonjour.h"
+#include "MidiMessage.h"
 
 using namespace ci;
 using namespace ci::app;
@@ -113,6 +114,8 @@ protected:
     void updateChannelsFromOsc();
     void handleLightOscSending();
     void handleCalibrationSending();
+    smf::MidiMessage mMidiMessage;
+
     // Gui stuff.
     void drawGui();
     void drawChannelControls();
@@ -259,21 +262,38 @@ void PhotonicDirectorApp::setupOsc(int receivePort, int sendPort)
 
 void PhotonicDirectorApp::oscReceive(const osc::Message &message)
 {
-    mLastOscAddress = message.getAddress();
-    if (std::find(mIncomingOscAdresses.begin(), mIncomingOscAdresses.end(), mLastOscAddress) == mIncomingOscAdresses.end()) {
-        // Only add messages containing a float at the start to the addresses.
-        if (message.getArgType(0) == osc::ArgType::FLOAT || message.getArgType(0) == osc::ArgType::INTEGER_32) {
-            mIncomingOscAdresses.push_back(mLastOscAddress);
+    try {
+        // Get the midi message if there is one.
+        if (message.getArgType(0) == osc::ArgType::MIDI) {
+            // parse the mide signal and return
+            uint8_t port;
+            uint8_t status;
+            uint8_t data1;
+            uint8_t data2;
+            message.getArgMidi(0, &port, &status, &data1, &data2);
+            // Create the midi message.
+            smf::MidiMessage midiMessage = smf::MidiMessage(status, data1, data2);
+            for (auto effect : mEffects) {
+                effect->listenToMidi(&midiMessage);
+            }
+            return;
         }
-    }
-    if (mChannels.size() > 0) {
-        for (InputChannelRef channel : mChannels) {
-            if (message.getAddress() == channel->getAddress()) {
-                // Gather the args. There can be up to 3 args.
-                int numArgs = message.getNumArgs();
-                float arg1, arg2, arg3;
-                if (message.getNumArgs() >= 1) {
-                    try {
+
+        mLastOscAddress = message.getAddress();
+        if (std::find(mIncomingOscAdresses.begin(), mIncomingOscAdresses.end(), mLastOscAddress) == mIncomingOscAdresses.end()) {
+            // Only add messages containing a float at the start to the addresses.
+            if (message.getArgType(0) == osc::ArgType::FLOAT || message.getArgType(0) == osc::ArgType::INTEGER_32) {
+                mIncomingOscAdresses.push_back(mLastOscAddress);
+            }
+        }
+        if (mChannels.size() > 0) {
+            for (InputChannelRef channel : mChannels) {
+                if (message.getAddress() == channel->getAddress()) {
+                    // Gather the args. There can be up to 3 args.
+                    int numArgs = message.getNumArgs();
+                    float arg1, arg2, arg3;
+                    if (message.getNumArgs() >= 1) {
+
                         if (message.getArgType(0) == osc::ArgType::INTEGER_32) {
                             int arg = message.getArgInt32(0);
                             arg1 = arg;
@@ -297,18 +317,18 @@ void PhotonicDirectorApp::oscReceive(const osc::Message &message)
                             }
                         }
                     }
-                    catch( std::exception &exc ) {
-                        app::console() << "Channel receives string or other unknown type: " << exc.what() << std::endl;
-                    }
                 }
             }
         }
+        mLightCalibrator.receiveOscMessage(message);
+        for (auto effect : mEffects) {
+            effect->listenToOsc(message);
+        }
+        updateChannelsFromOsc();
     }
-    mLightCalibrator.receiveOscMessage(message);
-    for (auto effect : mEffects) {
-        effect->listenToOsc(message);
+    catch( std::exception &exc ) {
+        app::console() << "Channel receives string or other unknown type: " << exc.what() << std::endl;
     }
-    updateChannelsFromOsc();
 }
 
 void PhotonicDirectorApp::updateChannelsFromOsc() {
