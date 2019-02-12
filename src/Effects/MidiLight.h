@@ -9,19 +9,16 @@
 namespace photonic {
 
     struct MidiLightInformation {
-        MidiLightInformation(LightControl control, uint8_t note);
+        MidiLightInformation(LightControl control, uint8_t note, float fadetime);
 
         LightControl lightcontrol;
         int midiNote;
-
+        float fadeoutTime;
+        bool fadeout;
     };
 
     class MidiLight : public Effect {
     public:
-        enum Inputs {
-            kInput_VolumeChannel = 1,
-        };
-
         explicit MidiLight(std::string name, std::string uuid = "");
 
         void execute(double dt) override;

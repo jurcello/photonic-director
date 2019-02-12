@@ -6,8 +6,8 @@ using namespace photonic;
 using namespace ci;
 
 
-MidiLightInformation::MidiLightInformation(LightControl control, uint8_t note)
-:lightcontrol(control), midiNote(note)
+MidiLightInformation::MidiLightInformation(LightControl control, uint8_t note, float fadetime)
+:lightcontrol(control), midiNote(note), fadeoutTime(fadetime), fadeout(false)
 {
 }
 
@@ -19,6 +19,20 @@ void MidiLight::execute(double dt) {
     Effect::execute(dt);
     if (mMidiLightInformation.size() !=  mLights.size()) {
         repopulateLightInformation();
+    }
+    // fade the lights.
+    for (auto &information: mMidiLightInformation) {
+        if (information.fadeout) {
+            float intensity = information.lightcontrol.light->getEffetcIntensity(mUuid);
+            if (intensity > 0) {
+                intensity -= dt / information.fadeoutTime;
+                if (intensity <= 0) {
+                    intensity = 0;
+                    information.fadeout = false;
+                }
+                information.lightcontrol.light->setEffectIntensity(mUuid, intensity);
+            }
+        }
     }
 }
 
@@ -34,7 +48,13 @@ void MidiLight::listenToMidi(const smf::MidiMessage *message) {
         }
         for (auto &information: mMidiLightInformation) {
             if (message->getKeyNumber() == information.midiNote) {
-                information.lightcontrol.light->setEffectIntensity(mUuid, intensity);
+                if (intensity == 0.f && information.fadeoutTime > 0) {
+                    information.fadeout = true;
+                }
+                else {
+                    information.fadeout = false;
+                    information.lightcontrol.light->setEffectIntensity(mUuid, intensity);
+                }
                 if (information.lightcontrol.light->isColorEnabled()) {
                     information.lightcontrol.light->setEffectColor(mUuid, information.lightcontrol.color);
                 }
@@ -53,6 +73,7 @@ void MidiLight::drawEditGui() {
             ui::ColorEdit4("", &control.lightcontrol.color[0]);
         }
         ui::InputInt("Midi note value", &control.midiNote);
+        ui::InputFloat("Fadeout time", &control.fadeoutTime);
         ui::PopID();
         id++;
     }
@@ -67,7 +88,7 @@ void MidiLight::repopulateLightInformation() {
             mMidiLightInformation.push_back(*found);
         }
         else {
-            mMidiLightInformation.emplace_back(MidiLightInformation(LightControl(light, ColorA::black(), 0.0f), 0));
+            mMidiLightInformation.emplace_back(MidiLightInformation(LightControl(light, ColorA::black(), 0.0f), 0, 0.0f));
         }
     }
 }
@@ -108,6 +129,7 @@ void MidiLightXmlSerializer::writeEffect(XmlTree &xmlNode) {
             controlNode.setTag("lightInformation");
             controlNode.setAttribute("lightUuid", lightInformation.lightcontrol.light->getUuid());
             controlNode.setAttribute("midiNote", lightInformation.midiNote);
+            controlNode.setAttribute("fadeoutTime", lightInformation.fadeoutTime);
             if (lightInformation.lightcontrol.light->isColorEnabled()) {
                 controlNode.setAttribute("r", lightInformation.lightcontrol.color.r);
                 controlNode.setAttribute("g", lightInformation.lightcontrol.color.g);
@@ -132,6 +154,7 @@ void MidiLightXmlSerializer::readEffect(XmlTree &xmlNode, const std::vector<Ligh
             if (it != lights.end()) {
                 LightRef light = *it;
                 float midiNote = informationNode->getAttributeValue<float>("midiNote");
+                float fadeoutTime = informationNode->getAttributeValue<float>("fadeoutTime");
                 ColorA color = Color::black();
                 if (light->isColorEnabled()) {
                     float r = informationNode->getAttributeValue<float>("r");
@@ -140,7 +163,7 @@ void MidiLightXmlSerializer::readEffect(XmlTree &xmlNode, const std::vector<Ligh
                     float a = informationNode->getAttributeValue<float>("a");
                     color = ColorA(r, g, b, a);
                 }
-                lightInformationData.push_back(MidiLightInformation(LightControl(light, color, 0.0f), midiNote));
+                lightInformationData.push_back(MidiLightInformation(LightControl(light, color, 0.0f), midiNote, fadeoutTime));
             }
         }
         effect->setLightInformation(lightInformationData);
