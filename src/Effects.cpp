@@ -434,6 +434,10 @@ void Effect::listenToOsc(const osc::Message &message) {
     }
 }
 
+void Effect::setOscSender(osc::SenderUdp *OscSender) {
+    mOscSender = OscSender;
+}
+
 void Effect::listenToMidi(const smf::MidiMessage* message) {
     // Normally do nothing.
 }

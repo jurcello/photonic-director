@@ -257,6 +257,9 @@ void PhotonicDirectorApp::setupOsc(int receivePort, int sendPort)
     }
     mOscSender = new osc::SenderUdp(mOscSocket, protocol::endpoint(address, sendPort ) );
     mLightCalibrator.setOscSender(mOscSender);
+    for (auto effect: mEffects) {
+        effect->setOscSender(mOscSender);
+    }
 
 }
 
@@ -432,6 +435,12 @@ void PhotonicDirectorApp::load()
         config.readLights(mLights, &mLightFactory);
         config.readChannels(mChannels);
         config.readEffects(mEffects, mLights, mChannels);
+        // Todo: there is some code duplication here.
+        // However, there needs to be some refactoring concerning osc,
+        // because we might want more than one osc connection.
+        for (auto effect: mEffects) {
+            effect->setOscSender(mOscSender);
+        }
     }
 }
 
@@ -980,6 +989,7 @@ void PhotonicDirectorApp::drawEffectControls()
                 std::string type = Effect::getTypes()[effectType];
                 console() << effectName << ", " << type << endl;
                 EffectRef newEffect = Effect::create(type, effectName);
+                newEffect->setOscSender(mOscSender);
                 mEffects.push_back(newEffect);
                 ui::CloseCurrentPopup();
             }

@@ -198,8 +198,9 @@ namespace photonic {
         virtual void execute(double dt);
         // TODO: implement using listener pattern.
         void listenToOsc(const osc::Message &message);
-        virtual void listenToMidi(const smf::MidiMessage* message);
+        void setOscSender(osc::SenderUdp *OscSender);
         virtual Stage getStage();
+        virtual void listenToMidi(const smf::MidiMessage* message);
         bool hasOutput();
         virtual void init();
         virtual void visualize();
@@ -224,6 +225,7 @@ namespace photonic {
         double mFadeValue;
         std::map<int, Parameter*> mParams;
         std::map<int, Parameter*> mOrderedParams;
+        osc::SenderUdp* mOscSender;
 
         ColorA interPolateColors(ColorA color1, ColorA color2, double intensity);
         
