@@ -46,6 +46,7 @@ set( SRC_FILES
 	${APP_PATH}/src/Effects/Drifter.cpp
 	${APP_PATH}/src/Effects/StoryTeller.cpp
 	${APP_PATH}/src/Effects/ShutDown.cpp
+	${APP_PATH}/src/Effects/ShutDownHuman.cpp
 	${APP_PATH}/src/Effects/MovingHead.cpp
 )
 
