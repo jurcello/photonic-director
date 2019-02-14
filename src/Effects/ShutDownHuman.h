@@ -51,11 +51,13 @@ namespace photonic {
         std::string mOscOutOffToggle = "/shutdownHuman/toggle/off";
 
         void updateState();
+        void setSwitchedOffLightIntensity(LightRef light);
         void setLightIntensities(float intensity);
         void muteAll();
         void blowupIntensities(float ratio, float max = 1.0f);
         void addNoise();
         void sendTrigger(std::string address, int value);
+        void saveLightIntensities();
 
     };
 

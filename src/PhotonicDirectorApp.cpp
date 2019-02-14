@@ -489,7 +489,7 @@ void PhotonicDirectorApp::update()
             ColorA endColor(0.0f, 0.0f, 0.0f, 1.0f);
             float highestWeight = 1.0f;
             for (const auto effect : mEffects) {
-                if (effect->hasOutput() && effect->hasLight(light)) {
+                if (effect->hasOutput() && effect->hasLight(light) && effect->getStage() == Effect::Stage::kStage_Main) {
                     const float effetcIntensity = light->getEffetcIntensity(effect->getUuid());
                     ////////////////////////////////////////////////////////
                     // Calculate the weight of the effect. The weight should be more if the intensity is more.
@@ -514,7 +514,7 @@ void PhotonicDirectorApp::update()
     }
     // After effects.
     for (auto effect : mEffects) {
-        if (effect->getStage() == Effect::Stage::kStage_After)
+        if (effect->getStage() == Effect::Stage::kStage_After && effect->isTurnedOn)
         {
             effect->execute(dt);
         }

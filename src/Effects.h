@@ -14,6 +14,7 @@
 #include "cinder/Xml.h"
 #include "Light.h"
 #include "Osc.h"
+#include "Utils.h"
 #include "MidiMessage.h"
 
 #define REGISTER_TYPE(klass) \

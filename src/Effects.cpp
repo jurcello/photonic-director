@@ -6,7 +6,6 @@
 //
 
 #include "Effects.h"
-#include "Utils.h"
 #include "CinderImGui.h"
 
 using namespace cinder::app;

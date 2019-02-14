@@ -34,24 +34,20 @@ void ShutDownHuman::execute(double dt) {
         switch (mCurrentStage) {
             case EffectStage::first:
                 blowupIntensities(
-                        ((float)mTimer.getSeconds() / mParams[kInput_FirstStageTime]->floatValue) *
-                        mParams[kInput_MaxOutputFirst]->floatValue,
+                        (float)mTimer.getSeconds() / mParams[kInput_FirstStageTime]->floatValue,
                         mParams[kInput_MaxOutputFirst]->floatValue
                 );
                 break;
 
             case EffectStage::second: {
-                const float intensity = ((
-                                                 1 - (float)mTimer.getSeconds() / mParams[kInput_SecondStageTime]->floatValue
-                                         ) * 0.9f + 0.1f);
+                const float intensity = (1 - (float)mTimer.getSeconds() / mParams[kInput_SecondStageTime]->floatValue);
                 setLightIntensities(intensity);
             }
                 break;
 
             case EffectStage::third:
                 blowupIntensities(
-                        ((float)mTimer.getSeconds() / mParams[kInput_ThirdStageTime]->floatValue) *
-                        mParams[kInput_MaxOutputThird]->floatValue,
+                        (float)mTimer.getSeconds() / mParams[kInput_ThirdStageTime]->floatValue,
                         mParams[kInput_MaxOutputThird]->floatValue
 
                 );
@@ -64,6 +60,7 @@ void ShutDownHuman::execute(double dt) {
         if (mCurrentStage != EffectStage::idle) {
             addNoise();
         }
+        saveLightIntensities();
     }
 }
 
@@ -109,13 +106,39 @@ void ShutDownHuman::updateState() {
     }
 }
 
+void ShutDownHuman::blowupIntensities(float ratio, float max) {
+    for (const auto &light : mLights) {
+        setSwitchedOffLightIntensity(light);
+        const float increase = max * (1.f - math<float>::pow(2 * math<float>::abs(ratio - 0.5f), 0.7f));
+        float newIntensity = light->intensity + light->intensity * increase;
+        if (newIntensity > max) {
+            newIntensity = max;
+        }
+        light->intensity = newIntensity;
+        if (light->isColorEnabled()) {
+            light->color += normalizeColor(light->color) * increase;
+        }
+
+    }
+}
+
 void ShutDownHuman::setLightIntensities(float intensity) {
     for (const auto &light : mLights) {
-        light->intensity = light->intensity < intensity ? light->intensity : intensity;
+        setSwitchedOffLightIntensity(light);
+        light->intensity *= intensity;
         if (light->isColorEnabled()) {
             // Wash out color.
-            light->color *= 1 + intensity;
+            light->color *= intensity;
         }
+    }
+}
+
+void ShutDownHuman::setSwitchedOffLightIntensity(LightRef light) {
+    if (light->intensity == 0.f) {
+        light->intensity = 0.2f;
+    }
+    if (light->color == ColorA::black()) {
+        light->color = ColorA::gray(0.4);
     }
 }
 
@@ -125,20 +148,6 @@ void ShutDownHuman::muteAll() {
         if (light->isColorEnabled()) {
             light->color = ColorA::black();
         }
-    }
-}
-
-void ShutDownHuman::blowupIntensities(float ratio, float max) {
-    for (const auto &light : mLights) {
-        if (light->intensity == 0.f) {
-            light->intensity = 0.2f;
-        }
-        float newIntensity = light->intensity * 1 + math<float>::sqrt(ratio);
-        if (newIntensity > max) {
-            newIntensity = max;
-        }
-        light->intensity = newIntensity;
-
     }
 }
 
@@ -167,6 +176,15 @@ void ShutDownHuman::sendTrigger(std::string address, int value) {
     }
 }
 
+void ShutDownHuman::saveLightIntensities() {
+    for (const auto light: mLights) {
+        light->setEffectIntensity(mUuid, light->intensity);
+        if (light->isColorEnabled()) {
+            light->setEffectColor(mUuid, light->color);
+        }
+    }
+}
+
 void ShutDownHuman::drawEditGui() {
     std::string oscFirst = "Osc address for trigger first stage: " + mOscOutTriggerFirstStage;
     ui::Text("%s", oscFirst.c_str());
@@ -176,6 +194,19 @@ void ShutDownHuman::drawEditGui() {
     ui::Text("%s", oscThird.c_str());
     std::string oscOffToggle = "Osc address for off toggle: " + mOscOutOffToggle;
     ui::Text("%s", oscOffToggle.c_str());
+    std::string stage = "idle";
+    switch (mCurrentStage) {
+        case EffectStage::first:
+            stage = "first";
+            break;
+        case EffectStage::second:
+            stage = "second";
+            break;
+        case EffectStage::third:
+            stage = "third";
+            break;
+    }
+    ui::Text("Stage: %s", stage.c_str());
 }
 
 std::string ShutDownHuman::getTypeName() {

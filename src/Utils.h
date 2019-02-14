@@ -27,6 +27,17 @@ namespace photonic {
     inline double getBellIntensity(double distance, double width) {
         return math<double>::exp(-(distance)/(2*(math<double>::pow(width, 2))));
     }
+
+    inline ColorA normalizeColor(ColorA color) {
+        float max = color.r;
+        if (color.g > max) {
+            max = color.g;
+        }
+        if (color.b > max) {
+            max = color.b;
+        }
+        return color / max;
+    }
 }
 
 #endif /* Utils_h */

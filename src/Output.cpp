@@ -23,6 +23,7 @@ DmxOutput::DmxOutput()
 
 void DmxOutput::setChannelValue(int channel, int value)
 {
+    value = math<int>::clamp(value, 0, 255);
     mOut[channel - 1] = value;
 }
 
