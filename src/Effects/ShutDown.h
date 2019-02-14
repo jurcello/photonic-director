@@ -33,11 +33,13 @@ namespace photonic {
         void updateState();
         void sendSoundTrigger(std::string address);
         void sendSoundVolume(float volume);
+        void sendTrigger(std::string address, int value);
         Perlin mPerlin;
         Timer mTimer;
         std::string mOscOutAddressTrigger = "/shutdown/trigger/sound";
         std::string mOscOutAddressTriggerFlickerStart = "/shutdown/triggerFlicker/sound";
         std::string mOscOutAddressVolume = "/shutdown/volume/sound";
+        std::string mOscOutOffToggle = "/shutdown/toggle/off";
         bool mIsShutDown;
         float mLastUpdateSecondsAgo;
     };

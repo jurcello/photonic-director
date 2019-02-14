@@ -62,8 +62,13 @@ void ShutDown::updateState() {
         mTimer.stop();
         sendSoundVolume(0.f);
         sendSoundTrigger(mOscOutAddressTrigger);
+        sendTrigger(mOscOutOffToggle, 0);
     }
     if (!mParams[kInput_TriggerChannel]->triggerValue) {
+        if (mIsShutDown) {
+            // Send signal to enable sound again.
+            sendTrigger(mOscOutOffToggle, 127);
+        }
         mIsShutDown = false;
     }
 }
@@ -72,6 +77,14 @@ void ShutDown::sendSoundTrigger(std::string address) {
     if (mOscSender != nullptr) {
         osc::Message message(address);
         message.append(127);
+        mOscSender->send(message);
+    }
+}
+
+void ShutDown::sendTrigger(std::string address, int value) {
+    if (mOscSender != nullptr) {
+        osc::Message message(address);
+        message.append(value);
         mOscSender->send(message);
     }
 }
@@ -99,6 +112,8 @@ void ShutDown::drawEditGui() {
     ui::Text("%s", oscFlicker.c_str());
     std::string oscVolume = "Osc address for sound volume out: " + mOscOutAddressVolume;
     ui::Text("%s", oscVolume.c_str());
+    std::string oscOffToggle = "Osc address for off toggle: " + mOscOutOffToggle;
+    ui::Text("%s", oscOffToggle.c_str());
 
 }
 

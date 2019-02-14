@@ -5,6 +5,7 @@
 #include "../Effects.h"
 #include "CinderImGui.h"
 #include "../Light.h"
+#include "cinder/Perlin.h"
 
 namespace photonic {
 
@@ -19,9 +20,15 @@ namespace photonic {
 
     class MidiLight : public Effect {
     public:
+        enum Inputs {
+            kInput_NoiseAmount = 1,
+            kInput_NoiseSpeed = 2,
+        };
+
         explicit MidiLight(std::string name, std::string uuid = "");
 
         void execute(double dt) override;
+        void init() override;
 
         void drawEditGui() override;
         EffectXmlSerializerRef getXmlSerializer() override;
@@ -32,9 +39,14 @@ namespace photonic {
         std::string getTypeName() override;
 
         std::string getTypeClassName() override;
-
+        // Part of the interface. Don't set protected.
+        bool mUseModulo;
     protected:
         std::vector<MidiLightInformation> mMidiLightInformation;
+        int mLastMidiNote;
+
+        Timer mTimer;
+        Perlin mPerlin;
 
         void repopulateLightInformation();
 

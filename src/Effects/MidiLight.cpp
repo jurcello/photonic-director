@@ -12,42 +12,61 @@ MidiLightInformation::MidiLightInformation(LightControl control, uint8_t note, f
 }
 
 MidiLight::MidiLight(std::string name, std::string uuid)
-: Effect(name, uuid) {
+: Effect(name, uuid), mLastMidiNote(0), mUseModulo(false)
+{
+    registerParam(Parameter::Type::kType_Float, kInput_NoiseAmount, 0.1f, "Noise Amount");
+    registerParam(Parameter::Type::kType_Float, kInput_NoiseSpeed, 10.0f, "Noise Speed");
+
+}
+
+void MidiLight::init() {
+    mTimer.start();
 }
 
 void MidiLight::execute(double dt) {
     Effect::execute(dt);
+    auto elapsedTime = (float) mTimer.getSeconds();
     if (mMidiLightInformation.size() !=  mLights.size()) {
         repopulateLightInformation();
     }
     // fade the lights.
     for (auto &information: mMidiLightInformation) {
-        if (information.fadeout) {
-            float intensity = information.lightcontrol.light->getEffetcIntensity(mUuid);
-            if (intensity > 0) {
+        float intensity = information.lightcontrol.light->getEffetcIntensity(mUuid);
+        if (intensity > 0) {
+            if (information.fadeout) {
                 intensity -= dt / information.fadeoutTime;
                 if (intensity <= 0) {
                     intensity = 0;
                     information.fadeout = false;
                 }
-                information.lightcontrol.light->setEffectIntensity(mUuid, intensity);
             }
+            // Add some noise.
+            float noise = mPerlin.noise(
+                    information.lightcontrol.light->getPosition().x,
+                    information.lightcontrol.light->getPosition().y,
+                    elapsedTime * mParams[kInput_NoiseSpeed]->floatValue / 10.f) * mParams[kInput_NoiseAmount]->floatValue;
+            intensity *= (1 + noise);
+            information.lightcontrol.light->setEffectIntensity(mUuid, intensity);
         }
     }
 }
 
 void MidiLight::listenToMidi(const smf::MidiMessage *message) {
     if (message->isNote()) {
+        int keyNumber = message->getKeyNumber();
+        if (mUseModulo) {
+            keyNumber = (keyNumber % 12) + 1;
+        }
+        mLastMidiNote = keyNumber;
         float intensity = 0.f;
         if (message->isNoteOn()) {
-            app::console() << "Note: " << message->getKeyNumber() << std::endl;
             intensity = message->getVelocity() / 128.f;
         }
         else {
             intensity = 0.f;
         }
         for (auto &information: mMidiLightInformation) {
-            if (message->getKeyNumber() == information.midiNote) {
+            if (keyNumber == information.midiNote) {
                 if (intensity == 0.f && information.fadeoutTime > 0) {
                     information.fadeout = true;
                 }
@@ -64,6 +83,9 @@ void MidiLight::listenToMidi(const smf::MidiMessage *message) {
 }
 
 void MidiLight::drawEditGui() {
+    ui::Text("Last key: %i", mLastMidiNote);
+    ui::Text("Last key mod: %i", (mLastMidiNote % 12) + 1);
+    ui::Checkbox("Use modulo (only octaves)", &mUseModulo);
     int id = 0;
     for (auto &control: mMidiLightInformation) {
         ui::PushID(id);
@@ -121,6 +143,7 @@ void MidiLightXmlSerializer::writeEffect(XmlTree &xmlNode) {
     EffectXmlSerializer::writeEffect(xmlNode);
     auto effect = (MidiLight*) mEffect;
     auto lightInformationData = effect->getLightInformation();
+    xmlNode.setAttribute("useModulo", effect->mUseModulo);
     if (! lightInformationData.empty()) {
         XmlTree parentNode;
         parentNode.setTag("lightInformationData");
@@ -145,8 +168,11 @@ void MidiLightXmlSerializer::writeEffect(XmlTree &xmlNode) {
 void MidiLightXmlSerializer::readEffect(XmlTree &xmlNode, const std::vector<LightRef> &lights,
                                                    std::vector<InputChannelRef> &channels) {
     EffectXmlSerializer::readEffect(xmlNode, lights, channels);
+    auto effect = (MidiLight*) mEffect;
+    if (xmlNode.hasAttribute("useModule")) {
+        effect->mUseModulo = xmlNode.getAttributeValue<bool>("useModulo");
+    }
     if (xmlNode.hasChild("lightInformationData")) {
-        auto effect = (MidiLight*) mEffect;
         auto lightInformationData = effect->getLightInformation();
         for (auto &informationNode: xmlNode.getChild("lightInformationData").getChildren()) {
             std::string lightUuid = informationNode->getAttributeValue<std::string>("lightUuid");
