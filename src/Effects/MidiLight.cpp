@@ -7,12 +7,12 @@ using namespace ci;
 
 
 MidiLightInformation::MidiLightInformation(LightControl control, uint8_t note, float fadetime)
-:lightcontrol(control), midiNote(note), fadeoutTime(fadetime), fadeout(false)
+:lightcontrol(control), midiNote(note), fadeoutTime(fadetime), fadeout(false), shouldHightlight(false)
 {
 }
 
 MidiLight::MidiLight(std::string name, std::string uuid)
-: Effect(name, uuid), mLastMidiNote(0), mUseModulo(false)
+: Effect(name, uuid), mLastMidiNote(0), mUseModulo(false), mShowLampsWhenHovered(false)
 {
     registerParam(Parameter::Type::kType_Float, kInput_NoiseAmount, 0.1f, "Noise Amount");
     registerParam(Parameter::Type::kType_Float, kInput_NoiseSpeed, 10.0f, "Noise Speed");
@@ -31,22 +31,35 @@ void MidiLight::execute(double dt) {
     }
     // fade the lights.
     for (auto &information: mMidiLightInformation) {
-        float intensity = information.lightcontrol.light->getEffetcIntensity(mUuid);
-        if (intensity > 0) {
-            if (information.fadeout) {
-                intensity -= dt / information.fadeoutTime;
-                if (intensity <= 0) {
-                    intensity = 0;
-                    information.fadeout = false;
+        if (mShowLampsWhenHovered) {
+            if (information.shouldHightlight) {
+                information.lightcontrol.light->setEffectIntensity(mUuid, 1.0f);
+                if (information.lightcontrol.light->isColorEnabled()) {
+                    information.lightcontrol.light->setEffectColor(mUuid, information.lightcontrol.color);
                 }
             }
-            // Add some noise.
-            float noise = mPerlin.noise(
-                    information.lightcontrol.light->getPosition().x,
-                    information.lightcontrol.light->getPosition().y,
-                    elapsedTime * mParams[kInput_NoiseSpeed]->floatValue / 10.f) * mParams[kInput_NoiseAmount]->floatValue;
-            intensity *= (1 + noise);
-            information.lightcontrol.light->setEffectIntensity(mUuid, intensity);
+            else {
+                information.lightcontrol.light->setEffectIntensity(mUuid, 0.0f);
+            }
+        }
+        else {
+            float intensity = information.lightcontrol.light->getEffetcIntensity(mUuid);
+            if (intensity > 0) {
+                if (information.fadeout) {
+                    intensity -= dt / information.fadeoutTime;
+                    if (intensity <= 0) {
+                        intensity = 0;
+                        information.fadeout = false;
+                    }
+                }
+                // Add some noise.
+                float noise = mPerlin.noise(
+                        information.lightcontrol.light->getPosition().x,
+                        information.lightcontrol.light->getPosition().y,
+                        elapsedTime * mParams[kInput_NoiseSpeed]->floatValue / 10.f) * mParams[kInput_NoiseAmount]->floatValue;
+                intensity *= (1 + noise);
+                information.lightcontrol.light->setEffectIntensity(mUuid, intensity);
+            }
         }
     }
 }
@@ -86,15 +99,19 @@ void MidiLight::drawEditGui() {
     ui::Text("Last key: %i", mLastMidiNote);
     ui::Text("Last key mod: %i", (mLastMidiNote % 12) + 1);
     ui::Checkbox("Use modulo (only octaves)", &mUseModulo);
+    ui::Checkbox("Show lamps when hovering name", &mShowLampsWhenHovered);
     int id = 0;
     for (auto &control: mMidiLightInformation) {
         ui::PushID(id);
         ui::Text("%s", control.lightcontrol.light->mName.c_str());
+        control.shouldHightlight = ui::IsItemHovered();
         ui::SameLine();
         if (control.lightcontrol.light->isColorEnabled()) {
             ui::ColorEdit4("", &control.lightcontrol.color[0]);
         }
         ui::InputInt("Midi note value", &control.midiNote);
+        const std::string noteToString = midiNoteToString(control.midiNote);
+        ui::Text("Midi note: %s", noteToString.c_str());
         ui::InputFloat("Fadeout time", &control.fadeoutTime);
         ui::PopID();
         id++;

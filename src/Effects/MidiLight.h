@@ -16,6 +16,7 @@ namespace photonic {
         int midiNote;
         float fadeoutTime;
         bool fadeout;
+        bool shouldHightlight;
     };
 
     class MidiLight : public Effect {
@@ -44,6 +45,7 @@ namespace photonic {
     protected:
         std::vector<MidiLightInformation> mMidiLightInformation;
         int mLastMidiNote;
+        bool mShowLampsWhenHovered;
 
         Timer mTimer;
         Perlin mPerlin;

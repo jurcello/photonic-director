@@ -38,6 +38,12 @@ namespace photonic {
         }
         return color / max;
     }
+
+    inline std::string midiNoteToString(int midinote) {
+        int octave = int (midinote / 12) - 1;
+        const std::string name = "C C#D D#E F F#G G#A A#B ";
+        return name.substr((midinote % 12) * 2, 2) + std::to_string(octave);
+    }
 }
 
 #endif /* Utils_h */
