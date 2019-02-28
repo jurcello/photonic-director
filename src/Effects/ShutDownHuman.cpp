@@ -17,6 +17,8 @@ ShutDownHuman::ShutDownHuman(std::string name, std::string uuid)
     registerParam(Parameter::Type::kType_Float, kInput_NoiseAmount, 0.2f, "Perlin Noise Amount");
     registerParam(Parameter::Type::kType_Float, kInput_RandomNoiseAmount, 0.2f, "Random Noise Amount");
     registerParam(Parameter::Type::kType_Float, kInput_SecondStageNoiseAmount, 0.2f, "Second stage relative noise (1 is unity)");
+    registerParam(Parameter::Type::kType_Float, kInput_FirstStageEaseComponent, 0.2f, "First stage ease component (towards zero more steep)");
+    registerParam(Parameter::Type::kType_Float, kInput_SecondsStageDropPercentage, 10.f, "Second stage drop percentage (between 0 and 100)");
 
 
 
@@ -40,7 +42,8 @@ void ShutDownHuman::execute(double dt) {
                 break;
 
             case EffectStage::second: {
-                const float intensity = (1 - (float)mTimer.getSeconds() / mParams[kInput_SecondStageTime]->floatValue);
+                const float dropFactor = (100.f - mParams[kInput_SecondsStageDropPercentage]->floatValue) * 0.01f;
+                const float intensity = math<float>::clamp(dropFactor, 0.f, 1.f) * (1 - (float)mTimer.getSeconds() / mParams[kInput_SecondStageTime]->floatValue);
                 setLightIntensities(intensity);
             }
                 break;
@@ -107,9 +110,18 @@ void ShutDownHuman::updateState() {
 }
 
 void ShutDownHuman::blowupIntensities(float ratio, float max) {
+
+    //        const float increase = max * (1.f - math<float>::pow(2 * math<float>::abs(ratio - 0.5f), 0.7f));
+    // Following formula might look very difficult.
+    // Just draw it in grapher to see the function.
+    // Basically it is a function that returns 0 at ratio is 0 and 1.
+    // At 0.5 it reaches one. The behavior towards one is controlled by the ease component.
+    const float power = mParams[kInput_FirstStageEaseComponent]->floatValue;
+    const float normalease = (math<float>::pow(.5f, power) - math<float>::pow(math<float>::abs(ratio - 0.5f), power)) / math<float>::pow(.5f, power);
+    const float increase = max * normalease;
+    app::console() << "Ratio " << ratio << ", increase: " << increase << std::endl;
     for (const auto &light : mLights) {
         setSwitchedOffLightIntensity(light);
-        const float increase = max * (1.f - math<float>::pow(2 * math<float>::abs(ratio - 0.5f), 0.7f));
         float newIntensity = light->intensity + light->intensity * increase;
         if (newIntensity > max) {
             newIntensity = max;

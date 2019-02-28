@@ -7,7 +7,7 @@ using namespace ci;
 
 
 MidiLightInformation::MidiLightInformation(LightControl control, uint8_t note, float fadetime)
-:lightcontrol(control), midiNote(note), fadeoutTime(fadetime), fadeout(false), shouldHightlight(false)
+:lightcontrol(control), midiNote(note), fadeoutTime(fadetime), fadeout(false), shouldHightlight(false), shouldReactToNoteOff(true)
 {
 }
 
@@ -16,6 +16,7 @@ MidiLight::MidiLight(std::string name, std::string uuid)
 {
     registerParam(Parameter::Type::kType_Float, kInput_NoiseAmount, 0.1f, "Noise Amount");
     registerParam(Parameter::Type::kType_Float, kInput_NoiseSpeed, 10.0f, "Noise Speed");
+    registerParam(Parameter::Type::kType_Float, kInput_OveralVolume, 1.0f, "Overall volume");
 
 }
 
@@ -29,36 +30,39 @@ void MidiLight::execute(double dt) {
     if (mMidiLightInformation.size() !=  mLights.size()) {
         repopulateLightInformation();
     }
+    if (this->hasOutput()) {
     // fade the lights.
-    for (auto &information: mMidiLightInformation) {
-        if (mShowLampsWhenHovered) {
-            if (information.shouldHightlight) {
-                information.lightcontrol.light->setEffectIntensity(mUuid, 1.0f);
-                if (information.lightcontrol.light->isColorEnabled()) {
-                    information.lightcontrol.light->setEffectColor(mUuid, information.lightcontrol.color);
+        for (auto &information: mMidiLightInformation) {
+            if (mShowLampsWhenHovered) {
+                if (information.shouldHightlight) {
+                    information.lightcontrol.light->setEffectIntensity(mUuid, 1.0f);
+                    if (information.lightcontrol.light->isColorEnabled()) {
+                        information.lightcontrol.light->setEffectColor(mUuid, information.lightcontrol.color);
+                    }
+                }
+                else {
+                    information.lightcontrol.light->setEffectIntensity(mUuid, 0.0f);
                 }
             }
             else {
-                information.lightcontrol.light->setEffectIntensity(mUuid, 0.0f);
-            }
-        }
-        else {
-            float intensity = information.lightcontrol.light->getEffetcIntensity(mUuid);
-            if (intensity > 0) {
-                if (information.fadeout) {
-                    intensity -= dt / information.fadeoutTime;
-                    if (intensity <= 0) {
-                        intensity = 0;
-                        information.fadeout = false;
+                float intensity = information.lightcontrol.light->getEffetcIntensity(mUuid);
+                if (intensity > 0) {
+                    if (information.fadeout || !information.shouldReactToNoteOff) {
+                        const double step = dt / information.fadeoutTime;
+                        intensity -= step;
+                        if (intensity <= 0) {
+                            intensity = 0;
+                            information.fadeout = false;
+                        }
                     }
+                    // Add some noise.
+                    float noise = mPerlin.noise(
+                            information.lightcontrol.light->getPosition().x,
+                            information.lightcontrol.light->getPosition().y,
+                            elapsedTime * mParams[kInput_NoiseSpeed]->floatValue / 10.f) * mParams[kInput_NoiseAmount]->floatValue;
+                    intensity *= (1 + noise);
+                    information.lightcontrol.light->setEffectIntensity(mUuid, intensity);
                 }
-                // Add some noise.
-                float noise = mPerlin.noise(
-                        information.lightcontrol.light->getPosition().x,
-                        information.lightcontrol.light->getPosition().y,
-                        elapsedTime * mParams[kInput_NoiseSpeed]->floatValue / 10.f) * mParams[kInput_NoiseAmount]->floatValue;
-                intensity *= (1 + noise);
-                information.lightcontrol.light->setEffectIntensity(mUuid, intensity);
             }
         }
     }
@@ -73,7 +77,7 @@ void MidiLight::listenToMidi(const smf::MidiMessage *message) {
         mLastMidiNote = keyNumber;
         float intensity = 0.f;
         if (message->isNoteOn()) {
-            intensity = message->getVelocity() / 128.f;
+            intensity = (message->getVelocity() / 128.f) * mParams[kInput_OveralVolume]->floatValue;
         }
         else {
             intensity = 0.f;
@@ -103,6 +107,7 @@ void MidiLight::drawEditGui() {
     int id = 0;
     for (auto &control: mMidiLightInformation) {
         ui::PushID(id);
+        ui::Spacing();
         ui::Text("%s", control.lightcontrol.light->mName.c_str());
         control.shouldHightlight = ui::IsItemHovered();
         ui::SameLine();
@@ -112,6 +117,8 @@ void MidiLight::drawEditGui() {
         ui::InputInt("Midi note value", &control.midiNote);
         const std::string noteToString = midiNoteToString(control.midiNote);
         ui::Text("Midi note: %s", noteToString.c_str());
+        ui::Checkbox("Should react to node off", &control.shouldReactToNoteOff);
+        ui::SameLine();
         ui::InputFloat("Fadeout time", &control.fadeoutTime);
         ui::PopID();
         id++;
@@ -170,6 +177,7 @@ void MidiLightXmlSerializer::writeEffect(XmlTree &xmlNode) {
             controlNode.setAttribute("lightUuid", lightInformation.lightcontrol.light->getUuid());
             controlNode.setAttribute("midiNote", lightInformation.midiNote);
             controlNode.setAttribute("fadeoutTime", lightInformation.fadeoutTime);
+            controlNode.setAttribute("shouldReactToNoteOff", lightInformation.shouldReactToNoteOff);
             if (lightInformation.lightcontrol.light->isColorEnabled()) {
                 controlNode.setAttribute("r", lightInformation.lightcontrol.color.r);
                 controlNode.setAttribute("g", lightInformation.lightcontrol.color.g);
@@ -198,6 +206,10 @@ void MidiLightXmlSerializer::readEffect(XmlTree &xmlNode, const std::vector<Ligh
                 LightRef light = *it;
                 float midiNote = informationNode->getAttributeValue<float>("midiNote");
                 float fadeoutTime = informationNode->getAttributeValue<float>("fadeoutTime");
+                bool shouldReactToNodeOff = true;
+                if (informationNode->hasAttribute("shouldReactToNoteOff")){
+                    shouldReactToNodeOff = informationNode->getAttributeValue<bool>("shouldReactToNoteOff");
+                }
                 ColorA color = Color::black();
                 if (light->isColorEnabled()) {
                     float r = informationNode->getAttributeValue<float>("r");
@@ -206,7 +218,9 @@ void MidiLightXmlSerializer::readEffect(XmlTree &xmlNode, const std::vector<Ligh
                     float a = informationNode->getAttributeValue<float>("a");
                     color = ColorA(r, g, b, a);
                 }
-                lightInformationData.push_back(MidiLightInformation(LightControl(light, color, 0.0f), midiNote, fadeoutTime));
+                MidiLightInformation lightInformation = MidiLightInformation(LightControl(light, color, 0.0f), midiNote, fadeoutTime);
+                lightInformation.shouldReactToNoteOff = shouldReactToNodeOff;
+                lightInformationData.push_back(lightInformation);
             }
         }
         effect->setLightInformation(lightInformationData);

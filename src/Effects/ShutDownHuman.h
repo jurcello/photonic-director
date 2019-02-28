@@ -21,6 +21,8 @@ namespace photonic {
             kInput_NoiseAmount = 8,
             kInput_RandomNoiseAmount = 9,
             kInput_SecondStageNoiseAmount = 10,
+            kInput_FirstStageEaseComponent = 11,
+            kInput_SecondsStageDropPercentage = 12,
 
         };
         enum EffectStage {

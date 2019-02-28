@@ -16,6 +16,7 @@ namespace photonic {
         int midiNote;
         float fadeoutTime;
         bool fadeout;
+        bool shouldReactToNoteOff;
         bool shouldHightlight;
     };
 
@@ -24,6 +25,7 @@ namespace photonic {
         enum Inputs {
             kInput_NoiseAmount = 1,
             kInput_NoiseSpeed = 2,
+            kInput_OveralVolume = 3,
         };
 
         explicit MidiLight(std::string name, std::string uuid = "");
