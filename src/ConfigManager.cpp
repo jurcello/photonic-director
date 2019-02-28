@@ -98,7 +98,7 @@ void ConfigManager::readChannels(std::vector<InputChannelRef> &channels)
     }
 }
 
-void ConfigManager::readEffects(std::vector<EffectRef> &effects, std::vector<LightRef> &lights, std::vector<InputChannelRef> &channels)
+void ConfigManager::readEffects(std::list<EffectRef> &effects, std::vector<LightRef> &lights, std::vector<InputChannelRef> &channels)
 {
     effects.clear();
     if (mDoc.hasChild("effects")) {
@@ -330,7 +330,7 @@ void ConfigManager::writeChannels(std::vector<InputChannelRef> &channels) {
     mDoc.push_back(channelsNode);
 }
 
-void ConfigManager::writeEffects(std::vector<EffectRef> &effects)
+void ConfigManager::writeEffects(std::list<EffectRef> &effects)
 {
     XmlTree effectsNode;
     effectsNode.setTag("effects");

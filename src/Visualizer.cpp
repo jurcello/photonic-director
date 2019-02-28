@@ -186,7 +186,7 @@ void Visualizer::drawLight(LightRef light)
 
 }
 
-void Visualizer::drawEffects(std::vector<EffectRef> effects) {
+void Visualizer::drawEffects(std::list<EffectRef> effects) {
     gl::pushMatrices();
     gl::setMatrices(mCam);
     for (const auto effect : effects) {

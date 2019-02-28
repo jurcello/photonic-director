@@ -28,6 +28,7 @@ const int WINDOW_HEIGHT = 768;
 
 const char* LIGHT_SELECT = "LIGHT_SELECT";
 const char* CHANNEL_SELECT = "CHANN_SELECT";
+const char* EFFECT_SELECT_DRAG_DROP = "EFF_SELECT";
 
 enum gui_status {
     IDLE,
@@ -107,7 +108,7 @@ protected:
     double mLastChannelGeneration;
     
     // Effects.
-    vector<EffectRef> mEffects;
+    list<EffectRef> mEffects;
     double mLastUpdate;
     
     void oscReceive(const osc::Message &message);
@@ -126,6 +127,8 @@ protected:
     GuiStatusData mGuiStatusData;
     bool mShowVisualizer;
     bool mShowObjects;
+
+    void changeEffectOrder(EffectRef effect, int newPosition);
 
     // Dmx output.
     DmxOutput mDmxOut;
@@ -1001,14 +1004,41 @@ void PhotonicDirectorApp::drawEffectControls()
         
         ui::Text("Effects");
         ui::Separator();
-        int testId = 0;
+        int effectOrderId = 0;
         // Create colors for the texts.
         ColorA colorActive(0.0, 1.0, 0.0, 1.0);
         ColorA colorInActive(1.0, 0.0, 0.0, 1.0);
         ColorA colorFading(1.0, 1.0, 0.0, 1.0);
+
+        // Drag and drop variables for ordering.
+        int moveTo = 0;
+        EffectRef effectToMove = nullptr;
+
         for (auto it = mEffects.begin(); it != mEffects.end(); ) {
-            ui::PushID(testId);
+            ui::PushID(effectOrderId);
             EffectRef & effectRef = *it;
+
+            // Start drag and drop functionality.
+            ui::Button(":::");
+            ui::SameLine();
+            ImGuiDragDropFlags srcFlags = 0;
+            if (ui::BeginDragDropSource(srcFlags)) {
+                ImGui::SetDragDropPayload(EFFECT_SELECT_DRAG_DROP, &effectRef, sizeof(EffectRef));
+                ui::Text("Drag to reorder;");
+                ImGui::EndDragDropSource();
+            }
+
+            if (ImGui::BeginDragDropTarget())
+            {
+                ImGuiDragDropFlags targetFlags = 0;
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(EFFECT_SELECT_DRAG_DROP, targetFlags))
+                {
+                    effectToMove = *(EffectRef*)payload->Data;
+                    moveTo = effectOrderId;
+                }
+                ImGui::EndDragDropTarget();
+            }
+
             ui::Checkbox("", &effectRef->isTurnedOn);
             ui::SameLine();
 
@@ -1046,8 +1076,11 @@ void PhotonicDirectorApp::drawEffectControls()
             }
             ui::TextColored(statusColor, "%s", effectRef->getStatusName().c_str());
             ui::PopID();
-            testId++;
+            effectOrderId++;
             it++;
+        }
+        if (effectToMove != nullptr) {
+            changeEffectOrder(effectToMove, moveTo);
         }
     }
     if (effectSelection != nullptr) {
@@ -1288,6 +1321,13 @@ void PhotonicDirectorApp::drawEffectControls()
         }
     }
     
+}
+
+void PhotonicDirectorApp::changeEffectOrder(EffectRef effect, int newPosition) {
+    mEffects.remove(effect);
+    auto iterator = mEffects.begin();
+    std::advance(iterator, newPosition);
+    mEffects.emplace(iterator, effect);
 }
 
 void PhotonicDirectorApp::drawDmxInspector()

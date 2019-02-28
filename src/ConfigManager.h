@@ -23,7 +23,7 @@ public:
     void readFromFile(fs::path path);
     void readLights(std::vector<LightRef> &lights, LightFactory* lightFactory);
     void readChannels(std::vector<InputChannelRef> &channels);
-    void readEffects(std::vector<EffectRef> &effects, std::vector<LightRef> &lights, std::vector<InputChannelRef> &channels);
+    void readEffects(std::list<EffectRef> &effects, std::vector<LightRef> &lights, std::vector<InputChannelRef> &channels);
     template <class T>
     T readValue(std::string name, T defaultValue) {
         if (mDoc.hasChild(name)) {
@@ -37,7 +37,7 @@ public:
     void startNewDoc();
     void writeLights(std::vector<LightRef> &lights);
     void writeChannels(std::vector<InputChannelRef> &channels);
-    void writeEffects(std::vector<EffectRef> &effects);
+    void writeEffects(std::list<EffectRef> &effects);
     template <class T>
     void writeValue(std::string name, T value) {
         XmlTree valueNode;

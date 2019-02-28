@@ -40,7 +40,7 @@ public:
     LightRef pickLight(std::vector<LightRef> lights);
     void highLightLight(LightRef light);
     void highLightLight(LightRef light, Color color);
-    void drawEffects(std::vector<EffectRef> effect);
+    void drawEffects(std::list<EffectRef> effect);
     
 protected:
     gl::BatchRef mCube, mLight;
