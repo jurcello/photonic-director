@@ -16,6 +16,7 @@
 #include "Poco/DNSSD/DNSSDResponder.h"
 #include "Poco/DNSSD/Bonjour/Bonjour.h"
 #include "MidiMessage.h"
+#include "Scene.h"
 
 using namespace ci;
 using namespace ci::app;
@@ -110,6 +111,11 @@ protected:
     // Effects.
     list<EffectRef> mEffects;
     double mLastUpdate;
+
+    SceneListRef mSceneList;
+    SceneListUIRef mScenesUI;
+
+
     
     void oscReceive(const osc::Message &message);
     void updateChannelsFromOsc();
@@ -165,6 +171,10 @@ PhotonicDirectorApp::PhotonicDirectorApp()
 
     mGuiStatusData.status = IDLE;
     Poco::DNSSD::initializeDNSSD();
+
+    // Setup scenelist.
+    mSceneList = SceneListRef(new SceneList);
+    mScenesUI = SceneListUIRef(new SceneListUI(mSceneList));
 }
 
 void PhotonicDirectorApp::setTheme(ImGui::Options &options) {
@@ -580,6 +590,7 @@ void PhotonicDirectorApp::drawGui()
     static bool showChannelEditor = true;
     static bool showEffectEditor = true;
     static bool showDmxInspector = false;
+    static bool showSceneInspector = false;
     // Draw the general ui.
     ImGuiWindowFlags windowFlags = 0;
     windowFlags |= ImGuiWindowFlags_NoMove;
@@ -650,6 +661,7 @@ void PhotonicDirectorApp::drawGui()
     ui::Checkbox("Show effect editor", &showEffectEditor);
     ui::Checkbox("Show objects hierarchy", &mShowObjects);
     ui::Checkbox("Show DMX inspector", &showDmxInspector);
+    ui::Checkbox("Show Scene inspector", &showSceneInspector);
     ui::Separator();
     ui::Text("Unity connection");
     ui::InputText("Address", &mUnityAddress);
@@ -704,6 +716,9 @@ void PhotonicDirectorApp::drawGui()
     }
     if (showDmxInspector) {
         drawDmxInspector();
+    }
+    if (showSceneInspector) {
+        mScenesUI->drawGui();
     }
 }
 

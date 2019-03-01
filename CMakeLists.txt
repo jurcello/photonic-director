@@ -27,6 +27,7 @@ set( SRC_FILES
 	${APP_PATH}/src/Output.cpp
 	${APP_PATH}/src/PhotonicDirectorApp.cpp
 	${APP_PATH}/src/Visualizer.cpp
+	${APP_PATH}/src/Scene.cpp
 	${APP_PATH}/src/Utils.h
 	${APP_PATH}/src/Effects/WaveEffect.cpp
 	${APP_PATH}/src/Effects/LocationFollow.cpp
