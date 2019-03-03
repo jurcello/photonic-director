@@ -419,6 +419,7 @@ void PhotonicDirectorApp::save()
         config.writeLights(mLights);
         config.writeChannels(mChannels);
         config.writeEffects(mEffects);
+        config.writeScenes(mSceneList->mScenes);
         config.writeValue<int>("oscReceivePort", mOscReceivePort);
         config.writeValue<int>("oscSendPort", mOscSendPort);
         config.writeValue<int>("unityPort", mUnityPort);
@@ -454,6 +455,7 @@ void PhotonicDirectorApp::load()
         for (auto effect: mEffects) {
             effect->setOscSender(mOscSender);
         }
+        config.readScenes(mSceneList, mEffects);
     }
 }
 
@@ -955,6 +957,12 @@ void PhotonicDirectorApp::drawEffectControls()
         // Add the button.
         if (ui::Button("Create Effect")) {
             ui::OpenPopup("Create effect");
+        }
+        ui::SameLine();
+        if (ui::Button("All off")) {
+            for (const auto effect : mEffects) {
+                effect->isTurnedOn = false;
+            }
         }
         if (ui::BeginPopupModal("Create effect")) {
             static std::string effectName;

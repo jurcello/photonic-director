@@ -14,9 +14,18 @@ photonic::Scene::Scene()
 {
 }
 
-photonic::Scene::Scene(std::string name)
-:name(name)
-{
+SceneRef Scene::create(std::string name, std::string uuid) {
+    if (uuid == "") {
+        uuid = generate_uuid(); 
+    }
+    Scene *const newScene = new Scene();
+    newScene->name = name;
+    newScene->mUuid = uuid;
+    return SceneRef(newScene);
+}
+
+std::string Scene::getUuid() {
+    return mUuid;
 }
 
 void photonic::Scene::addEffectOn(photonic::EffectRef effect) {
@@ -55,6 +64,14 @@ std::list<EffectRef>::iterator photonic::Scene::removeEffectOff(photonic::Effect
 bool photonic::Scene::hasEffectOff(photonic::EffectRef effect) {
     auto it = std::find(mEffectsOff.begin(), mEffectsOff.end(), effect);
     return it != mEffectsOff.end();
+}
+
+std::list<EffectRef> Scene::getEffectsOn() {
+    return mEffectsOn;
+}
+
+std::list<EffectRef> Scene::getEffectsOff() {
+    return mEffectsOff;
 }
 
 void photonic::Scene::listenToOsc(const osc::Message &message) {
@@ -105,7 +122,7 @@ void photonic::SceneList::addScene(photonic::SceneRef scene) {
 }
 
 void photonic::SceneList::createScene(std::string sceneName) {
-    auto newScene = SceneRef(new Scene(sceneName));
+    auto newScene = Scene::create(sceneName);
     addScene(newScene);
 }
 
@@ -154,11 +171,17 @@ void photonic::SceneList::previousScene() {
     if (mSceneIterator != mScenes.begin()) {
         std::advance(mSceneIterator, -1);
     }
+    (*mSceneIterator)->activate();
 }
 
 void photonic::SceneList::reset() {
     mSceneIterator = mScenes.begin();
     isActive = false;
+}
+
+void SceneList::removeAllScenes() {
+    mScenes.clear();
+    reset();
 }
 
 void photonic::SceneList::listenToOsc(const osc::Message &message) {
@@ -180,6 +203,7 @@ void photonic::SceneList::reorderScene(const photonic::SceneRef scene, int newPo
     std::advance(iterator, newPos);
     mScenes.emplace(iterator, scene);
 }
+
 
 photonic::SceneListUI::SceneListUI(photonic::SceneListRef sceneList)
 :mSceneList(sceneList)

@@ -20,8 +20,9 @@ namespace photonic {
         friend class SceneListUI;
 
     public:
-        Scene();
-        Scene(std::string name);
+        static SceneRef create(std::string name, std::string uuid = "");
+
+        std::string getUuid();
         void addEffectOn(EffectRef effect);
         std::list<EffectRef>::iterator removeEffectOn(EffectRef effect);
         bool hasEffectOn(EffectRef effect);
@@ -29,6 +30,9 @@ namespace photonic {
         void addEffectOff(EffectRef effect);
         std::list<EffectRef>::iterator removeEffectOff(EffectRef effect);
         bool hasEffectOff(EffectRef effect);
+
+        std::list<EffectRef> getEffectsOn();
+        std::list<EffectRef> getEffectsOff();
 
         void listenToOsc(const osc::Message &message);
 
@@ -39,9 +43,12 @@ namespace photonic {
 
 
     protected:
+        std::string mUuid;
         std::list<EffectRef> mEffectsOn;
         std::list<EffectRef> mEffectsOff;
 
+    private:
+        Scene();
     };
 
     class SceneList {
@@ -57,6 +64,7 @@ namespace photonic {
         void reset();
         void listenToOsc(const osc::Message &message);
         void reorderScene(const SceneRef scene, int newPos);
+        void removeAllScenes();
 
         std::list<SceneRef> mScenes;
         std::string oscAddress = "/scenes/trigger";

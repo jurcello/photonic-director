@@ -14,6 +14,7 @@
 #include "Light.h"
 #include "Effects.h"
 #include "Output.h"
+#include "Scene.h"
 
 using namespace photonic;
 
@@ -24,6 +25,7 @@ public:
     void readLights(std::vector<LightRef> &lights, LightFactory* lightFactory);
     void readChannels(std::vector<InputChannelRef> &channels);
     void readEffects(std::list<EffectRef> &effects, std::vector<LightRef> &lights, std::vector<InputChannelRef> &channels);
+    void readScenes(SceneListRef &sceneList, std::list<EffectRef> &effects);
     template <class T>
     T readValue(std::string name, T defaultValue) {
         if (mDoc.hasChild(name)) {
@@ -38,6 +40,7 @@ public:
     void writeLights(std::vector<LightRef> &lights);
     void writeChannels(std::vector<InputChannelRef> &channels);
     void writeEffects(std::list<EffectRef> &effects);
+    void writeScenes(std::list<SceneRef> &scenes);
     template <class T>
     void writeValue(std::string name, T value) {
         XmlTree valueNode;
