@@ -4,6 +4,11 @@
 
 #include "Scene.h"
 
+const char* SCENE_SELECT_DRAG_DROP = "SCENE_SEL";
+extern const char* EFFECT_SELECT_DRAG_DROP;
+
+using namespace photonic;
+
 photonic::Scene::Scene()
 :name("untitled")
 {
@@ -20,8 +25,12 @@ void photonic::Scene::addEffectOn(photonic::EffectRef effect) {
     }
 }
 
-void photonic::Scene::removeEffectOn(photonic::EffectRef effect) {
-    mEffectsOn.remove(effect);
+std::list<EffectRef>::iterator photonic::Scene::removeEffectOn(photonic::EffectRef effect) {
+    for (auto it = mEffectsOn.begin(); it != mEffectsOn.end(); it++) {
+        if (*it == effect) {
+            return mEffectsOn.erase(it);
+        }
+    }
 }
 
 bool photonic::Scene::hasEffectOn(photonic::EffectRef effect) {
@@ -35,8 +44,12 @@ void photonic::Scene::addEffectOff(photonic::EffectRef effect) {
     }
 }
 
-void photonic::Scene::removeEffectOff(photonic::EffectRef effect) {
-    mEffectsOff.remove(effect);
+std::list<EffectRef>::iterator photonic::Scene::removeEffectOff(photonic::EffectRef effect) {
+    for (auto it = mEffectsOff.begin(); it != mEffectsOff.end(); it++) {
+        if (*it == effect) {
+            return mEffectsOff.erase(it);
+        }
+    }
 }
 
 bool photonic::Scene::hasEffectOff(photonic::EffectRef effect) {
@@ -161,6 +174,13 @@ void photonic::SceneList::listenToOsc(const osc::Message &message) {
     }
 }
 
+void photonic::SceneList::reorderScene(const photonic::SceneRef scene, int newPos) {
+    mScenes.remove(scene);
+    auto iterator = mScenes.begin();
+    std::advance(iterator, newPos);
+    mScenes.emplace(iterator, scene);
+}
+
 photonic::SceneListUI::SceneListUI(photonic::SceneListRef sceneList)
 :mSceneList(sceneList)
 {
@@ -181,6 +201,7 @@ void photonic::SceneListUI::drawGui() {
         mSceneList->reset();
     }
 
+
     if (ui::Button("Add Scene")) {
         ui::OpenPopup("Add scene");
     }
@@ -199,27 +220,125 @@ void photonic::SceneListUI::drawGui() {
     }
     ui::Separator();
     ui::NewLine();
+
+    // Drag and drop variables for ordering.
+    int moveTo = 0;
+    SceneRef sceneToMove = nullptr;
+    int sceneOrderId = 0;
+
     static SceneRef sceneToEdit = nullptr;
     if (! ui::IsWindowCollapsed()) {
-        ui::ListBoxHeader("Edit scenes", mSceneList->mScenes.size(), 20);
+        ui::Text("Scenes");
         for (auto it = mSceneList->mScenes.begin(); it != mSceneList->mScenes.end(); ) {
+            ui::PushID(sceneOrderId);
             auto scene = *it;
             bool active = (mSceneList->getActiveScene() == scene) && mSceneList->isActive;
+
+            // Start drag and drop functionality.
+            ui::Button(":::");
+            ui::SameLine();
+            ImGuiDragDropFlags srcFlags = 0;
+            if (ui::BeginDragDropSource(srcFlags)) {
+                ImGui::SetDragDropPayload(SCENE_SELECT_DRAG_DROP, &scene, sizeof(SceneRef));
+                ui::Text("Drag to reorder;");
+                ImGui::EndDragDropSource();
+            }
+
+            if (ImGui::BeginDragDropTarget())
+            {
+                ImGuiDragDropFlags targetFlags = 0;
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(SCENE_SELECT_DRAG_DROP, targetFlags))
+                {
+                    sceneToMove = *(SceneRef*)payload->Data;
+                    moveTo = sceneOrderId;
+                }
+                ImGui::EndDragDropTarget();
+            }
+
             float fadeValue[] = {(float) active};
             ui::PlotHistogram("", fadeValue, 1, 0, NULL, 0.0f, 1.0f, ImVec2(20, 18));
             ui::SameLine();
-            if (ui::Selectable(scene->name.c_str()), sceneToEdit == scene) {
+            ui::Text("%s", scene->name.c_str());
+            ui::SameLine();
+            if (ui::Button("Edit")) {
                 sceneToEdit = scene;
             }
             ui::SameLine();
             if (ui::Button("Remove")) {
                 it = mSceneList->mScenes.erase(it);
+                ui::PopID();
+                continue;
+            }
+            ui::PopID();
+            it++;
+            sceneOrderId++;
+        }
+        if (sceneToMove != nullptr) {
+            mSceneList->reorderScene(sceneToMove,  moveTo);
+        }
+    }
+    if (sceneToEdit != nullptr) {
+        drawSceneUI(sceneToEdit);
+    }
+}
+
+void photonic::SceneListUI::drawSceneUI(SceneRef &scene) {
+    ui::ScopedWindow window("Edit scene");
+    if (! ui::IsWindowCollapsed()) {
+        ui::Text("%s", scene->name.c_str());
+        ui::InputText("Name", &scene->name);
+
+        ui::ListBoxHeader("Effects to enable");
+        int effectOnId = 0;
+        for (auto it = scene->mEffectsOn.begin(); it != scene->mEffectsOn.end(); ) {
+            auto effect = *it;
+            ui::PushID(effectOnId);
+            ui::Text("%s", effect->getName().c_str());
+            if (ui::Button("Remove")) {
+                it = scene->removeEffectOn(effect);
+                ui::PopID();
                 continue;
             }
             it++;
+            ui::PopID();
+            effectOnId++;
         }
         ui::ListBoxFooter();
-    }
+        if (ui::BeginDragDropTarget()) {
+            ImGuiDragDropFlags target_flags = 0;
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(EFFECT_SELECT_DRAG_DROP, target_flags)) {
+                EffectRef effect = *(EffectRef*)payload->Data;
+                scene->addEffectOn(effect);
+            }
+        }
 
+        ui::ListBoxHeader("Effects to disable");
+        int effectOffId = 0;
+        for (auto it = scene->mEffectsOff.begin(); it != scene->mEffectsOff.end(); ) {
+            auto effect = *it;
+            ui::PushID(effectOffId);
+            ui::Text("%s", effect->getName().c_str());
+            if (ui::Button("Remove")) {
+                it = scene->removeEffectOff(effect);
+                ui::PopID();
+                continue;
+            }
+            it++;
+            ui::PopID();
+            effectOffId++;
+        }
+        ui::ListBoxFooter();
+        if (ui::BeginDragDropTarget()) {
+            ImGuiDragDropFlags target_flags = 0;
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(EFFECT_SELECT_DRAG_DROP, target_flags)) {
+                EffectRef effect = *(EffectRef*)payload->Data;
+                scene->addEffectOff(effect);
+            }
+        }
+
+        if (ui::Button("Done")) {
+            scene = nullptr;
+        }
+    }
 
 }

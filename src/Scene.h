@@ -12,21 +12,22 @@
 
 namespace photonic {
 
-
     class Scene;
 
     typedef std::shared_ptr<Scene> SceneRef;
 
     class Scene {
+        friend class SceneListUI;
+
     public:
         Scene();
         Scene(std::string name);
         void addEffectOn(EffectRef effect);
-        void removeEffectOn(EffectRef effect);
+        std::list<EffectRef>::iterator removeEffectOn(EffectRef effect);
         bool hasEffectOn(EffectRef effect);
 
         void addEffectOff(EffectRef effect);
-        void removeEffectOff(EffectRef effect);
+        std::list<EffectRef>::iterator removeEffectOff(EffectRef effect);
         bool hasEffectOff(EffectRef effect);
 
         void listenToOsc(const osc::Message &message);
@@ -55,6 +56,7 @@ namespace photonic {
         SceneRef getActiveScene();
         void reset();
         void listenToOsc(const osc::Message &message);
+        void reorderScene(const SceneRef scene, int newPos);
 
         std::list<SceneRef> mScenes;
         std::string oscAddress = "/scenes/trigger";
@@ -73,7 +75,10 @@ namespace photonic {
         void drawGui();
 
     protected:
+        void drawSceneUI(SceneRef &scene);
+
         SceneListRef mSceneList;
+
 
     };
 
