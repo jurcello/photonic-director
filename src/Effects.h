@@ -206,6 +206,8 @@ namespace photonic {
         virtual void init();
         virtual void visualize();
         virtual EffectXmlSerializerRef getXmlSerializer();
+        void turnOnImmediately();
+        void turnOffImmediately();
 
         // Public accessable variables. Part of the interface!
         float fadeInTime;

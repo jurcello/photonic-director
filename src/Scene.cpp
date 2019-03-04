@@ -318,6 +318,7 @@ void photonic::SceneListUI::drawSceneUI(SceneRef &scene) {
             auto effect = *it;
             ui::PushID(effectOnId);
             ui::Text("%s", effect->getName().c_str());
+            ui::SameLine();
             if (ui::Button("Remove")) {
                 it = scene->removeEffectOn(effect);
                 ui::PopID();
@@ -342,6 +343,7 @@ void photonic::SceneListUI::drawSceneUI(SceneRef &scene) {
             auto effect = *it;
             ui::PushID(effectOffId);
             ui::Text("%s", effect->getName().c_str());
+            ui::SameLine();
             if (ui::Button("Remove")) {
                 it = scene->removeEffectOff(effect);
                 ui::PopID();

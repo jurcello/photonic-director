@@ -457,6 +457,18 @@ void Effect::visualize() {
     // No default visualisation.
 }
 
+void Effect::turnOnImmediately() {
+    isTurnedOn = true;
+    mStatus = kStatus_On;
+    mFadeValue = 1.f;
+}
+
+void Effect::turnOffImmediately() {
+    isTurnedOn = false;
+    mStatus = kStatus_Off;
+    mFadeValue = 0.f;
+}
+
 EffectXmlSerializerRef Effect::getXmlSerializer() {
     return EffectXmlSerializerRef(new EffectXmlSerializer(this));
 }

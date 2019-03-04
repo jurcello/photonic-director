@@ -336,6 +336,7 @@ void PhotonicDirectorApp::oscReceive(const osc::Message &message)
                 }
             }
         }
+        mSceneList->listenToOsc(message);
         mLightCalibrator.receiveOscMessage(message);
         for (auto effect : mEffects) {
             effect->listenToOsc(message);
@@ -1078,6 +1079,14 @@ void PhotonicDirectorApp::drawEffectControls()
             ui::SameLine();
             if(ui::Button("Edit")) {
                 effectSelection = &effectRef;
+            }
+            ui::SameLine();
+            if (ui::Button("Turn on immediately")) {
+                effectRef->turnOnImmediately();
+            }
+            ui::SameLine();
+            if (ui::Button("Turn off immediately")) {
+                effectRef->turnOffImmediately();
             }
             ui::SameLine();
             std::string effectName = effectRef->getName() + " (" + effectRef->getTypeName() + ")";
