@@ -146,6 +146,7 @@ protected:
 
     fs::path mCurrentPath;
     void saveToFile(fs::path savePath);
+    float mLastSave = 0.f;
     
 };
 
@@ -432,6 +433,7 @@ void PhotonicDirectorApp::quickSave() {
         save();
         return;
     }
+    mLastSave = getElapsedSeconds();
     saveToFile(mCurrentPath);
 }
 
@@ -619,6 +621,20 @@ void PhotonicDirectorApp::drawGui()
     ImGuiWindowFlags windowFlags = 0;
     windowFlags |= ImGuiWindowFlags_NoMove;
     ImGui::ScopedWindow window("Controls", windowFlags);
+
+    //////////// Save message
+    if (mLastSave > getElapsedSeconds() - 1.0f) {
+        ui::OpenPopup("Saved");
+        if (ui::BeginPopupModal("Saved")) {
+            ui::Text("Your save was succesfull");
+            ui::EndPopup();
+        }
+    }
+    else {
+        if (ui::IsPopupOpen("Saved")) {
+            ui::CloseCurrentPopup();
+        }
+    }
     
     ui::Separator();
     ui::Text("Osc settings");
