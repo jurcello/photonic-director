@@ -163,6 +163,46 @@ void ConfigManager::readEffects(std::list<EffectRef> &effects, std::vector<Light
     }
 }
 
+void ConfigManager::readScenes(SceneListRef &sceneList, std::list<EffectRef> &effects) {
+    sceneList->removeAllScenes();
+    if (mDoc.hasChild("scenes")) {
+        auto scenesNodes = mDoc.getChild("scenes");
+        if (scenesNodes.hasAttribute("oscAddress")) {
+            sceneList->oscAddress = scenesNodes.getAttributeValue<std::string>("oscAddress");
+        }
+        if (scenesNodes.hasAttribute("oscNextMessageText")) {
+            sceneList->oscStringMessageNext = scenesNodes.getAttributeValue<std::string>("oscNextMessageText");
+        }
+        for (const auto sceneNode: scenesNodes) {
+            std::string name = sceneNode.getAttributeValue<std::string>("name");
+            std::string uuid = sceneNode.getAttributeValue<std::string>("uuid");
+            auto newScene = Scene::create(name, uuid);
+            if (sceneNode.hasAttribute("description")) {
+                newScene->description = sceneNode.getAttributeValue<std::string>("description");
+            }
+            if (sceneNode.hasChild("effectsOn")) {
+                for (const auto &effectNode : sceneNode.getChild("effectsOn").getChildren()) {
+                    std::string effectUuid = effectNode->getValue();
+                    auto it = std::find_if(effects.begin(), effects.end(), [&effectUuid](const EffectRef effectCandidate){ return effectCandidate->getUuid() == effectUuid;});
+                    if (it != effects.end()) {
+                        newScene->addEffectOn(*it);
+                    }
+                }
+            }
+            if (sceneNode.hasChild("effectsOff")) {
+                for (const auto &effectNode : sceneNode.getChild("effectsOff").getChildren()) {
+                    std::string effectUuid = effectNode->getValue();
+                    auto it = std::find_if(effects.begin(), effects.end(), [&effectUuid](const EffectRef effectCandidate){ return effectCandidate->getUuid() == effectUuid;});
+                    if (it != effects.end()) {
+                        newScene->addEffectOff(*it);
+                    }
+                }
+            }
+            sceneList->addScene(newScene);
+        }
+    }
+}
+
 void ConfigManager::readParam(std::unique_ptr<XmlTree> &paramNode, Parameter *param, std::vector<InputChannelRef> &channels, std::vector<LightRef> &lights)
 {
     // We only need the type and the value
@@ -396,6 +436,42 @@ void ConfigManager::writeEffects(std::list<EffectRef> &effects)
         effectsNode.push_back(effectNode);
     }
     mDoc.push_back(effectsNode);
+}
+
+void ConfigManager::writeScenes(SceneListRef &sceneList) {
+    XmlTree scenesNode;
+    scenesNode.setTag("scenes");
+    scenesNode.setAttribute("oscAddress", sceneList->oscAddress);
+    scenesNode.setAttribute("oscNextMessageText", sceneList->oscStringMessageNext);
+    for (const auto &scene: sceneList->mScenes) {
+        XmlTree sceneNode;
+        sceneNode.setTag("scene");
+        sceneNode.setAttribute("name", scene->name);
+        sceneNode.setAttribute("uuid", scene->getUuid());
+        sceneNode.setAttribute("description", scene->description);
+
+        XmlTree effectsOnNode;
+        effectsOnNode.setTag("effectsOn");
+        for (auto effect : scene->getEffectsOn()) {
+            XmlTree effectNode;
+            effectNode.setTag("effect");
+            effectNode.setValue(effect->getUuid());
+            effectsOnNode.push_back(effectNode);
+        }
+        sceneNode.push_back(effectsOnNode);
+
+        XmlTree effectsOffNode;
+        effectsOffNode.setTag("effectsOff");
+        for (auto effect : scene->getEffectsOff()) {
+            XmlTree effectNode;
+            effectNode.setTag("effect");
+            effectNode.setValue(effect->getUuid());
+            effectsOffNode.push_back(effectNode);
+        }
+        sceneNode.push_back(effectsOffNode);
+        scenesNode.push_back(sceneNode);
+    }
+    mDoc.push_back(scenesNode);
 }
 
 void ConfigManager::writeParameter(cinder::XmlTree &paramsNode, photonic::Parameter *param, int index)

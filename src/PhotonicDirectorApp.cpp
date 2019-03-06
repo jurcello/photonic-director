@@ -16,6 +16,7 @@
 #include "Poco/DNSSD/DNSSDResponder.h"
 #include "Poco/DNSSD/Bonjour/Bonjour.h"
 #include "MidiMessage.h"
+#include "Scene.h"
 
 using namespace ci;
 using namespace ci::app;
@@ -110,6 +111,11 @@ protected:
     // Effects.
     list<EffectRef> mEffects;
     double mLastUpdate;
+
+    SceneListRef mSceneList;
+    SceneListUIRef mScenesUI;
+
+
     
     void oscReceive(const osc::Message &message);
     void updateChannelsFromOsc();
@@ -165,6 +171,10 @@ PhotonicDirectorApp::PhotonicDirectorApp()
 
     mGuiStatusData.status = IDLE;
     Poco::DNSSD::initializeDNSSD();
+
+    // Setup scenelist.
+    mSceneList = SceneListRef(new SceneList);
+    mScenesUI = SceneListUIRef(new SceneListUI(mSceneList));
 }
 
 void PhotonicDirectorApp::setTheme(ImGui::Options &options) {
@@ -307,7 +317,7 @@ void PhotonicDirectorApp::oscReceive(const osc::Message &message)
                             channel->setValue(arg1);
                             channel->setType(InputChannel::Type::kType_Dim1);
                         }
-                        else {
+                        else if (message.getArgType(0) == osc::ArgType::FLOAT) {
                             arg1 = message.getArgFloat(0);
                             channel->setValue(arg1);
                             channel->setType(InputChannel::Type::kType_Dim1);
@@ -326,6 +336,7 @@ void PhotonicDirectorApp::oscReceive(const osc::Message &message)
                 }
             }
         }
+        mSceneList->listenToOsc(message);
         mLightCalibrator.receiveOscMessage(message);
         for (auto effect : mEffects) {
             effect->listenToOsc(message);
@@ -409,6 +420,7 @@ void PhotonicDirectorApp::save()
         config.writeLights(mLights);
         config.writeChannels(mChannels);
         config.writeEffects(mEffects);
+        config.writeScenes(mSceneList);
         config.writeValue<int>("oscReceivePort", mOscReceivePort);
         config.writeValue<int>("oscSendPort", mOscSendPort);
         config.writeValue<int>("unityPort", mUnityPort);
@@ -444,6 +456,7 @@ void PhotonicDirectorApp::load()
         for (auto effect: mEffects) {
             effect->setOscSender(mOscSender);
         }
+        config.readScenes(mSceneList, mEffects);
     }
 }
 
@@ -580,6 +593,7 @@ void PhotonicDirectorApp::drawGui()
     static bool showChannelEditor = true;
     static bool showEffectEditor = true;
     static bool showDmxInspector = false;
+    static bool showSceneInspector = false;
     // Draw the general ui.
     ImGuiWindowFlags windowFlags = 0;
     windowFlags |= ImGuiWindowFlags_NoMove;
@@ -650,6 +664,7 @@ void PhotonicDirectorApp::drawGui()
     ui::Checkbox("Show effect editor", &showEffectEditor);
     ui::Checkbox("Show objects hierarchy", &mShowObjects);
     ui::Checkbox("Show DMX inspector", &showDmxInspector);
+    ui::Checkbox("Show Scene inspector", &showSceneInspector);
     ui::Separator();
     ui::Text("Unity connection");
     ui::InputText("Address", &mUnityAddress);
@@ -704,6 +719,9 @@ void PhotonicDirectorApp::drawGui()
     }
     if (showDmxInspector) {
         drawDmxInspector();
+    }
+    if (showSceneInspector) {
+        mScenesUI->drawGui();
     }
 }
 
@@ -941,6 +959,12 @@ void PhotonicDirectorApp::drawEffectControls()
         if (ui::Button("Create Effect")) {
             ui::OpenPopup("Create effect");
         }
+        ui::SameLine();
+        if (ui::Button("All off")) {
+            for (const auto effect : mEffects) {
+                effect->isTurnedOn = false;
+            }
+        }
         if (ui::BeginPopupModal("Create effect")) {
             static std::string effectName;
             static std::string filter;
@@ -1047,6 +1071,7 @@ void PhotonicDirectorApp::drawEffectControls()
             ui::PlotHistogram("", fadeValue, 1, 0, NULL, 0.0f, 1.0f, ImVec2(20, 18));
             ui::SameLine();
             if (ui::Button("Remove")) {
+                mSceneList->onEffectRemove(*it);
                 it = mEffects.erase(it);
                 effectSelection = nullptr;
                 ui::PopID();
@@ -1055,6 +1080,14 @@ void PhotonicDirectorApp::drawEffectControls()
             ui::SameLine();
             if(ui::Button("Edit")) {
                 effectSelection = &effectRef;
+            }
+            ui::SameLine();
+            if (ui::Button("Turn on immediately")) {
+                effectRef->turnOnImmediately();
+            }
+            ui::SameLine();
+            if (ui::Button("Turn off immediately")) {
+                effectRef->turnOffImmediately();
             }
             ui::SameLine();
             std::string effectName = effectRef->getName() + " (" + effectRef->getTypeName() + ")";
