@@ -18,6 +18,7 @@ namespace photonic {
         explicit Desaturate(std::string name, std::string uuid = "");
 
         void execute(double dt) override;
+        void executePost(double dt) override;
         std::string getTypeName() override;
         std::string getTypeClassName() override;
         Effect::Stage getStage() override;

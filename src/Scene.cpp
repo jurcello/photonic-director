@@ -250,9 +250,13 @@ void photonic::SceneListUI::drawGui() {
     }
     if (ui::BeginPopupModal("Add scene")) {
         static std::string sceneName;
+        static std::string sceneDescription;
         ui::InputText("Name", &sceneName);
+        ui::InputTextMultiline("Description", &sceneDescription);
         if (ui::Button("Done")) {
-            mSceneList->createScene(sceneName);
+            mSceneList->createScene(sceneName, sceneDescription);
+            sceneDescription = "";
+            sceneName = "";
             ui::CloseCurrentPopup();
         }
         ui::SameLine();

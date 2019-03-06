@@ -405,7 +405,7 @@ void PhotonicDirectorApp::mouseMove(cinder::app::MouseEvent event)
 
 void PhotonicDirectorApp::keyDown( KeyEvent event)
 {
-    if (event.getChar() == KeyEvent::KEY_ESCAPE)
+    if (event.getChar() == 'q' && event.isAccelDown())
         exit(0);
     if (event.getChar() == 'g') {
         mGuiStatusData.drawGui = !mGuiStatusData.drawGui;
@@ -507,10 +507,7 @@ void PhotonicDirectorApp::update()
     /////////////////////////////////////////////
     // Main stage.
     for (auto effect : mEffects) {
-        if (effect->getStage() == Effect::Stage::kStage_Main)
-        {
-            effect->execute(dt);
-        }
+        effect->execute(dt);
     }
     // Prepare DMX output.
     mDmxOut.reset();
@@ -555,7 +552,7 @@ void PhotonicDirectorApp::update()
     for (auto effect : mEffects) {
         if (effect->getStage() == Effect::Stage::kStage_After && effect->isTurnedOn)
         {
-            effect->execute(dt);
+            effect->executePost(dt);
         }
     }
 
@@ -623,7 +620,7 @@ void PhotonicDirectorApp::drawGui()
     ImGui::ScopedWindow window("Controls", windowFlags);
 
     //////////// Save message
-    if (mLastSave > getElapsedSeconds() - 1.0f) {
+    if (mLastSave > getElapsedSeconds() - 0.5f && getElapsedSeconds() > 1.f) {
         ui::OpenPopup("Saved");
         if (ui::BeginPopupModal("Saved")) {
             ui::Text("Your save was succesfull");
@@ -699,9 +696,9 @@ void PhotonicDirectorApp::drawGui()
     ui::Checkbox("Show light editor", &showLightEditor);
     ui::Checkbox("Show channel editor", &showChannelEditor);
     ui::Checkbox("Show effect editor", &showEffectEditor);
+    ui::Checkbox("Show Scene inspector", &showSceneInspector);
     ui::Checkbox("Show objects hierarchy", &mShowObjects);
     ui::Checkbox("Show DMX inspector", &showDmxInspector);
-    ui::Checkbox("Show Scene inspector", &showSceneInspector);
     ui::Separator();
     ui::Text("Unity connection");
     ui::InputText("Address", &mUnityAddress);
@@ -1111,6 +1108,12 @@ void PhotonicDirectorApp::drawEffectControls()
             float fadeValue[] = {fadeValueContent};
             ui::PlotHistogram("", fadeValue, 1, 0, NULL, 0.0f, 1.0f, ImVec2(20, 18));
             ui::SameLine();
+            std::string effectName = effectRef->getName() + " (" + effectRef->getTypeName() + ")";
+            ui::Text("%s", effectName.c_str());
+            if (ui::IsItemClicked()) {
+                effectSelection = &effectRef;
+            }
+            ui::SameLine();
             if (ui::Button("Remove")) {
                 mSceneList->onEffectRemove(*it);
                 it = mEffects.erase(it);
@@ -1130,9 +1133,6 @@ void PhotonicDirectorApp::drawEffectControls()
             if (ui::Button("Turn off immediately")) {
                 effectRef->turnOffImmediately();
             }
-            ui::SameLine();
-            std::string effectName = effectRef->getName() + " (" + effectRef->getTypeName() + ")";
-            ui::Text("%s", effectName.c_str());
             ui::SameLine();
             ColorA statusColor;
             switch (effectRef->getStatus()) {

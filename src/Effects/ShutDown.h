@@ -22,6 +22,7 @@ namespace photonic {
         ShutDown(std::string name, std::string uuid = "");
 
         void execute(double dt) override;
+        void executePost(double dt) override;
         void init() override;
         Stage getStage() override;
         void drawEditGui() override;

@@ -31,6 +31,9 @@ ShutDownHuman::ShutDownHuman(std::string name, std::string uuid)
 
 void ShutDownHuman::execute(double dt) {
     Effect::execute(dt);
+}
+
+void ShutDownHuman::executePost(double dt) {
     updateState();
     if (mIsShutdown) {
         switch (mCurrentStage) {

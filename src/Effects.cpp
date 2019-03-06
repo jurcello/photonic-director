@@ -408,6 +408,11 @@ void Effect::execute(double dt) {
     }
 }
 
+void Effect::executePost(double dt) {
+    // This might be used in child classes.
+    // Todo: declare purely virtual?
+}
+
 void Effect::listenToOsc(const osc::Message &message) {
     // First handle on/off functionality.
     if (message.getAddress() == oscAddressForOnOff) {

@@ -197,6 +197,7 @@ namespace photonic {
         virtual bool supportsLight(LightRef light);
         virtual void drawEditGui();
         virtual void execute(double dt);
+        virtual void executePost(double dt);
         // TODO: implement using listener pattern.
         void listenToOsc(const osc::Message &message);
         void setOscSender(osc::SenderUdp *OscSender);

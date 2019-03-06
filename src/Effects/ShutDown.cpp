@@ -22,6 +22,10 @@ ShutDown::ShutDown(std::string name, std::string uuid)
 
 void ShutDown::execute(double dt) {
     Effect::execute(dt);
+}
+
+void ShutDown::executePost(double dt) {
+    Effect::executePost(dt);
     updateState();
     if (isTurnedOn && !mTimer.isStopped()) {
         if (mParams[kInput_TimeBetweenUpdates]->floatValue == 0.f || mLastUpdateSecondsAgo > mParams[kInput_TimeBetweenUpdates]->floatValue) {

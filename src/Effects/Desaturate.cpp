@@ -16,6 +16,9 @@ photonic::Desaturate::Desaturate(std::string name, std::string uuid)
 
 void photonic::Desaturate::execute(double dt) {
     Effect::execute(dt);
+}
+
+void Desaturate::executePost(double dt) {
     if (mParams[kInput_InputChannel]->channelRef) {
         float desatuateValue = 1.0f - mParams[kInput_InputChannel]->getMappedChannelValue() * mFadeValue;
         for (const auto &light : mLights) {

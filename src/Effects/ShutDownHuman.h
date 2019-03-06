@@ -35,6 +35,7 @@ namespace photonic {
         ShutDownHuman(std::string name, std::string uuid = "");
 
         void execute(double dt) override;
+        void executePost(double dt) override;
         Stage getStage() override;
 
         void drawEditGui() override;
