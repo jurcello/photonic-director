@@ -40,7 +40,7 @@ public:
     void writeLights(std::vector<LightRef> &lights);
     void writeChannels(std::vector<InputChannelRef> &channels);
     void writeEffects(std::list<EffectRef> &effects);
-    void writeScenes(std::list<SceneRef> &scenes);
+    void writeScenes(SceneListRef &sceneList);
     template <class T>
     void writeValue(std::string name, T value) {
         XmlTree valueNode;

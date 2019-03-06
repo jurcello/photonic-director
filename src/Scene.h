@@ -40,6 +40,7 @@ namespace photonic {
 
         std::string oscTriggerAddress;
         std::string name;
+        std::string description;
 
 
     protected:
@@ -55,7 +56,7 @@ namespace photonic {
     public:
         SceneList();
         void addScene(SceneRef scene);
-        void createScene(std::string sceneName);
+        void createScene(std::string sceneName, std::string description = "");
         void removeScene(SceneRef scene);
         bool hasScene(SceneRef scene);
         void nextScene();
@@ -65,9 +66,11 @@ namespace photonic {
         void listenToOsc(const osc::Message &message);
         void reorderScene(const SceneRef scene, int newPos);
         void removeAllScenes();
+        void onEffectRemove(EffectRef effect);
 
         std::list<SceneRef> mScenes;
         std::string oscAddress = "/scenes/trigger";
+        std::string oscStringMessageNext = "next";
 
         bool isActive;
 

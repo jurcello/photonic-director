@@ -317,7 +317,7 @@ void PhotonicDirectorApp::oscReceive(const osc::Message &message)
                             channel->setValue(arg1);
                             channel->setType(InputChannel::Type::kType_Dim1);
                         }
-                        else {
+                        else if (message.getArgType(0) == osc::ArgType::FLOAT) {
                             arg1 = message.getArgFloat(0);
                             channel->setValue(arg1);
                             channel->setType(InputChannel::Type::kType_Dim1);
@@ -420,7 +420,7 @@ void PhotonicDirectorApp::save()
         config.writeLights(mLights);
         config.writeChannels(mChannels);
         config.writeEffects(mEffects);
-        config.writeScenes(mSceneList->mScenes);
+        config.writeScenes(mSceneList);
         config.writeValue<int>("oscReceivePort", mOscReceivePort);
         config.writeValue<int>("oscSendPort", mOscSendPort);
         config.writeValue<int>("unityPort", mUnityPort);
@@ -1071,6 +1071,7 @@ void PhotonicDirectorApp::drawEffectControls()
             ui::PlotHistogram("", fadeValue, 1, 0, NULL, 0.0f, 1.0f, ImVec2(20, 18));
             ui::SameLine();
             if (ui::Button("Remove")) {
+                mSceneList->onEffectRemove(*it);
                 it = mEffects.erase(it);
                 effectSelection = nullptr;
                 ui::PopID();

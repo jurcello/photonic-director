@@ -167,10 +167,19 @@ void ConfigManager::readScenes(SceneListRef &sceneList, std::list<EffectRef> &ef
     sceneList->removeAllScenes();
     if (mDoc.hasChild("scenes")) {
         auto scenesNodes = mDoc.getChild("scenes");
+        if (scenesNodes.hasAttribute("oscAddress")) {
+            sceneList->oscAddress = scenesNodes.getAttributeValue<std::string>("oscAddress");
+        }
+        if (scenesNodes.hasAttribute("oscNextMessageText")) {
+            sceneList->oscStringMessageNext = scenesNodes.getAttributeValue<std::string>("oscNextMessageText");
+        }
         for (const auto sceneNode: scenesNodes) {
             std::string name = sceneNode.getAttributeValue<std::string>("name");
             std::string uuid = sceneNode.getAttributeValue<std::string>("uuid");
             auto newScene = Scene::create(name, uuid);
+            if (sceneNode.hasAttribute("description")) {
+                newScene->description = sceneNode.getAttributeValue<std::string>("description");
+            }
             if (sceneNode.hasChild("effectsOn")) {
                 for (const auto &effectNode : sceneNode.getChild("effectsOn").getChildren()) {
                     std::string effectUuid = effectNode->getValue();
@@ -429,14 +438,17 @@ void ConfigManager::writeEffects(std::list<EffectRef> &effects)
     mDoc.push_back(effectsNode);
 }
 
-void ConfigManager::writeScenes(std::list<SceneRef> &scenes) {
+void ConfigManager::writeScenes(SceneListRef &sceneList) {
     XmlTree scenesNode;
     scenesNode.setTag("scenes");
-    for (const auto &scene: scenes) {
+    scenesNode.setAttribute("oscAddress", sceneList->oscAddress);
+    scenesNode.setAttribute("oscNextMessageText", sceneList->oscStringMessageNext);
+    for (const auto &scene: sceneList->mScenes) {
         XmlTree sceneNode;
         sceneNode.setTag("scene");
         sceneNode.setAttribute("name", scene->name);
         sceneNode.setAttribute("uuid", scene->getUuid());
+        sceneNode.setAttribute("description", scene->description);
 
         XmlTree effectsOnNode;
         effectsOnNode.setTag("effectsOn");

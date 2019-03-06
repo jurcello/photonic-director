@@ -121,8 +121,9 @@ void photonic::SceneList::addScene(photonic::SceneRef scene) {
     }
 }
 
-void photonic::SceneList::createScene(std::string sceneName) {
+void photonic::SceneList::createScene(std::string sceneName, std::string description) {
     auto newScene = Scene::create(sceneName);
+    newScene->description = description;
     addScene(newScene);
 }
 
@@ -184,16 +185,33 @@ void SceneList::removeAllScenes() {
     reset();
 }
 
-void photonic::SceneList::listenToOsc(const osc::Message &message) {
-    if (message.getAddress() == oscAddress && message.getArgType(0) == osc::ArgType::INTEGER_32) {
-        int direction = message.getArgInt32(0);
-        if (direction == 0) {
-            previousScene();
+void SceneList::onEffectRemove(EffectRef effect) {
+    for (const auto &scene : mScenes) {
+        if (scene->hasEffectOff(effect)) {
+            scene->removeEffectOff(effect);
         }
-        else {
-            nextScene();
+        if (scene->hasEffectOn(effect)) {
+            scene->removeEffectOn(effect);
         }
+    }
+}
 
+void photonic::SceneList::listenToOsc(const osc::Message &message) {
+    if (message.getAddress() == oscAddress) {
+        if (message.getArgType(0) == osc::ArgType::INTEGER_32) {
+            int direction = message.getArgInt32(0);
+            if (direction == 0) {
+                previousScene();
+            }
+            else {
+                nextScene();
+            }
+        }
+        else if (message.getArgType(0) == osc::ArgType::STRING) {
+            if (message.getArgString(0) == oscStringMessageNext) {
+                nextScene();
+            }
+        }
     }
 }
 
@@ -213,6 +231,7 @@ photonic::SceneListUI::SceneListUI(photonic::SceneListRef sceneList)
 void photonic::SceneListUI::drawGui() {
     ImGui::ScopedWindow window("Scenes");
     ui::InputText("osc address for triggering", &mSceneList->oscAddress);
+    ui::InputText("osc message for next", &mSceneList->oscStringMessageNext);
     if (ui::Button("Next")) {
         mSceneList->nextScene();
     }
@@ -283,6 +302,17 @@ void photonic::SceneListUI::drawGui() {
             ui::PlotHistogram("", fadeValue, 1, 0, NULL, 0.0f, 1.0f, ImVec2(20, 18));
             ui::SameLine();
             ui::Text("%s", scene->name.c_str());
+            if (ui::IsItemHovered()) {
+                std::string effectOnList = "Will turn on:";
+                for (const auto effect : scene->mEffectsOn) {
+                    effectOnList += "\n- " + effect->getName();
+                }
+                std::string effectOffList = "Will turn off:";
+                for (const auto effect : scene->mEffectsOff) {
+                    effectOffList += "\n- " + effect->getName();
+                }
+                ui::SetTooltip("%s\n%s\n%s", scene->description.c_str(), effectOnList.c_str(), effectOffList.c_str());
+            }
             ui::SameLine();
             if (ui::Button("Edit")) {
                 sceneToEdit = scene;
@@ -311,6 +341,7 @@ void photonic::SceneListUI::drawSceneUI(SceneRef &scene) {
     if (! ui::IsWindowCollapsed()) {
         ui::Text("%s", scene->name.c_str());
         ui::InputText("Name", &scene->name);
+        ui::InputTextMultiline("Description", &scene->description);
 
         ui::ListBoxHeader("Effects to enable");
         int effectOnId = 0;
