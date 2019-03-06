@@ -72,6 +72,7 @@ public:
     void resize() override;
     
     void save();
+    void quickSave();
     void load();
     
     void pickLight();
@@ -142,6 +143,9 @@ protected:
     // Zeroconf
     Poco::DNSSD::DNSSDResponder* mDnssdResponder;
     Poco::DNSSD::ServiceHandle mServiceHandle;
+
+    fs::path mCurrentPath;
+    void saveToFile(fs::path savePath);
     
 };
 
@@ -408,6 +412,9 @@ void PhotonicDirectorApp::keyDown( KeyEvent event)
     if (event.getChar() == 'v') {
         mShowVisualizer = ! mShowVisualizer;
     }
+    if (event.getChar() == 's' && event.isAccelDown()) {
+        quickSave();
+    }
 
 }
 
@@ -416,19 +423,32 @@ void PhotonicDirectorApp::save()
     std::vector<string> extensions {"xml"};
     fs::path savePath = getSaveFilePath(fs::path(), extensions);
     if (! savePath.empty()) {
-        config.startNewDoc();
-        config.writeLights(mLights);
-        config.writeChannels(mChannels);
-        config.writeEffects(mEffects);
-        config.writeScenes(mSceneList);
-        config.writeValue<int>("oscReceivePort", mOscReceivePort);
-        config.writeValue<int>("oscSendPort", mOscSendPort);
-        config.writeValue<int>("unityPort", mUnityPort);
-        config.writeValue<bool>("oscUnicast", mOscUnicast);
-        config.writeValue<std::string>("oscSendAddress", mOscSendAddress);
-        config.writeValue<std::string>("unityAddress", mUnityAddress);
-        config.writeToFile(savePath);
+        saveToFile(savePath);
     }
+}
+
+void PhotonicDirectorApp::quickSave() {
+    if (mCurrentPath.empty()) {
+        save();
+        return;
+    }
+    saveToFile(mCurrentPath);
+}
+
+void PhotonicDirectorApp::saveToFile(fs::path savePath) {
+    mCurrentPath = savePath;
+    config.startNewDoc();
+    config.writeLights(mLights);
+    config.writeChannels(mChannels);
+    config.writeEffects(mEffects);
+    config.writeScenes(mSceneList);
+    config.writeValue<int>("oscReceivePort", mOscReceivePort);
+    config.writeValue<int>("oscSendPort", mOscSendPort);
+    config.writeValue<int>("unityPort", mUnityPort);
+    config.writeValue<bool>("oscUnicast", mOscUnicast);
+    config.writeValue<std::string>("oscSendAddress", mOscSendAddress);
+    config.writeValue<std::string>("unityAddress", mUnityAddress);
+    config.writeToFile(savePath);
 }
 
 void PhotonicDirectorApp::load()
@@ -437,6 +457,7 @@ void PhotonicDirectorApp::load()
     std::vector<string> extensions {"xml"};
     fs::path loadPath = getOpenFilePath(fs::path(), extensions);
     if (! loadPath.empty()) {
+        mCurrentPath = loadPath;
         config.readFromFile(loadPath);
         mOscReceivePort = config.readValue<int>("oscReceivePort", mOscReceivePort);
         mOscSendPort = config.readValue<int>("oscSendPort", mOscSendPort);
@@ -696,6 +717,10 @@ void PhotonicDirectorApp::drawGui()
     }
     ui::Separator();
     ui::Text("File");
+    if (! mCurrentPath.empty()) {
+        ui::Spacing();
+        ui::Text("Current file: %s", mCurrentPath.filename().c_str() );
+    }
     ui::Spacing();
     if (ui::Button("Load")) {
         load();
