@@ -131,6 +131,10 @@ void Visualizer::disableEditingMode()
     mEditingMode = false;
 }
 
+bool Visualizer::isInEditMode() {
+    return mEditingMode;
+}
+
 LightRef Visualizer::pickLight(std::vector<LightRef> lights)
 {
     float u = mMousePos.x / (float) getWindowWidth();

@@ -35,6 +35,8 @@ public:
     
     void enableEditingMode();
     void disableEditingMode();
+
+    bool isInEditMode();
     
     void resize();
     LightRef pickLight(std::vector<LightRef> lights);
