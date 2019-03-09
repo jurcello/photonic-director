@@ -40,6 +40,7 @@ set( SRC_FILES
 	${APP_PATH}/src/Effects/OriginatingWave.cpp
 	${APP_PATH}/src/Effects/ConditionalVolume.cpp
 	${APP_PATH}/src/Effects/CloseInLocation.cpp
+	${APP_PATH}/src/Effects/VUMeter.cpp
 	${APP_PATH}/src/Effects/PulseStatic.cpp
 	${APP_PATH}/src/Effects/Preset.cpp
 	${APP_PATH}/src/Effects/MidiLight.cpp
