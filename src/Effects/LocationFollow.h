@@ -15,6 +15,7 @@ namespace photonic {
             kInput_Radius = 2,
             kInput_Intensity = 3,
             kInput_DropOff = 4,
+            kInput_FadeOutTime = 5,
         };
         LocationFollow(std::string name, std::string uuid = "");
 

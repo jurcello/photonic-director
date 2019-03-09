@@ -317,6 +317,9 @@ void photonic::SceneListUI::drawGui() {
                 }
                 ui::SetTooltip("%s\n%s\n%s", scene->description.c_str(), effectOnList.c_str(), effectOffList.c_str());
             }
+            if (ui::IsItemClicked()) {
+                sceneToEdit = scene;
+            }
             ui::SameLine();
             if (ui::Button("Edit")) {
                 sceneToEdit = scene;

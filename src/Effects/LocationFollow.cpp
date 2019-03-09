@@ -32,10 +32,15 @@ photonic::LocationFollow::LocationFollow(std::string name, std::string uuid)
     dropOff->floatValue = 1.0f;
     mParams[kInput_DropOff] = dropOff;
 
+    registerParam(Parameter::Type::kType_Float, kInput_FadeOutTime, 0.1f, "Fade out time");
 }
 
 void photonic::LocationFollow::execute(double dt) {
     float radius = mParams[kInput_Radius]->floatValue;
+    float stepSize = 0.f;
+    if (mParams[kInput_FadeOutTime]->floatValue > 0.f) {
+        stepSize = dt / mParams[kInput_FadeOutTime]->floatValue;
+    }
     Effect::execute(dt);
     if (mChannel) {
         float dropOff = mParams[kInput_DropOff]->floatValue;
@@ -60,7 +65,15 @@ void photonic::LocationFollow::execute(double dt) {
                 float distanceFromRadius = distance - radius;
                 intensity = mParams[kInput_Intensity]->floatValue / math<float>::pow(1 + distanceFromRadius, dropOff);
             }
-            light->setEffectIntensity(mUuid, intensity);
+            float lastIntensity = light->getEffetcIntensity(mUuid);
+
+            float lastIntensityDiminished = lastIntensity - stepSize;
+            if (intensity < lastIntensityDiminished && stepSize > 0) {
+                light->setEffectIntensity(mUuid, lastIntensityDiminished);
+            }
+            else {
+                light->setEffectIntensity(mUuid, intensity);
+            }
         }
     }
 }
