@@ -37,6 +37,7 @@ namespace photonic {
         void listenToOsc(const osc::Message &message);
 
         void activate();
+        void deActivate();
 
         std::string oscTriggerAddress;
         std::string name;

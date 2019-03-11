@@ -106,6 +106,13 @@ void photonic::Scene::activate() {
     }
 }
 
+void Scene::deActivate() {
+    for (const auto &effect: mEffectsOn) {
+        effect->isTurnedOn = false;
+    }
+
+}
+
 photonic::SceneList::SceneList()
 :isActive(false)
 {
@@ -170,7 +177,15 @@ void photonic::SceneList::previousScene() {
         return;
     }
     if (mSceneIterator != mScenes.begin()) {
+        // Deactivate the current scene.
+        // Then move the currentScene iterator 1 back.
+        (*mSceneIterator)->deActivate();
         std::advance(mSceneIterator, -1);
+    }
+    // In order to arrive at the same state,
+    // start the whole sequence from the first scene.
+    for (auto iterator = mScenes.begin(); iterator != mSceneIterator; iterator++) {
+        (*iterator)->activate();
     }
     (*mSceneIterator)->activate();
 }
