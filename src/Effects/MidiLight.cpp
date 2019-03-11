@@ -72,9 +72,11 @@ void MidiLight::listenToMidi(const smf::MidiMessage *message) {
     if (message->isNote()) {
         int keyNumber = message->getKeyNumber();
         if (mUseModulo) {
-            keyNumber = (keyNumber % 12) + 1;
+            keyNumber = (keyNumber % 12);
         }
-        mLastMidiNote = keyNumber;
+        if (message->isNoteOn()) {
+            mLastMidiNote = keyNumber;
+        }
         float intensity = 0.f;
         if (message->isNoteOn()) {
             intensity = (message->getVelocity() / 128.f) * mParams[kInput_OveralVolume]->floatValue;
@@ -101,7 +103,7 @@ void MidiLight::listenToMidi(const smf::MidiMessage *message) {
 
 void MidiLight::drawEditGui() {
     ui::Text("Last key: %i", mLastMidiNote);
-    ui::Text("Last key mod: %i", (mLastMidiNote % 12) + 1);
+    ui::Text("Last key mod: %i", (mLastMidiNote % 12));
     ui::Checkbox("Use modulo (only octaves)", &mUseModulo);
     ui::Checkbox("Show lamps when hovering name", &mShowLampsWhenHovered);
     int id = 0;

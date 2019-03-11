@@ -100,6 +100,7 @@ class PhotonicDirectorApp : public App
     int mOscReceivePort;
     int mOscSendPort;
     std::string mLastOscAddress;
+    bool mSendLightOsc;
 
     // Unity related stuff.
     std::string mUnityAddress;
@@ -488,6 +489,7 @@ void PhotonicDirectorApp::saveToFile(fs::path savePath)
     config.writeValue<int>("oscSendPort", mOscSendPort);
     config.writeValue<int>("unityPort", mUnityPort);
     config.writeValue<bool>("oscUnicast", mOscUnicast);
+    config.writeValue<bool>("sendLightOsc", mSendLightOsc);
     config.writeValue<std::string>("oscSendAddress", mOscSendAddress);
     config.writeValue<std::string>("unityAddress", mUnityAddress);
     config.writeToFile(savePath);
@@ -508,6 +510,7 @@ void PhotonicDirectorApp::load()
         mOscUnicast = config.readValue<bool>("oscUnicast", mOscUnicast);
         mOscSendAddress = config.readValue<std::string>("oscSendAddress", mOscSendAddress);
         mUnityAddress = config.readValue<std::string>("unityAddress", mUnityAddress);
+        mSendLightOsc = config.readValue<bool>("sendLightOsc", mSendLightOsc);
         setupOsc(mOscReceivePort, mOscSendPort);
         // Reset the channelRegistry of the dmx out.
         mDmxOut.clearRegistry();
@@ -631,7 +634,9 @@ void PhotonicDirectorApp::update()
         light->updateDmx();
     }
     mDmxOut.update();
-    handleLightOscSending();
+    if (mSendLightOsc) {
+        handleLightOscSending();
+    }
     handleCalibrationSending();
     mLastUpdate = now;
 }
@@ -742,6 +747,7 @@ void PhotonicDirectorApp::drawGui()
             }
         }
     }
+    ui::Checkbox("Send light osc", &mSendLightOsc);
 
     ui::Separator();
     ui::Text("Dmx settings");
