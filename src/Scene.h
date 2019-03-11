@@ -33,6 +33,7 @@ namespace photonic {
 
         std::list<EffectRef> getEffectsOn();
         std::list<EffectRef> getEffectsOff();
+        void setEffectsStillOn(std::list<EffectRef> effects);
 
         void listenToOsc(const osc::Message &message);
 
@@ -48,6 +49,7 @@ namespace photonic {
         std::string mUuid;
         std::list<EffectRef> mEffectsOn;
         std::list<EffectRef> mEffectsOff;
+        std::list<EffectRef> mEffectsStillOn;
 
     private:
         Scene();
@@ -65,9 +67,10 @@ namespace photonic {
         SceneRef getActiveScene();
         void reset();
         void listenToOsc(const osc::Message &message);
-        void reorderScene(const SceneRef scene, int newPos);
+        void reorderScene(SceneRef scene, int newPos);
         void removeAllScenes();
-        void onEffectRemove(EffectRef effect);
+        void onEffectRemove(EffectRef &effect);
+        void updateEffectsStillOn();
 
         std::list<SceneRef> mScenes;
         std::string oscAddress = "/scenes/trigger";

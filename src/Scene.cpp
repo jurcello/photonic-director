@@ -74,6 +74,15 @@ std::list<EffectRef> Scene::getEffectsOff() {
     return mEffectsOff;
 }
 
+void Scene::setEffectsStillOn(std::list<EffectRef> effects) {
+    mEffectsStillOn.clear();
+    for (auto effect: effects) {
+        if (std::find(mEffectsOn.begin(), mEffectsOn.end(), effect) == mEffectsOn.end()) {
+            mEffectsStillOn.push_back(effect);
+        }
+    }
+}
+
 void photonic::Scene::listenToOsc(const osc::Message &message) {
     if (message.getAddress() == oscTriggerAddress) {
         switch (message.getArgType(0)) {
@@ -125,6 +134,7 @@ void photonic::SceneList::addScene(photonic::SceneRef scene) {
         if (mScenes.size() == 1) {
             mSceneIterator = mScenes.begin();
         }
+        updateEffectsStillOn();
     }
 }
 
@@ -139,6 +149,7 @@ void photonic::SceneList::removeScene(photonic::SceneRef scene) {
         mSceneIterator = mScenes.begin();
     }
     mScenes.remove(scene);
+    updateEffectsStillOn();
 }
 
 bool photonic::SceneList::hasScene(photonic::SceneRef scene) {
@@ -200,7 +211,7 @@ void SceneList::removeAllScenes() {
     reset();
 }
 
-void SceneList::onEffectRemove(EffectRef effect) {
+void SceneList::onEffectRemove(EffectRef &effect) {
     for (const auto &scene : mScenes) {
         if (scene->hasEffectOff(effect)) {
             scene->removeEffectOff(effect);
@@ -208,6 +219,19 @@ void SceneList::onEffectRemove(EffectRef effect) {
         if (scene->hasEffectOn(effect)) {
             scene->removeEffectOn(effect);
         }
+    }
+}
+
+void SceneList::updateEffectsStillOn() {
+    std::list<EffectRef> effectsStillOn;
+    for (const auto &scene : mScenes) {
+        for (const auto &effect: scene->getEffectsOn()) {
+            effectsStillOn.push_back(effect);
+        }
+        for (const auto &effect: scene->getEffectsOff()) {
+            effectsStillOn.remove(effect);
+        }
+        scene->setEffectsStillOn(effectsStillOn);
     }
 }
 
@@ -235,6 +259,7 @@ void photonic::SceneList::reorderScene(const photonic::SceneRef scene, int newPo
     auto iterator = mScenes.begin();
     std::advance(iterator, newPos);
     mScenes.emplace(iterator, scene);
+    updateEffectsStillOn();
 }
 
 
@@ -330,7 +355,11 @@ void photonic::SceneListUI::drawGui() {
                 for (const auto effect : scene->mEffectsOff) {
                     effectOffList += "\n- " + effect->getName();
                 }
-                ui::SetTooltip("%s\n%s\n%s", scene->description.c_str(), effectOnList.c_str(), effectOffList.c_str());
+                std::string effectStillOnList = "Are still on:";
+                for (const auto effect : scene->mEffectsStillOn) {
+                    effectStillOnList += "\n- " + effect->getName();
+                }
+                ui::SetTooltip("%s\n%s\n%s\n%s", scene->description.c_str(), effectOnList.c_str(), effectOffList.c_str(), effectStillOnList.c_str());
             }
             if (ui::IsItemClicked()) {
                 sceneToEdit = scene;
@@ -374,6 +403,7 @@ void photonic::SceneListUI::drawSceneUI(SceneRef &scene) {
             ui::SameLine();
             if (ui::Button("Remove")) {
                 it = scene->removeEffectOn(effect);
+                mSceneList->updateEffectsStillOn();
                 ui::PopID();
                 continue;
             }
@@ -387,6 +417,7 @@ void photonic::SceneListUI::drawSceneUI(SceneRef &scene) {
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(EFFECT_SELECT_DRAG_DROP, target_flags)) {
                 EffectRef effect = *(EffectRef*)payload->Data;
                 scene->addEffectOn(effect);
+                mSceneList->updateEffectsStillOn();
             }
         }
 
@@ -399,6 +430,7 @@ void photonic::SceneListUI::drawSceneUI(SceneRef &scene) {
             ui::SameLine();
             if (ui::Button("Remove")) {
                 it = scene->removeEffectOff(effect);
+                mSceneList->updateEffectsStillOn();
                 ui::PopID();
                 continue;
             }
@@ -412,6 +444,7 @@ void photonic::SceneListUI::drawSceneUI(SceneRef &scene) {
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(EFFECT_SELECT_DRAG_DROP, target_flags)) {
                 EffectRef effect = *(EffectRef*)payload->Data;
                 scene->addEffectOff(effect);
+                mSceneList->updateEffectsStillOn();
             }
         }
 
