@@ -42,6 +42,9 @@ void FightingInputs::execute(double dt) {
     if (mParams[kInput_VictimLamp]->lightRef == nullptr) {
         return;
     }
+    if (!hasLight(mParams[kInput_VictimLamp]->lightRef)) {
+        addLight(mParams[kInput_VictimLamp]->lightRef);
+    }
     float dropOff = mParams[kInput_DropOff]->floatValue;
     UpdateRadius(dt);
     updateIntensityTrackers(dt);
