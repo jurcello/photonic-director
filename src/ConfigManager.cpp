@@ -91,6 +91,10 @@ void ConfigManager::readChannels(std::vector<InputChannelRef> &channels)
             std::string address = channelNode.getChild("oscAddress").getValue<std::string>();
             std::string uuid = channelNode.getAttributeValue<std::string>("uuid");
             InputChannelRef newChannel = InputChannel::create(name, address, uuid);
+            if (channelNode.hasAttribute("calibrationMax")) {
+                float calibrationMax = channelNode.getAttributeValue<float>("calibrationMax");
+                newChannel->setCalibrationMax(calibrationMax);
+            }
             channels.push_back(newChannel);
         }
     } catch (Exception e){
@@ -363,6 +367,7 @@ void ConfigManager::writeChannels(std::vector<InputChannelRef> &channels) {
         addressNode.setTag("oscAddress");
         addressNode.setValue(channel->getAddress());
         channelNode.setAttribute("uuid", channel->getUuid());
+        channelNode.setAttribute("calibrationMax", channel->getCalibrationMax());
         channelNode.push_back(nameNode);
         channelNode.push_back(addressNode);
         channelsNode.push_back(channelNode);

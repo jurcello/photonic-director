@@ -21,7 +21,7 @@ InputChannelRef InputChannel::create(std::string name, std::string address, std:
 }
 
 InputChannel::InputChannel(std::string name, std::string address, std::string uuid)
-: mName(name), mAddress(address), mValue(0.f), mVec2Value(vec2(0.f)), mVec3Value(vec3(0.f)), mUuid(uuid), mIntValue(0), mSmoothing(1), mCurrentSmoothing(1)
+: mName(name), mAddress(address), mValue(0.f), mVec2Value(vec2(0.f)), mVec3Value(vec3(0.f)), mUuid(uuid), mIntValue(0), mSmoothing(1), mCurrentSmoothing(1), mIsCalibrating(false), mCalibratedMax(1.0f)
 {
     if (mUuid == "")
         mUuid = generate_uuid();
@@ -51,6 +51,7 @@ void InputChannel::setValue(double value)
 void InputChannel::setValue(float value)
 {
     updateCurrentSmooting();
+    updateCalibration(value);
     if (mCurrentSmoothing > 1) {
         mValue = (mValue * (mCurrentSmoothing -1) + value) / mCurrentSmoothing;
         return;
@@ -89,7 +90,7 @@ void InputChannel::setValue(vec3 value) {
 
 float InputChannel::getValue()
 {
-    return mValue;
+    return mValue / mCalibratedMax;
 }
 
 int InputChannel::getIntValue()
@@ -143,6 +144,34 @@ int InputChannel::getSmoothing() {
 void InputChannel::updateCurrentSmooting() {
     if (mCurrentSmoothing < mSmoothing) {
         mCurrentSmoothing++;
+    }
+}
+
+void InputChannel::setCalibrationMode(bool isCalibrating) {
+    if (isCalibrating && !mIsCalibrating) {
+        mCalibratedMax = 0.1f;
+    }
+    mIsCalibrating = isCalibrating;
+}
+
+bool InputChannel::isCalibrating() {
+    return mIsCalibrating;
+}
+
+float InputChannel::getCalibrationMax() {
+    return mCalibratedMax;
+}
+
+void InputChannel::setCalibrationMax(float max) {
+    mCalibratedMax = max;
+}
+
+void InputChannel::updateCalibration(float inputValue) {
+    if (!mIsCalibrating) {
+        return;
+    }
+    if (inputValue > mCalibratedMax) {
+        mCalibratedMax = inputValue;
     }
 }
 

@@ -72,10 +72,12 @@ class PhotonicDirectorApp : public App
     void draw() override;
     void keyDown(KeyEvent event) override;
     void resize() override;
+    void fileDrop( FileDropEvent event );
 
     void save();
     void quickSave();
     void load();
+    void loadFile(fs::path filePath);
 
     void pickLight();
 
@@ -500,10 +502,14 @@ void PhotonicDirectorApp::load()
     mGuiStatusData.lightToEdit = nullptr;
     std::vector<string> extensions{"xml"};
     fs::path loadPath = getOpenFilePath(fs::path(), extensions);
-    if (!loadPath.empty())
+    loadFile(loadPath);
+}
+
+void PhotonicDirectorApp::loadFile(fs::path filePath) {
+    if (!filePath.empty())
     {
-        mCurrentPath = loadPath;
-        config.readFromFile(loadPath);
+        mCurrentPath = filePath;
+        config.readFromFile(filePath);
         mOscReceivePort = config.readValue<int>("oscReceivePort", mOscReceivePort);
         mOscSendPort = config.readValue<int>("oscSendPort", mOscSendPort);
         mUnityPort = config.readValue<int>("unityPort", mUnityPort);
@@ -1141,6 +1147,20 @@ void PhotonicDirectorApp::drawChannelControls()
         {
             channel->setSmoothing(smoothing);
         }
+        if (channel->getType() == photonic::InputChannel::Type::kType_Dim1) {
+            static bool isCalibrating;
+            isCalibrating = channel->isCalibrating();
+            if (ui::Checkbox("Calibrate", &isCalibrating)) {
+                channel->setCalibrationMode(isCalibrating);
+            }
+            static float calibrationMax;
+            calibrationMax = channel->getCalibrationMax();
+            ui::InputFloat("Calibration max", &calibrationMax);
+            if (ui::Button("Reset calibration")) {
+                channel->setCalibrationMax(1.0f);
+                channel->setCalibrationMode(false);
+            }
+        }
         if (ui::Button("Done"))
         {
             channelSelection = nullptr;
@@ -1689,6 +1709,10 @@ void PhotonicDirectorApp::drawObjectsHierarchy()
 void PhotonicDirectorApp::resize()
 {
     mVisualizer.resize();
+}
+
+void PhotonicDirectorApp::fileDrop(FileDropEvent event) {
+    loadFile(event.getFile(0));
 }
 
 void PhotonicDirectorApp::pickLight()

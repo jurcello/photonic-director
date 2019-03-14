@@ -447,6 +447,24 @@ void photonic::SceneListUI::drawSceneUI(SceneRef &scene) {
                 mSceneList->updateEffectsStillOn();
             }
         }
+        ui::ListBoxHeader("Effects still on");
+        int effectStillOnId = 0;
+        bool effectAddedToOff = false;
+        for (auto it = scene->mEffectsStillOn.begin(); it != scene->mEffectsStillOn.end(); it++) {
+            auto effect = *it;
+            ui::Text("%s", effect->getName().c_str());
+            ui::SameLine();
+            if (ui::Button("Add to effects off")) {
+                scene->addEffectOff(effect);
+                effectAddedToOff = true;
+            }
+            ui::PopID();
+            effectStillOnId++;
+        }
+        ui::ListBoxFooter();
+        if (effectAddedToOff) {
+            mSceneList->updateEffectsStillOn();
+        }
 
         if (ui::Button("Done")) {
             scene = nullptr;

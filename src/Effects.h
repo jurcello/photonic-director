@@ -53,11 +53,16 @@ namespace photonic {
         void setValue(vec2 value);
         void setValue(vec3 value);
         void setSmoothing(int smoothing);
+        void setCalibrationMode(bool isCalibrating);
+        bool isCalibrating();
         float getValue();
         int getIntValue();
         vec2 getVec2Value();
         vec3 getVec3Value();
         int getSmoothing();
+
+        float getCalibrationMax();
+        void setCalibrationMax(float max);
 
         void setType(Type type);
         Type getType();
@@ -79,8 +84,11 @@ namespace photonic {
 
         int mSmoothing;
         int mCurrentSmoothing;
+        float mCalibratedMax;
+        bool mIsCalibrating;
 
         void updateCurrentSmooting();
+        void updateCalibration(float inputValue);
     };
     
     struct Parameter {

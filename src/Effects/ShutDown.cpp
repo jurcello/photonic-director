@@ -22,6 +22,11 @@ ShutDown::ShutDown(std::string name, std::string uuid)
 
 void ShutDown::execute(double dt) {
     Effect::execute(dt);
+    // TODO: this is a quick fix.
+    // Maybe we need an event which tells if the effect is enabled.
+    if (mFadeValue > 0 && mFadeValue < 1.f) {
+        mParams[kInput_TriggerChannel]->triggerValue = false;
+    }
 }
 
 void ShutDown::executePost(double dt) {
