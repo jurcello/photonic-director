@@ -61,6 +61,9 @@ void ShutDown::executePost(double dt) {
 }
 
 void ShutDown::updateState() {
+    if (mStatus != photonic::Effect::Status::kStatus_On) {
+        return;
+    }
     if (mParams[kInput_TriggerChannel]->triggerValue && mTimer.isStopped() && !mIsShutDown) {
         mTimer.start();
         mIsShutDown = true;

@@ -33,6 +33,8 @@ photonic::LocationFollow::LocationFollow(std::string name, std::string uuid)
     mParams[kInput_DropOff] = dropOff;
 
     registerParam(Parameter::Type::kType_Float, kInput_FadeOutTime, 0.1f, "Fade out time");
+
+    registerParam(Parameter::Type::kType_Channel_MinMax, kInput_IntensityChannel, vec4(0.f, 1.0f, 0.0f, 1.f), "Intensity Channel");
 }
 
 void photonic::LocationFollow::execute(double dt) {
@@ -40,6 +42,9 @@ void photonic::LocationFollow::execute(double dt) {
     float stepSize = 0.f;
     if (mParams[kInput_FadeOutTime]->floatValue > 0.f) {
         stepSize = dt / mParams[kInput_FadeOutTime]->floatValue;
+    }
+    if (mParams[kInput_IntensityChannel]->channelRef != nullptr) {
+        mParams[kInput_Intensity]->floatValue = mParams[kInput_IntensityChannel]->getMappedChannelValue();
     }
     Effect::execute(dt);
     if (mChannel) {

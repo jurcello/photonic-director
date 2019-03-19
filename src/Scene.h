@@ -65,6 +65,7 @@ namespace photonic {
         void nextScene();
         void previousScene();
         SceneRef getActiveScene();
+        void activateScene(std::string name);
         void reset();
         void listenToOsc(const osc::Message &message);
         void reorderScene(SceneRef scene, int newPos);

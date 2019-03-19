@@ -165,6 +165,22 @@ photonic::SceneRef photonic::SceneList::getActiveScene() {
     return *mSceneIterator;
 }
 
+void SceneList::activateScene(std::string name) {
+    SceneRef sceneToActivate = nullptr;
+    for (auto it = mScenes.begin(); it != mScenes.end(); it++) {
+        if ((*it)->name == name) {
+            sceneToActivate = *it;
+            break;
+        }
+    }
+    if (sceneToActivate != nullptr) {
+        reset();
+        while (*mSceneIterator != sceneToActivate) {
+            nextScene();
+        }
+    }
+}
+
 void photonic::SceneList::nextScene() {
     if (isActive) {
         std::advance(mSceneIterator, 1);
@@ -202,6 +218,9 @@ void photonic::SceneList::previousScene() {
 }
 
 void photonic::SceneList::reset() {
+    while (mSceneIterator != mScenes.begin()) {
+        previousScene();
+    }
     mSceneIterator = mScenes.begin();
     isActive = false;
 }
@@ -250,6 +269,9 @@ void photonic::SceneList::listenToOsc(const osc::Message &message) {
             if (message.getArgString(0) == oscStringMessageNext) {
                 nextScene();
             }
+            else {
+                activateScene(message.getArgString(0));
+            }
         }
     }
 }
@@ -260,6 +282,9 @@ void photonic::SceneList::reorderScene(const photonic::SceneRef scene, int newPo
     std::advance(iterator, newPos);
     mScenes.emplace(iterator, scene);
     updateEffectsStillOn();
+    // Because the order of the list changed, most probably the sceneIterator now contains
+    // an invalid value. Therefor perform a reset.
+    reset();
 }
 
 

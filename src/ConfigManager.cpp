@@ -95,6 +95,10 @@ void ConfigManager::readChannels(std::vector<InputChannelRef> &channels)
                 float calibrationMax = channelNode.getAttributeValue<float>("calibrationMax");
                 newChannel->setCalibrationMax(calibrationMax);
             }
+            if (channelNode.hasAttribute("smoothing")) {
+                int smoothing = channelNode.getAttributeValue<int>("smoothing");
+                newChannel->setSmoothing(smoothing);
+            }
             channels.push_back(newChannel);
         }
     } catch (Exception e){
@@ -368,6 +372,7 @@ void ConfigManager::writeChannels(std::vector<InputChannelRef> &channels) {
         addressNode.setValue(channel->getAddress());
         channelNode.setAttribute("uuid", channel->getUuid());
         channelNode.setAttribute("calibrationMax", channel->getCalibrationMax());
+        channelNode.setAttribute("smoothing", channel->getSmoothing());
         channelNode.push_back(nameNode);
         channelNode.push_back(addressNode);
         channelsNode.push_back(channelNode);

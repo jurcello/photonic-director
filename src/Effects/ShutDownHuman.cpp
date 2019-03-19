@@ -80,6 +80,9 @@ Effect::Stage ShutDownHuman::getStage() {
 }
 
 void ShutDownHuman::updateState() {
+    if (mStatus != photonic::Effect::Status::kStatus_On) {
+        return;
+    }
     if (!mIsShutdown && mParams[kInput_TriggerChannel]->triggerValue) {
         mIsShutdown = true;
         mCurrentStage = EffectStage::first;
