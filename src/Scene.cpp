@@ -173,11 +173,21 @@ void SceneList::activateScene(std::string name) {
             break;
         }
     }
-    if (sceneToActivate != nullptr) {
-        reset();
-        while (*mSceneIterator != sceneToActivate) {
-            nextScene();
-        }
+    if (sceneToActivate == nullptr) {
+        return;
+    }
+
+    reset();
+
+    if (sceneToActivate == *(mScenes.begin())) {
+        // If the scene to activate is the first scene, it can be enabled
+        // by calling next scene.
+        nextScene();
+        return;
+    }
+
+    while (*mSceneIterator != sceneToActivate) {
+        nextScene();
     }
 }
 
